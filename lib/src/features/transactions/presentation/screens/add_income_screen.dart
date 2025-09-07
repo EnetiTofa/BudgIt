@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:budgit/src/features/transactions/presentation/income_form.dart';
+import 'package:budgit/src/features/transactions/presentation/widgets/income_form.dart';
 
 class AddIncomeScreen extends StatelessWidget {
   const AddIncomeScreen({super.key});

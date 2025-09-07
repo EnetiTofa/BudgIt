@@ -5,8 +5,8 @@ import 'package:budgit/src/features/transactions/data/transaction_repository_pro
 import 'package:budgit/src/features/categories/domain/category.dart';
 import 'package:budgit/src/features/transactions/domain/transaction.dart';
 import 'package:budgit/src/features/categories/presentation/category_list_provider.dart';
-import 'package:budgit/src/features/transactions/presentation/recurring_transactions_provider.dart';
-import 'package:budgit/src/features/transactions/presentation/transaction_log_provider.dart';
+import 'package:budgit/src/features/transactions/presentation/providers/recurring_transactions_provider.dart';
+import 'package:budgit/src/features/transactions/presentation/providers/transaction_log_provider.dart';
 import 'package:budgit/src/utils/clock_provider.dart';
 import 'package:budgit/src/features/savings/domain/savings_goal.dart';
 import 'package:budgit/src/features/savings/presentation/savings_providers.dart';

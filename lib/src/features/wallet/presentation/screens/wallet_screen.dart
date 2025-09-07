@@ -4,7 +4,7 @@ import 'package:budgit/src/features/wallet/presentation/widgets/average_spending
 import 'package:budgit/src/features/wallet/presentation/widgets/daily_spending_gauges.dart';
 import 'package:budgit/src/features/wallet/presentation/widgets/wallet_bar_chart.dart';
 import 'package:budgit/src/features/wallet/presentation/widgets/wallet_category_card.dart';
-import 'package:budgit/src/features/wallet/presentation/controllers/wallet_category_data_provider.dart';
+import 'package:budgit/src/features/wallet/presentation/providers/wallet_category_data_provider.dart';
 
 class WalletScreen extends ConsumerStatefulWidget {
   const WalletScreen({super.key});

@@ -7,7 +7,7 @@ part of 'wallet_category_data_provider.dart';
 // **************************************************************************
 
 String _$walletCategoryDataHash() =>
-    r'5743dda0b392108b55626838fa0207cd8859cc3d';
+    r'a6dcbfdeb5df2febc42af4bb6ef97da0902cc25c';
 
 /// See also [walletCategoryData].
 @ProviderFor(walletCategoryData)

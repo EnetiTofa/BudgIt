@@ -2,7 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:budgit/src/features/transactions/domain/transaction.dart';
 import 'package:budgit/src/features/categories/presentation/category_list_provider.dart';
-import 'package:budgit/src/features/transactions/presentation/transaction_log_provider.dart';
+import 'package:budgit/src/features/transactions/presentation/providers/transaction_log_provider.dart';
 import 'package:budgit/src/features/wallet/domain/wallet_category_data.dart';
 import 'package:budgit/src/utils/clock_provider.dart';
 import 'package:budgit/src/features/transactions/data/transaction_repository_provider.dart';
@@ -39,6 +39,7 @@ Future<List<WalletCategoryData>> walletCategoryData(Ref ref) async {
     final outgoingBoosts = adjustments.where((a) => a.fromCategoryId == category.id).fold(0.0, (sum, a) => sum + a.amount);
     final effectiveWeeklyBudget = baseAmount + incomingBoosts - outgoingBoosts;
     
+    
     final categoryWalletTxs = transactionLog
         .whereType<OneOffPayment>()
         .where((p) => p.isWalleted && p.category.id == category.id && !p.date.isBefore(startOfWeek));
@@ -52,12 +53,19 @@ Future<List<WalletCategoryData>> walletCategoryData(Ref ref) async {
         .where((p) => !p.date.isBefore(startOfToday))
         .fold(0.0, (sum, p) => sum + p.amount);
 
+    // --- This is the new, correct calculation logic ---
+    final daysPassedInWeek = now.difference(startOfWeek).inDays;
+    final daysRemaining = 7 - daysPassedInWeek;
+    final budgetRemaining = effectiveWeeklyBudget - spentInCompletedDays;
+    final recommendedDailySpending = daysRemaining > 0 ? budgetRemaining / daysRemaining : 0.0;
+
     result.add(
       WalletCategoryData(
         category: category,
         spentInCompletedDays: spentInCompletedDays,
         spendingToday: spendingToday,
         effectiveWeeklyBudget: effectiveWeeklyBudget, // Pass the new value
+        recommendedDailySpending: recommendedDailySpending,
       ),
     );
   }

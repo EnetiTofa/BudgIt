@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:budgit/src/features/transactions/domain/transaction.dart';
-import 'package:budgit/src/features/transactions/presentation/payment_form.dart';
+import 'package:budgit/src/features/transactions/presentation/widgets/payment_form.dart';
 
 class EditPaymentScreen extends StatelessWidget {
   final Transaction transaction;

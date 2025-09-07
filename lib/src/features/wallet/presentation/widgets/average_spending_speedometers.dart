@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:budgit/src/common_widgets/custom_toggle.dart';
 import 'package:budgit/src/features/wallet/domain/wallet_category_data.dart';
-import 'package:budgit/src/features/wallet/presentation/controllers/wallet_category_data_provider.dart';
+import 'package:budgit/src/features/wallet/presentation/providers/wallet_category_data_provider.dart';
 import 'package:budgit/src/features/wallet/presentation/widgets/wallet_speedometer.dart';
 
 class AverageSpendingSpeedometers extends ConsumerStatefulWidget {

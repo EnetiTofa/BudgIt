@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:budgit/src/features/transactions/domain/transaction.dart';
-import 'package:budgit/src/features/transactions/presentation/transaction_log_provider.dart';
-import 'package:budgit/src/features/transactions/presentation/edit_payment_screen.dart';
+import 'package:budgit/src/features/transactions/presentation/providers/transaction_log_provider.dart';
+import 'package:budgit/src/features/transactions/presentation/screens/edit_payment_screen.dart';
 import 'package:budgit/src/features/transactions/data/transaction_repository_provider.dart';
-import 'package:budgit/src/features/transactions/presentation/edit_income_screen.dart';
+import 'package:budgit/src/features/transactions/presentation/screens/edit_income_screen.dart';
 
 class TransactionLogScreen extends ConsumerWidget {
   const TransactionLogScreen({super.key});

@@ -7,7 +7,7 @@ import 'package:budgit/src/common_widgets/custom_dropdown_field.dart';
 import 'package:budgit/src/common_widgets/custom_text_input_field.dart';
 import 'package:budgit/src/constants/app_icons.dart';
 import 'package:budgit/src/features/categories/domain/category.dart';
-import 'package:budgit/src/features/transactions/presentation/add_transaction_controller.dart';
+import 'package:budgit/src/features/transactions/presentation/controllers/add_transaction_controller.dart';
 import 'package:budgit/src/features/categories/presentation/category_list_provider.dart';
 
 class CategoryForm extends ConsumerStatefulWidget {

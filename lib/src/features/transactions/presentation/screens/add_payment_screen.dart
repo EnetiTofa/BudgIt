@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:budgit/src/features/transactions/presentation/payment_form.dart';
+import 'package:budgit/src/features/transactions/presentation/widgets/payment_form.dart';
 
 class AddPaymentScreen extends StatelessWidget {
   const AddPaymentScreen({super.key});

@@ -83,8 +83,9 @@ class _WalletCategoryCardState extends ConsumerState<WalletCategoryCard> with Si
                     child: Text(
                       data.category.name,
                       style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w800,
                         color: contentColor,
+                        fontSize: 20,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -98,10 +99,17 @@ class _WalletCategoryCardState extends ConsumerState<WalletCategoryCard> with Si
                           text: currencyFormat.format(data.totalSpentThisWeek),
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
+                            fontSize: 14,
                             color: isOverspent ? Colors.yellow.shade200 : contentColor,
                           ),
                         ),
-                        TextSpan(text: ' / ${currencyFormat.format(data.effectiveWeeklyBudget)}'),
+                        TextSpan(
+                          text: ' / ${currencyFormat.format(data.effectiveWeeklyBudget)}',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w400,
+                            fontSize: 12,
+                          )
+                          ),
                       ],
                     ),
                   ),
@@ -119,9 +127,9 @@ class _WalletCategoryCardState extends ConsumerState<WalletCategoryCard> with Si
                       borderRadius: BorderRadius.circular(10),
                       child: LinearProgressIndicator(
                         value: _animation.value,
-                        backgroundColor: contentColor.withOpacity(0.3),
+                        backgroundColor: theme.colorScheme.surface.withOpacity(0.8),
                         valueColor: AlwaysStoppedAnimation<Color>(
-                          isOverspent ? Colors.yellow.shade200 : contentColor
+                          isOverspent ? Colors.yellow.shade200 : data.category.color.withOpacity(0.6)
                         ),
                       ),
                     );
@@ -142,7 +150,7 @@ class _WalletCategoryCardState extends ConsumerState<WalletCategoryCard> with Si
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Rec. spend: ${currencyFormat.format(data.recommendedDailySpending)}',
+                      'Rec. spend: ${currencyFormat.format(data.recommendedDailySpending)} / day',
                        style: theme.textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                         color: contentColor,

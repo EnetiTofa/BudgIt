@@ -4,9 +4,9 @@ import 'package:budgit/src/features/budgets/presentation/budget_hub_screen.dart'
 import 'package:budgit/src/features/categories/presentation/add_category_screen.dart';
 import 'package:budgit/src/features/home/presentation/home_screen.dart';
 import 'package:budgit/src/features/menu/presentation/menu_screen.dart';
-import 'package:budgit/src/features/transactions/presentation/add_income_screen.dart';
-import 'package:budgit/src/features/transactions/presentation/add_payment_screen.dart';
-import 'package:budgit/src/features/transactions/presentation/transaction_hub_screen.dart';
+import 'package:budgit/src/features/transactions/presentation/screens/add_income_screen.dart';
+import 'package:budgit/src/features/transactions/presentation/screens/add_payment_screen.dart';
+import 'package:budgit/src/features/transactions/presentation/screens/transaction_hub_screen.dart';
 import 'package:budgit/src/theme/app_theme.dart';
 import 'package:budgit/src/features/settings/presentation/theme_controller.dart';
 

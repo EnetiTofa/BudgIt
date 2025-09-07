@@ -2,7 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:budgit/src/features/transactions/data/transaction_repository_provider.dart';
 import 'package:budgit/src/features/categories/domain/category.dart';
 import 'package:budgit/src/features/wallet/domain/wallet_adjustment.dart';
-import 'package:budgit/src/features/wallet/presentation/controllers/wallet_category_data_provider.dart';
+import 'package:budgit/src/features/wallet/presentation/providers/wallet_category_data_provider.dart';
 import 'package:budgit/src/utils/clock_provider.dart';
 
 part 'boost_controller.g.dart';

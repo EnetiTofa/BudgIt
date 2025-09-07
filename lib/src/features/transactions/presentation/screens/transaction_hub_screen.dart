@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:budgit/src/features/transactions/presentation/recurring_screen.dart';
-import 'package:budgit/src/features/transactions/presentation/transaction_log_screen.dart';
+import 'package:budgit/src/features/transactions/presentation/screens/recurring_screen.dart';
+import 'package:budgit/src/features/transactions/presentation/screens/transaction_log_screen.dart';
 
 class TransactionHubScreen extends StatefulWidget {
   final int initialTabIndex;

@@ -6,7 +6,7 @@ import 'package:budgit/src/features/check_in/presentation/check_in_screen.dart';
 import 'package:budgit/src/features/check_in/presentation/is_check_in_available_provider.dart';
 import 'package:budgit/src/features/settings/presentation/settings_provider.dart';
 import 'package:budgit/src/features/settings/presentation/theme_selector_screen.dart';
-import 'package:budgit/src/features/transactions/presentation/add_transaction_controller.dart';
+import 'package:budgit/src/features/transactions/presentation/controllers/add_transaction_controller.dart';
 
 class MenuScreen extends ConsumerWidget {
   const MenuScreen({super.key});

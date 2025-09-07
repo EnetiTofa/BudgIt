@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:budgit/src/features/transactions/domain/transaction.dart';
-import 'package:budgit/src/features/transactions/presentation/income_form.dart'; // We'll create this next
+import 'package:budgit/src/features/transactions/presentation/widgets/income_form.dart'; // We'll create this next
 
 class EditIncomeScreen extends StatelessWidget {
   final Transaction transaction;

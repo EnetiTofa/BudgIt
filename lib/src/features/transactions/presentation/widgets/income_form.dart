@@ -6,7 +6,7 @@ import 'package:budgit/src/common_widgets/custom_dropdown_field.dart';
 import 'package:budgit/src/common_widgets/custom_text_input_field.dart';
 import 'package:budgit/src/common_widgets/custom_toggle.dart';
 import 'package:budgit/src/features/transactions/domain/transaction.dart';
-import 'package:budgit/src/features/transactions/presentation/add_transaction_controller.dart';
+import 'package:budgit/src/features/transactions/presentation/controllers/add_transaction_controller.dart';
 import 'package:budgit/src/utils/clock_provider.dart';
 
 enum IncomeType { oneOff, recurring }

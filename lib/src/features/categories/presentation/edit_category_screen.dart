@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // Import Riverpod
 import 'package:budgit/src/features/categories/presentation/category_form.dart';
 import 'package:budgit/src/features/categories/domain/category.dart';
-import 'package:budgit/src/features/transactions/presentation/add_transaction_controller.dart';
+import 'package:budgit/src/features/transactions/presentation/controllers/add_transaction_controller.dart';
 import 'package:budgit/src/features/categories/presentation/category_list_provider.dart';
-import 'package:budgit/src/features/transactions/presentation/transaction_log_provider.dart';
+import 'package:budgit/src/features/transactions/presentation/providers/transaction_log_provider.dart';
 import 'package:budgit/src/features/budgets/presentation/budget_progress_provider.dart';
 
 // Change this to a ConsumerWidget to get access to ref

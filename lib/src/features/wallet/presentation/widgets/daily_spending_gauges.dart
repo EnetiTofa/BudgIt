@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:budgit/src/features/wallet/domain/wallet_category_data.dart';
 import 'package:budgit/src/features/wallet/presentation/widgets/category_ring_painter.dart';
-import 'package:budgit/src/features/wallet/presentation/controllers/wallet_category_data_provider.dart';
+import 'package:budgit/src/features/wallet/presentation/providers/wallet_category_data_provider.dart';
 
 class DailySpendingGauges extends ConsumerWidget {
   const DailySpendingGauges({super.key});
@@ -105,6 +105,8 @@ class _SpendingGaugeState extends ConsumerState<_SpendingGauge> with SingleTicke
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final currencyFormat = NumberFormat.compactCurrency(locale: 'en_US', symbol: '\$');
+    final recommendedSpend = widget.data.recommendedDailySpending;
+
     
     return Column(
       children: [
@@ -141,7 +143,7 @@ class _SpendingGaugeState extends ConsumerState<_SpendingGauge> with SingleTicke
         ),
         const SizedBox(height: 2),
         Text(
-          '${currencyFormat.format(widget.data.spendingToday)} / ${currencyFormat.format(widget.data.recommendedDailySpending)}',
+          '${currencyFormat.format(widget.data.spendingToday)} / ${currencyFormat.format(recommendedSpend)}',
           style: theme.textTheme.bodySmall,
         ),
       ],

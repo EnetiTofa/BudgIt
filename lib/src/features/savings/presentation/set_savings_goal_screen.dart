@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:budgit/src/common_widgets/currency_input_field.dart';
 import 'package:budgit/src/features/savings/domain/savings_goal.dart';
 import 'package:budgit/src/features/savings/presentation/savings_providers.dart';
-import 'package:budgit/src/features/transactions/presentation/add_transaction_controller.dart';
+import 'package:budgit/src/features/transactions/presentation/controllers/add_transaction_controller.dart';
 
 class SetSavingsGoalScreen extends ConsumerStatefulWidget {
   final SavingsGoal? initialGoal;
