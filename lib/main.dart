@@ -6,7 +6,6 @@ import 'package:budgit/src/features/savings/domain/savings_goal.dart';
 import 'package:budgit/src/features/categories/domain/category.dart';
 import 'package:budgit/src/features/transactions/domain/transaction.dart';
 import 'package:budgit/src/features/wallet/domain/wallet_adjustment.dart';
-import 'package:budgit/src/features/settings/domain/screen_layout.dart';
 
 Future<void> main() async {
   // 1. Ensure Flutter is ready
@@ -27,7 +26,6 @@ Future<void> main() async {
   Hive.registerAdapter(IncomeOccurrenceAdapter());
   Hive.registerAdapter(WalletAdjustmentAdapter());
   Hive.registerAdapter(SavingsGoalAdapter());
-  Hive.registerAdapter(ScreenLayoutAdapter());
 
   // 4. Open all your boxes (ensure every line has 'await')
   await Hive.openBox<Category>('categories');
@@ -35,7 +33,6 @@ Future<void> main() async {
   await Hive.openBox<WalletAdjustment>('adjustments');
   await Hive.openBox<SavingsGoal>('savings_goals');
   await Hive.openBox('settings');
-  await Hive.openBox<ScreenLayout>('layouts');
 
   // 5. Run the app
   runApp(

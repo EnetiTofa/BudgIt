@@ -5,11 +5,13 @@ import 'package:budgit/src/features/wallet/domain/wallet_category_data.dart';
 import 'package:budgit/src/features/wallet/presentation/widgets/wallet_speedometer.dart';
 import 'package:budgit/src/features/wallet/presentation/screens/wallet_category_detail_screen.dart';
 
-// Change to a ConsumerStatefulWidget to access ref in initState for the animation
 class WalletCategoryCard extends ConsumerStatefulWidget {
   final WalletCategoryData data;
-  final int daysRemaining;
-  const WalletCategoryCard({super.key, required this.data, required this.daysRemaining}); // V-- Update constructor
+  
+  const WalletCategoryCard({
+    super.key,
+    required this.data,
+  });
 
   @override
   ConsumerState<WalletCategoryCard> createState() => _WalletCategoryCardState();
@@ -46,20 +48,19 @@ class _WalletCategoryCardState extends ConsumerState<WalletCategoryCard> with Si
 
   @override
   Widget build(BuildContext context) {
-    // V-- No more data fetching or calculations are needed here.
     final currencyFormat = NumberFormat.currency(locale: 'en_US', symbol: '\$');
     final theme = Theme.of(context);
     final data = widget.data;
     final isOverspent = data.totalSpentThisWeek > data.effectiveWeeklyBudget;
-    final contentColor = theme.colorScheme.primary;
-    // V-- Just use the value passed from the parent widget.
-    final daysRemaining = widget.daysRemaining; 
+    
+    // This logic automatically chooses black or white for readability
+    final brightness = ThemeData.estimateBrightnessForColor(data.category.color);
+    final contentColor = brightness == Brightness.dark ? Colors.white : Colors.black;
 
     return Card(
       elevation: 0,
       clipBehavior: Clip.antiAlias,
-      // V-- Use the category color for the card's background
-      color: data.category.color,
+      color: data.category.color, // Use category color for the background
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       margin: const EdgeInsets.symmetric(vertical: 6.0),
       child: InkWell(
@@ -82,9 +83,8 @@ class _WalletCategoryCardState extends ConsumerState<WalletCategoryCard> with Si
                     child: Text(
                       data.category.name,
                       style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 18,
-                        color: contentColor, // Use the contrasting content color
+                        fontWeight: FontWeight.bold,
+                        color: contentColor,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -119,7 +119,7 @@ class _WalletCategoryCardState extends ConsumerState<WalletCategoryCard> with Si
                       borderRadius: BorderRadius.circular(10),
                       child: LinearProgressIndicator(
                         value: _animation.value,
-                        backgroundColor: theme.colorScheme.surface.withOpacity(0.2),
+                        backgroundColor: contentColor.withOpacity(0.3),
                         valueColor: AlwaysStoppedAnimation<Color>(
                           isOverspent ? Colors.yellow.shade200 : contentColor
                         ),
@@ -128,7 +128,9 @@ class _WalletCategoryCardState extends ConsumerState<WalletCategoryCard> with Si
                   },
                 ),
               ),
-              Divider(height: 16, color: contentColor.withOpacity(0.5)),
+              Divider(height: 24, color: contentColor.withOpacity(0.5)),
+
+              // --- "Personal Trainer" Info Row ---
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
@@ -140,9 +142,9 @@ class _WalletCategoryCardState extends ConsumerState<WalletCategoryCard> with Si
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      '${currencyFormat.format(data.recommendedDailySpending)} / day for next $daysRemaining day${daysRemaining == 1 ? '' : 's'}',
+                      'Rec. spend: ${currencyFormat.format(data.recommendedDailySpending)}',
                        style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w600,
                         color: contentColor,
                        ),
                     ),

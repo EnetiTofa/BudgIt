@@ -7,7 +7,6 @@ import 'package:budgit/src/features/check_in/presentation/is_check_in_available_
 import 'package:budgit/src/features/settings/presentation/settings_provider.dart';
 import 'package:budgit/src/features/settings/presentation/theme_selector_screen.dart';
 import 'package:budgit/src/features/transactions/presentation/add_transaction_controller.dart';
-import 'package:budgit/src/features/wallet/presentation/screens/wallet_screen_customizer.dart';
 
 class MenuScreen extends ConsumerWidget {
   const MenuScreen({super.key});
@@ -69,11 +68,8 @@ class MenuScreen extends ConsumerWidget {
           ListTile(
             leading: const Icon(Icons.wallet_outlined),
             title: const Text('Customize Wallet Screen'),
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const WalletScreenCustomizer()),
-              );
-            },
+            subtitle: const Text('Coming soon!'),
+            onTap: () { /* Placeholder */ },
           ),
           ListTile(
             leading: const Icon(Icons.brightness_6_outlined),
