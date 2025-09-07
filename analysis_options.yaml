@@ -1,0 +1,12 @@
+include: package:flutter_lints/flutter.yaml
+
+linter:
+  rules:
+    # You can add other custom rules here
+
+# You can delete this entire section below
+analyzer:
+  errors:
+    must_be_immutable: ignore
+  exclude:
+    - lib/src/features/categories/domain/category.dart
