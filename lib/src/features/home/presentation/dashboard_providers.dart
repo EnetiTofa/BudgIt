@@ -4,6 +4,7 @@ import 'package:budgit/src/features/transactions/domain/transaction.dart';
 import 'package:budgit/src/features/categories/presentation/category_list_provider.dart';
 import 'package:budgit/src/features/transactions/presentation/providers/transaction_log_provider.dart';
 import 'package:budgit/src/utils/clock_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 part 'dashboard_providers.g.dart';
 
@@ -17,12 +18,10 @@ class MonthlySummary {
 }
 
 @riverpod
-Future<MonthlySummary> monthlySummary(MonthlySummaryRef ref) async {
+Future<MonthlySummary> monthlySummary(Ref ref) async {
   final categories = await ref.watch(categoryListProvider.future);
-  final transactionLog = await ref.watch(transactionLogProvider.future);
+  final transactionLog = ref.watch(transactionLogProvider);
   final now = ref.watch(clockProvider).now();
-  
-  final startOfMonth = DateTime(now.year, now.month, 1);
   double totalMonthlyBudget = 0;
 
   // Normalize all category budgets to a monthly amount
@@ -41,13 +40,22 @@ Future<MonthlySummary> monthlySummary(MonthlySummaryRef ref) async {
   }
 
   // Calculate total spending for the current month
-  final totalMonthlySpending = transactionLog
-      .whereType<OneOffPayment>()
-      .where((p) => !p.date.isBefore(startOfMonth))
-      .fold(0.0, (sum, p) => sum + p.amount);
+ return transactionLog.when(
+    data: (log) {
+      // --- The calculation now happens inside the data callback ---
+      final startOfMonth = DateTime(now.year, now.month, 1);
+      final totalMonthlySpending = log
+          .whereType<OneOffPayment>()
+          .where((p) => !p.date.isBefore(startOfMonth))
+          .fold(0.0, (sum, p) => sum + p.amount);
 
-  return MonthlySummary(
-    totalBudget: totalMonthlyBudget,
-    totalSpending: totalMonthlySpending,
+      return MonthlySummary(
+        totalBudget: totalMonthlyBudget,
+        totalSpending: totalMonthlySpending,
+      );
+    },
+    // Return a loading or error state if the transaction log isn't ready
+    loading: () => const MonthlySummary(totalBudget: 0, totalSpending: 0),
+    error: (e, s) => throw e, // Or handle the error appropriately
   );
 }

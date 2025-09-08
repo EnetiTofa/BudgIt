@@ -6,7 +6,7 @@ import 'package:budgit/src/utils/clock_provider.dart';
 
 part 'is_check_in_available_provider.g.dart';
 
-@riverpod
+@Riverpod(keepAlive: true)
 Future<bool> isCheckInAvailable(Ref ref) async {
   final repository = ref.watch(transactionRepositoryProvider);
   final lastCheckInDate = await repository.getLastCheckInDate();

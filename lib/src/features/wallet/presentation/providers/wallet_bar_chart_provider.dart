@@ -30,19 +30,25 @@ class WalletBarChartData extends Equatable {
 
 @riverpod
 Future<WalletBarChartData> walletBarChartData(Ref ref) async {
-  final log = await ref.watch(transactionLogProvider.future);
+  // --- The entire structure is simplified here ---
+
+  // 1. Await all futures at the top. Riverpod handles loading/error states.
+  final log = await ref.watch(allTransactionOccurrencesProvider.future);
   final categories = await ref.watch(categoryListProvider.future);
   final settingsNotifier = ref.read(settingsProvider.notifier);
+
+  // 2. Perform the rest of the logic directly. No .when() is needed.
   final checkInDay = await settingsNotifier.getCheckInDay();
   final now = ref.watch(clockProvider).now();
   
   final startOfWeek = DateTime(now.year, now.month, now.day - (now.weekday - checkInDay + 7) % 7);
-  // --- This is the key change: we need the start of today ---
   final startOfToday = DateTime(now.year, now.month, now.day);
   
-  final walletTxsThisWeek = log.whereType<OneOffPayment>().where((p) => p.isWalleted && !p.date.isBefore(startOfWeek)).toList();
+  final walletTxsThisWeek = log
+      .whereType<OneOffPayment>()
+      .where((p) => p.isWalleted && !p.date.isBefore(startOfWeek))
+      .toList();
 
-  // --- Calculate Daily Totals (this logic is fine) ---
   final dailyTotals = <int, Map<String, double>>{};
   for (var tx in walletTxsThisWeek) {
     final dayIndex = tx.date.weekday - 1;
@@ -50,7 +56,6 @@ Future<WalletBarChartData> walletBarChartData(Ref ref) async {
     dailyTotals[dayIndex]![tx.category.id] = (dailyTotals[dayIndex]![tx.category.id] ?? 0) + tx.amount;
   }
 
-  // --- Corrected Average Calculation ---
   final completedDays = startOfToday.difference(startOfWeek).inDays;
   final totalSpentOnCompletedDays = walletTxsThisWeek
       .where((tx) => tx.date.isBefore(startOfToday))
@@ -73,7 +78,7 @@ Future<WalletBarChartData> walletBarChartData(Ref ref) async {
   return WalletBarChartData(
     dailyTotals: dailyTotals,
     dailyWalletTarget: dailyWalletTarget,
-    averageDailySpend: averageDailySpend, // Now using the correct value
+    averageDailySpend: averageDailySpend,
     maxY: maxY * 1.2,
   );
 }

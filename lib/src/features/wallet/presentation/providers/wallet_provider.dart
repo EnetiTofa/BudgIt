@@ -11,11 +11,11 @@ part 'wallet_provider.g.dart';
 @riverpod
 Future<WalletData> walletData(Ref ref) async {
   final categories = await ref.watch(categoryListProvider.future);
-  final transactionLog = await ref.watch(transactionLogProvider.future);
+  // --- This is the corrected line ---
+  final transactionLog = await ref.watch(allTransactionOccurrencesProvider.future);
   final now = ref.watch(clockProvider).now();
 
   // --- Date Calculations ---
-  // Monday is 1, Sunday is 7. We calculate the date of the most recent Monday at midnight.
   final startOfWeek = DateTime(now.year, now.month, now.day - (now.weekday - 1));
   final startOfToday = DateTime(now.year, now.month, now.day);
   

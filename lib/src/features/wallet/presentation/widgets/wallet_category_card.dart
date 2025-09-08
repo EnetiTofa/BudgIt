@@ -55,7 +55,7 @@ class _WalletCategoryCardState extends ConsumerState<WalletCategoryCard> with Si
     
     // This logic automatically chooses black or white for readability
     final brightness = ThemeData.estimateBrightnessForColor(data.category.color);
-    final contentColor = brightness == Brightness.dark ? Colors.white : Colors.black;
+    final contentColor = brightness == Brightness.dark ? Colors.white : Color(0xFF121212);
 
     return Card(
       elevation: 0,
@@ -127,9 +127,9 @@ class _WalletCategoryCardState extends ConsumerState<WalletCategoryCard> with Si
                       borderRadius: BorderRadius.circular(10),
                       child: LinearProgressIndicator(
                         value: _animation.value,
-                        backgroundColor: theme.colorScheme.surface.withOpacity(0.8),
+                        backgroundColor: theme.colorScheme.surface.withOpacity(0.7),
                         valueColor: AlwaysStoppedAnimation<Color>(
-                          isOverspent ? Colors.yellow.shade200 : data.category.color.withOpacity(0.6)
+                          isOverspent ? Colors.yellow.shade200 : data.category.color.withOpacity(0.7)
                         ),
                       ),
                     );

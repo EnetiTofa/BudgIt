@@ -9,6 +9,7 @@ import 'package:budgit/src/features/transactions/presentation/screens/add_paymen
 import 'package:budgit/src/features/transactions/presentation/screens/transaction_hub_screen.dart';
 import 'package:budgit/src/theme/app_theme.dart';
 import 'package:budgit/src/features/settings/presentation/theme_controller.dart';
+import 'package:budgit/src/features/transactions/presentation/providers/transaction_log_provider.dart';
 
 /// The root widget of the application.
 class MyApp extends ConsumerWidget {
@@ -49,6 +50,14 @@ class _AppShellState extends ConsumerState<AppShell> {
     const BudgetHubScreen(),
     const MenuScreen(),
   ];
+
+
+
+  @override
+  void initState() {
+    super.initState();
+    ref.read(allTransactionOccurrencesProvider);
+  }
 
   void _onItemTapped(int index) {
     setState(() {

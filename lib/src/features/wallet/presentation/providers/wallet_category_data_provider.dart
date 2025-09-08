@@ -8,24 +8,23 @@ import 'package:budgit/src/utils/clock_provider.dart';
 import 'package:budgit/src/features/transactions/data/transaction_repository_provider.dart';
 import 'package:budgit/src/features/settings/presentation/settings_provider.dart';
 
+
 part 'wallet_category_data_provider.g.dart';
 
-@riverpod
+@Riverpod(keepAlive: true)
 Future<List<WalletCategoryData>> walletCategoryData(Ref ref) async {
-  // Fetch all necessary data
   final categories = await ref.watch(categoryListProvider.future);
-  final transactionLog = await ref.watch(transactionLogProvider.future);
-  final settingsRepo = await ref.watch(settingsProvider.future); // Wait for settings
+  // --- This is the corrected line ---
+  final transactionLog = await ref.watch(allTransactionOccurrencesProvider.future);
+  final settingsRepo = await ref.watch(settingsProvider.future);
   
   final repository = ref.watch(transactionRepositoryProvider);
   final now = ref.watch(clockProvider).now();
   
-  // Now we can safely get the check-in day
   final checkInDay = settingsRepo.getCheckInDay();
   
   final adjustments = await repository.getWalletAdjustmentsForWeek(now);
   
-  // --- Use the correct start of week calculation ---
   final startOfWeek = DateTime(now.year, now.month, now.day - (now.weekday - checkInDay + 7) % 7);
   final startOfToday = DateTime(now.year, now.month, now.day);
 
