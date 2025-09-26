@@ -16,7 +16,6 @@ enum RecurrencePeriod {
   yearly
 }
 
-// Abstract class has no Hive code
 abstract class Transaction extends FinancialEntry {
   const Transaction({
     required super.id,
@@ -40,9 +39,9 @@ class OneOffPayment extends Transaction with HiveObjectMixin {
     required this.store,
     required this.category,
     this.isWalleted = false,
+    this.parentRecurringId,
   }) : super(id: id, notes: notes, createdAt: createdAt, amount: amount);
 
-  // Fields specific to this class
   @HiveField(0)
   final DateTime date;
   @HiveField(1)
@@ -54,26 +53,22 @@ class OneOffPayment extends Transaction with HiveObjectMixin {
   @HiveField(4)
   final bool isWalleted;
 
-  // Overridden fields from superclasses
   @override
   @HiveField(5)
   String get id => super.id;
-
   @override
   @HiveField(6)
   String get notes => super.notes;
-
   @override
   @HiveField(7)
   DateTime get createdAt => super.createdAt;
-  
   @override
   @HiveField(8)
   double get amount => super.amount;
+
+  @HiveField(9)
+  final String? parentRecurringId;
 }
-
-
-// --- Apply the same pattern to all other concrete classes ---
 
 @HiveType(typeId: 4)
 class RecurringPayment extends Transaction with HiveObjectMixin {
@@ -86,6 +81,7 @@ class RecurringPayment extends Transaction with HiveObjectMixin {
     required this.payee,
     required this.category,
     required this.recurrence,
+    required this.recurrenceFrequency,
     required this.startDate,
     this.endDate,
   }) : super(id: id, notes: notes, createdAt: createdAt, amount: amount);
@@ -108,6 +104,9 @@ class RecurringPayment extends Transaction with HiveObjectMixin {
   @override @HiveField(8) DateTime get createdAt => super.createdAt;
   @override @HiveField(9) double get amount => super.amount;
 
+  @HiveField(10, defaultValue: 1)
+  final int recurrenceFrequency;
+
   List<PaymentOccurrence> generateOccurrences({required DateTime upToDate}) {
     final occurrences = <PaymentOccurrence>[];
     DateTime currentDate = startDate;
@@ -120,6 +119,7 @@ class RecurringPayment extends Transaction with HiveObjectMixin {
       occurrences.add(
         PaymentOccurrence(
           id: '${id}_${currentDate.toIso8601String()}',
+          parentRecurringId: id,
           amount: amount,
           notes: notes,
           createdAt: createdAt,
@@ -132,16 +132,16 @@ class RecurringPayment extends Transaction with HiveObjectMixin {
 
       switch (recurrence) {
         case RecurrencePeriod.daily:
-          currentDate = DateTime(currentDate.year, currentDate.month, currentDate.day + 1);
+          currentDate = DateTime(currentDate.year, currentDate.month, currentDate.day + recurrenceFrequency);
           break;
         case RecurrencePeriod.weekly:
-          currentDate = DateTime(currentDate.year, currentDate.month, currentDate.day + 7);
+          currentDate = DateTime(currentDate.year, currentDate.month, currentDate.day + (7 * recurrenceFrequency));
           break;
         case RecurrencePeriod.monthly:
-          currentDate = DateTime(currentDate.year, currentDate.month + 1, currentDate.day);
+          currentDate = DateTime(currentDate.year, currentDate.month + recurrenceFrequency, currentDate.day);
           break;
         case RecurrencePeriod.yearly:
-          currentDate = DateTime(currentDate.year + 1, currentDate.month, currentDate.day);
+          currentDate = DateTime(currentDate.year + recurrenceFrequency, currentDate.month, currentDate.day);
           break;
       }
     }
@@ -158,7 +158,11 @@ class OneOffIncome extends Transaction with HiveObjectMixin {
     required double amount,
     required this.date,
     required this.source,
+    required this.iconCodePoint, 
+    this.iconFontFamily,
     this.isAdvanced = false,
+    this.reference,
+    this.parentRecurringId,
   }) : super(id: id, notes: notes, createdAt: createdAt, amount: amount);
 
   @HiveField(0)
@@ -172,6 +176,15 @@ class OneOffIncome extends Transaction with HiveObjectMixin {
   @override @HiveField(4) String get notes => super.notes;
   @override @HiveField(5) DateTime get createdAt => super.createdAt;
   @override @HiveField(6) double get amount => super.amount;
+
+  @HiveField(7)
+  final String? reference;
+  @HiveField(8, defaultValue: 57534)
+  final int iconCodePoint;
+  @HiveField(9)
+  final String? iconFontFamily;
+  @HiveField(10)
+  final String? parentRecurringId;
 }
 
 @HiveType(typeId: 6)
@@ -183,9 +196,13 @@ class RecurringIncome extends Transaction with HiveObjectMixin {
     required double amount,
     required this.source,
     required this.recurrence,
+    required this.recurrenceFrequency,
     required this.startDate,
+    required this.iconCodePoint,
+    this.iconFontFamily,
     this.endDate,
     this.isAdvanced = false,
+    this.reference,
   }) : super(id: id, notes: notes, createdAt: createdAt, amount: amount);
 
   @HiveField(0)
@@ -203,7 +220,16 @@ class RecurringIncome extends Transaction with HiveObjectMixin {
   @override @HiveField(6) String get notes => super.notes;
   @override @HiveField(7) DateTime get createdAt => super.createdAt;
   @override @HiveField(8) double get amount => super.amount;
-  
+
+  @HiveField(9)
+  final String? reference;
+  @HiveField(10, defaultValue: 57534)
+  final int iconCodePoint;
+  @HiveField(11)
+  final String? iconFontFamily;
+  @HiveField(12, defaultValue: 1) 
+  final int recurrenceFrequency;
+
   List<IncomeOccurrence> generateOccurrences({required DateTime upToDate}) {
     final occurrences = <IncomeOccurrence>[];
     DateTime currentDate = startDate;
@@ -216,26 +242,31 @@ class RecurringIncome extends Transaction with HiveObjectMixin {
       occurrences.add(
         IncomeOccurrence(
           id: '${id}_${currentDate.toIso8601String()}',
+          parentRecurringId: id,
           amount: amount,
           notes: notes,
           createdAt: createdAt,
           date: currentDate,
           source: source,
+          isAdvanced: isAdvanced,
+          reference: reference,
+          iconCodePoint: iconCodePoint,
+          iconFontFamily: iconFontFamily,
         ),
       );
 
       switch (recurrence) {
         case RecurrencePeriod.daily:
-          currentDate = DateTime(currentDate.year, currentDate.month, currentDate.day + 1);
+          currentDate = DateTime(currentDate.year, currentDate.month, currentDate.day + recurrenceFrequency);
           break;
         case RecurrencePeriod.weekly:
-          currentDate = DateTime(currentDate.year, currentDate.month, currentDate.day + 7);
+          currentDate = DateTime(currentDate.year, currentDate.month, currentDate.day + (7 * recurrenceFrequency));
           break;
         case RecurrencePeriod.monthly:
-          currentDate = DateTime(currentDate.year, currentDate.month + 1, currentDate.day);
+          currentDate = DateTime(currentDate.year, currentDate.month + recurrenceFrequency, currentDate.day);
           break;
         case RecurrencePeriod.yearly:
-          currentDate = DateTime(currentDate.year + 1, currentDate.month, currentDate.day);
+          currentDate = DateTime(currentDate.year + recurrenceFrequency, currentDate.month, currentDate.day);
           break;
       }
     }
@@ -243,11 +274,11 @@ class RecurringIncome extends Transaction with HiveObjectMixin {
   }
 }
 
-// Occurrence classes are not stored directly, so they don't need Hive annotations
 @HiveType(typeId: 7)
 class PaymentOccurrence extends OneOffPayment {
    PaymentOccurrence({
     required super.id,
+    super.parentRecurringId,
     required super.notes,
     required super.createdAt,
     required super.amount,
@@ -263,11 +294,15 @@ class PaymentOccurrence extends OneOffPayment {
 class IncomeOccurrence extends OneOffIncome {
   IncomeOccurrence({
     required super.id,
+    super.parentRecurringId,
     required super.notes,
     required super.createdAt,
     required super.amount,
     required super.date,
     required super.source,
+    required super.iconCodePoint,
+    super.iconFontFamily,
     super.isAdvanced = false,
+    super.reference,
   });
 }

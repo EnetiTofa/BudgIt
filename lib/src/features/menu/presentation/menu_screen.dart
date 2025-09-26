@@ -118,9 +118,9 @@ class MenuScreen extends ConsumerWidget {
     return showDialog<void>(
       context: context,
       builder: (BuildContext context) {
+        int selectedDay = currentDay;
         return StatefulBuilder(
           builder: (context, setState) {
-            int selectedDay = currentDay;
             return AlertDialog(
               title: const Text('Select Check-in Day'),
               content: DropdownButton<int>(

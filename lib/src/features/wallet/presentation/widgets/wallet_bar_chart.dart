@@ -119,7 +119,7 @@ class _WalletBarChartState extends ConsumerState<WalletBarChart> with SingleTick
                                 if (value % interval == 0) {
                                   return Text(
                                     '${value.toInt()}',
-                                    style: const TextStyle(fontSize: 10, color: Colors.grey),
+                                    style: TextStyle(fontSize: 12, color: theme.colorScheme.secondary.withValues(alpha: 0.9)),
                                     textAlign: TextAlign.left,
                                   );
                                 }
@@ -140,8 +140,19 @@ class _WalletBarChartState extends ConsumerState<WalletBarChart> with SingleTick
                                     final startOfWeek = DateTime(now.year, now.month, now.day - (now.weekday - checkInDay + 7) % 7);
                                     final date = startOfWeek.add(Duration(days: value.toInt()));
                                     final text = DateFormat.E().format(date); 
-                                    
-                                    return SideTitleWidget(axisSide: meta.axisSide, space: 4, child: Text(text, style: const TextStyle(fontSize: 10)));
+                                    final isToday = now.difference(startOfWeek).inDays == value.toInt();
+                                    return SideTitleWidget(
+                                      axisSide: meta.axisSide, 
+                                      space: 4, 
+                                      child: Text(
+                                        text, 
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
+                                          color: isToday ? theme.colorScheme.primary : Colors.grey,
+                                        ),
+                                      ),
+                                    );
                                   },
                                   loading: () => const SizedBox.shrink(),
                                   error: (e, s) => const SizedBox.shrink(),

@@ -29,6 +29,15 @@ class FakeTransactionRepository implements TransactionRepository {
   }
 
   @override
+  Future<Transaction?> getTransactionById(String id) async {
+    try {
+      return _transactions.firstWhere((t) => t.id == id);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  @override
   Future<void> updateTransaction(Transaction transaction) async {
     final index = _transactions.indexWhere((t) => t.id == transaction.id);
     if (index != -1) _transactions[index] = transaction;

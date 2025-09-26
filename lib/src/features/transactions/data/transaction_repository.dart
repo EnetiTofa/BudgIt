@@ -16,6 +16,8 @@ abstract class TransactionRepository {
   Future<void> updateTransaction(Transaction transaction);
   /// Deletes a transaction
   Future<void> deleteTransaction(String transactionId);
+  
+  Future<Transaction?> getTransactionById(String id);
 
   /// Adds a new category.
   Future<void> addCategory(Category category);

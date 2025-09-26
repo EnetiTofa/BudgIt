@@ -35,8 +35,8 @@ class _BudgetHubScreenState extends State<BudgetHubScreen> with SingleTickerProv
         scrolledUnderElevation: 0,
         bottom: TabBar(
           controller: _tabController,
-          labelColor: Theme.of(context).colorScheme.primary,
-          unselectedLabelColor: Colors.grey,
+          labelColor: Theme.of(context).colorScheme.primary, // Color for the selected tab
+          unselectedLabelColor: Theme.of(context).colorScheme.secondary,
           dividerColor: Colors.transparent,
           indicator: UnderlineTabIndicator(
             borderSide: BorderSide(

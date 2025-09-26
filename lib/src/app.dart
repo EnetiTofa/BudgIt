@@ -186,7 +186,7 @@ class _AppShellState extends ConsumerState<AppShell> {
       onPressed: () => _onItemTapped(index),
       icon: Icon(
         isSelected ? filledIcon : outlinedIcon,
-        color: isSelected ? Theme.of(context).colorScheme.primary : Colors.grey,
+        color: isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.secondary,
       ),
     );
   }

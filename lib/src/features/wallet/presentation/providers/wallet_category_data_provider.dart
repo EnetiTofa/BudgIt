@@ -65,6 +65,7 @@ Future<List<WalletCategoryData>> walletCategoryData(Ref ref) async {
         spendingToday: spendingToday,
         effectiveWeeklyBudget: effectiveWeeklyBudget, // Pass the new value
         recommendedDailySpending: recommendedDailySpending,
+        daysRemaining: daysRemaining,
       ),
     );
   }

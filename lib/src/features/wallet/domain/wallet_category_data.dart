@@ -7,14 +7,16 @@ class WalletCategoryData extends Equatable {
     required this.spentInCompletedDays,
     required this.spendingToday,
     required this.effectiveWeeklyBudget,
-    required this.recommendedDailySpending, // <-- New required property
+    required this.recommendedDailySpending,
+    required this.daysRemaining, // <-- New required property
   });
 
   final Category category;
   final double spentInCompletedDays;
   final double spendingToday;
   final double effectiveWeeklyBudget;
-  final double recommendedDailySpending; // <-- New property
+  final double recommendedDailySpending;
+  final int daysRemaining; // <-- New property
 
   // --- Getters ---
   double get targetDailyAverage => (category.walletAmount ?? 0.0) / 7;

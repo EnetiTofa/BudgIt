@@ -24,7 +24,7 @@ class SummaryCardBase extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 10),
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(14),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

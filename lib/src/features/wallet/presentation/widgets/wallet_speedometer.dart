@@ -43,7 +43,7 @@ class WalletSpeedometer extends StatelessWidget {
             currentValue: currentAverage,
             categoryColor: color,
             primaryColor: Theme.of(context).colorScheme.primary,
-            surfaceColor: Theme.of(context).colorScheme.surface,
+            surfaceColor: Theme.of(context).colorScheme.surfaceContainerLow,
           ),
         ),
       );

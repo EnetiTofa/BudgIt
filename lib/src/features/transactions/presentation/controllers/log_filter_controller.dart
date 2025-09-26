@@ -11,6 +11,10 @@ class LogFilter extends _$LogFilter {
     return const LogFilterState();
   }
 
+  void setTransactionType(TransactionTypeFilter type) {
+    state = state.copyWith(transactionTypeFilter: type);
+  }
+
   void setSearchQuery(String query) {
     state = state.copyWith(searchQuery: query);
   }

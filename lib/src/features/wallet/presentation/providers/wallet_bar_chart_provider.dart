@@ -51,9 +51,12 @@ Future<WalletBarChartData> walletBarChartData(Ref ref) async {
 
   final dailyTotals = <int, Map<String, double>>{};
   for (var tx in walletTxsThisWeek) {
-    final dayIndex = tx.date.weekday - 1;
-    dailyTotals.putIfAbsent(dayIndex, () => {});
-    dailyTotals[dayIndex]![tx.category.id] = (dailyTotals[dayIndex]![tx.category.id] ?? 0) + tx.amount;
+    final txLocalDate = tx.date.toLocal();
+    final dayIndex = txLocalDate.difference(startOfWeek).inDays;
+    if (dayIndex >= 0 && dayIndex < 7) {
+      dailyTotals.putIfAbsent(dayIndex, () => {});
+      dailyTotals[dayIndex]![tx.category.id] = (dailyTotals[dayIndex]![tx.category.id] ?? 0) + tx.amount;
+    }
   }
 
   final completedDays = startOfToday.difference(startOfWeek).inDays;

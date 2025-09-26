@@ -19,9 +19,9 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
 
   // This is our simple, hardcoded list of pages.
   final List<Widget> _pages = [
+    const WalletBarChart(),
     const DailySpendingGauges(),
     const AverageSpendingSpeedometers(),
-    const WalletBarChart(),
   ];
 
   @override
@@ -99,7 +99,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                   shape: BoxShape.circle,
                   color: currentPage == index
                       ? Theme.of(context).colorScheme.primary
-                      : Colors.grey.withOpacity(0.5),
+                      : Theme.of(context).colorScheme.surfaceContainerHighest,
                 ),
               ),
             );

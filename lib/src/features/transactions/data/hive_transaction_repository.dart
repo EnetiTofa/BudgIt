@@ -125,6 +125,11 @@ class HiveTransactionRepository implements TransactionRepository {
   final Box<SavingsGoal> _savingsGoalBox = Hive.box<SavingsGoal>('savings_goals');
 
   @override
+  Future<Transaction?> getTransactionById(String id) async {
+    return _transactionBox.get(id);
+  }
+
+  @override
   Future<void> setSavingsGoal(SavingsGoal goal) async {
     await _savingsGoalBox.put('activeGoal', goal);
   }

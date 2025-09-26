@@ -55,7 +55,7 @@ class _WalletCategoryCardState extends ConsumerState<WalletCategoryCard> with Si
     
     // This logic automatically chooses black or white for readability
     final brightness = ThemeData.estimateBrightnessForColor(data.category.color);
-    final contentColor = brightness == Brightness.dark ? Colors.white : Color(0xFF121212);
+    final contentColor = brightness == Brightness.dark ? Colors.white : Color(0xFF121212).withAlpha(200);
 
     return Card(
       elevation: 0,

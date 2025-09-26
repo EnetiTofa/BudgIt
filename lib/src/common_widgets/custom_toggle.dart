@@ -37,7 +37,7 @@ class CustomToggle extends StatelessWidget {
         width: width,
         height: height,
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+          color: Theme.of(context).colorScheme.surfaceContainerLowest,
           borderRadius: BorderRadius.circular(height / 2),
         ),
         child: Stack(
@@ -62,9 +62,9 @@ class CustomToggle extends StatelessWidget {
                   child: Center(
                     child: AnimatedDefaultTextStyle(
                       duration: const Duration(milliseconds: 200),
-                      style: TextStyle(
-                        fontWeight: fontWeight ?? FontWeight.w500,
-                        fontSize: fontSize ?? 13,
+                      style: Theme.of(context).textTheme.labelLarge!.copyWith(
+                        fontWeight: fontWeight,
+                        fontSize: fontSize,
                         color: isSelected
                             ? Theme.of(context).colorScheme.onPrimary
                             : Theme.of(context).colorScheme.onSurface,

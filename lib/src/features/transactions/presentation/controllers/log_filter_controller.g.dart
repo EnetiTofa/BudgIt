@@ -6,7 +6,7 @@ part of 'log_filter_controller.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$logFilterHash() => r'21719eb9a3d8c08f42d3440f1d36cd44ae651ad7';
+String _$logFilterHash() => r'7d96937c8f185902f865f0bdfda8586880d4e660';
 
 /// See also [LogFilter].
 @ProviderFor(LogFilter)

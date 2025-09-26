@@ -30,6 +30,7 @@ class AddTransactionController extends _$AddTransactionController {
     ref.invalidate(recurringTransactionsProvider);
     ref.invalidate(budgetProgressProvider);
     ref.invalidate(isCheckInAvailableProvider);
+    ref.invalidate(allTransactionOccurrencesProvider);
     // Add any future dashboard providers here as well
   }
   
@@ -66,6 +67,7 @@ class AddTransactionController extends _$AddTransactionController {
     DateTime? endDate,         // Added optional endDate
     required Category category,
     required RecurrencePeriod recurrence,
+    required int recurrenceFrequency,
   }) async {
     final payment = RecurringPayment(
       id: DateTime.now().toIso8601String(),
@@ -78,6 +80,7 @@ class AddTransactionController extends _$AddTransactionController {
       endDate: endDate,
       category: category,
       recurrence: recurrence,
+      recurrenceFrequency: recurrenceFrequency,
     );
 
     final repository = ref.read(transactionRepositoryProvider);
@@ -88,10 +91,20 @@ class AddTransactionController extends _$AddTransactionController {
     await ref.read(transactionRepositoryProvider).updateTransaction(transaction);
     _invalidateProviders();
   }
+
+  Future<void> deleteTransaction(String transactionId) async {
+    final repository = ref.read(transactionRepositoryProvider);
+    await repository.deleteTransaction(transactionId);
+    _invalidateProviders();
+  }
+  
   Future<void> addOneOffIncome({
     required double amount,
     required String source,
     required DateTime date,
+    String? reference,
+    required int iconCodePoint,     // Added
+    String? iconFontFamily, // Added parameter
   }) async {
     final income = OneOffIncome(
       id: DateTime.now().toIso8601String(), // Temporary unique ID
@@ -100,6 +113,9 @@ class AddTransactionController extends _$AddTransactionController {
       amount: amount,
       date: date,
       source: source,
+      reference: reference,
+      iconCodePoint: iconCodePoint,   // Added
+      iconFontFamily: iconFontFamily, // Added field
     );
 
     final repository = ref.read(transactionRepositoryProvider);
@@ -112,6 +128,10 @@ class AddTransactionController extends _$AddTransactionController {
     required DateTime startDate,
     DateTime? endDate,
     required RecurrencePeriod recurrence,
+    required int recurrenceFrequency,
+    String? reference,
+    required int iconCodePoint,
+    String? iconFontFamily,
   }) async {
     final income = RecurringIncome(
       id: DateTime.now().toIso8601String(),
@@ -122,6 +142,10 @@ class AddTransactionController extends _$AddTransactionController {
       startDate: startDate,
       endDate: endDate,
       recurrence: recurrence,
+      recurrenceFrequency: recurrenceFrequency,
+      reference: reference, 
+      iconCodePoint: iconCodePoint,
+      iconFontFamily: iconFontFamily,
     );
 
     final repository = ref.read(transactionRepositoryProvider);

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:budgit/src/features/home/presentation/dashboard_providers.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -14,7 +13,15 @@ class HomeScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: const [
-          Text('Coming Soon')
+          Text('Coming Soon'),
+          TextField(
+            decoration: InputDecoration(
+              border: InputBorder.none,
+              hintText: '',
+            ),
+            autofocus: false,
+            enabled: true,
+          )
         ],
       ),
     );

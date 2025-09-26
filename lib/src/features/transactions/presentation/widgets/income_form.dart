@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import 'package:budgit/src/common_widgets/currency_input_field.dart';
-import 'package:budgit/src/common_widgets/custom_dropdown_field.dart';
 import 'package:budgit/src/common_widgets/custom_text_input_field.dart';
 import 'package:budgit/src/common_widgets/custom_toggle.dart';
 import 'package:budgit/src/features/transactions/domain/transaction.dart';
 import 'package:budgit/src/features/transactions/presentation/controllers/add_transaction_controller.dart';
 import 'package:budgit/src/utils/clock_provider.dart';
+import 'package:budgit/src/common_widgets/icon_picker_field.dart';
+import 'package:budgit/src/features/transactions/presentation/widgets/period_selector_field.dart';
+import 'package:budgit/src/features/transactions/presentation/widgets/date_selector_field.dart'; // 1. Add the import
 
 enum IncomeType { oneOff, recurring }
 
@@ -22,11 +23,14 @@ class IncomeForm extends ConsumerStatefulWidget {
 class _IncomeFormState extends ConsumerState<IncomeForm> {
   IncomeType _incomeType = IncomeType.oneOff;
   double _amount = 0.0;
+  IconData? _selectedIcon;
 
   final _sourceController = TextEditingController();
+  final _referenceController = TextEditingController();
   DateTime? _selectedDate;
   DateTime? _endDate;
   RecurrencePeriod _recurrence = RecurrencePeriod.monthly;
+  int _recurrenceFrequency = 1;
 
   bool get isEditing => widget.initialTransaction != null;
 
@@ -40,6 +44,8 @@ class _IncomeFormState extends ConsumerState<IncomeForm> {
         _sourceController.text = tx.source;
         _amount = tx.amount;
         _selectedDate = tx.date;
+        _referenceController.text = tx.reference ?? '';
+        _selectedIcon = IconData(tx.iconCodePoint, fontFamily: tx.iconFontFamily);
       } else if (tx is RecurringIncome) {
         _incomeType = IncomeType.recurring;
         _sourceController.text = tx.source;
@@ -47,39 +53,27 @@ class _IncomeFormState extends ConsumerState<IncomeForm> {
         _selectedDate = tx.startDate;
         _endDate = tx.endDate;
         _recurrence = tx.recurrence;
+        _recurrenceFrequency = tx.recurrenceFrequency;
+        _referenceController.text = tx.reference ?? '';
+        _selectedIcon = IconData(tx.iconCodePoint, fontFamily: tx.iconFontFamily);
       }
     } else {
       _selectedDate = ref.read(clockProvider).now();
+      _selectedIcon = Icons.attach_money;
     }
   }
 
   @override
   void dispose() {
     _sourceController.dispose();
+    _referenceController.dispose();
     super.dispose();
-  }
-
-  Future<void> _selectDate(BuildContext context, {bool isStartDate = true}) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: (isStartDate ? _selectedDate : _endDate) ?? DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2101),
-    );
-    if (picked != null) {
-      setState(() {
-        if (isStartDate) {
-          _selectedDate = picked;
-        } else {
-          _endDate = picked;
-        }
-      });
-    }
   }
 
   void _submitForm() {
     final source = _sourceController.text;
-    if (source.isEmpty || _amount <= 0 || _selectedDate == null) return;
+    final reference = _referenceController.text;
+    if (source.isEmpty || _amount <= 0 || _selectedDate == null || _selectedIcon == null) return;
 
     final controller = ref.read(addTransactionControllerProvider.notifier);
     
@@ -94,6 +88,9 @@ class _IncomeFormState extends ConsumerState<IncomeForm> {
           date: _selectedDate!,
           source: source,
           isAdvanced: tx.isAdvanced,
+          reference: reference.isEmpty ? null : reference,
+          iconCodePoint: _selectedIcon!.codePoint,
+          iconFontFamily: _selectedIcon!.fontFamily,
         );
         controller.updateTransaction(updatedTx);
       } else if (tx is RecurringIncome) {
@@ -106,13 +103,24 @@ class _IncomeFormState extends ConsumerState<IncomeForm> {
           startDate: _selectedDate!,
           endDate: _endDate,
           recurrence: _recurrence,
+          recurrenceFrequency: _recurrenceFrequency,
           isAdvanced: tx.isAdvanced,
+          reference: reference.isEmpty ? null : reference,
+          iconCodePoint: _selectedIcon!.codePoint,
+          iconFontFamily: _selectedIcon!.fontFamily,
         );
         controller.updateTransaction(updatedTx);
       }
     } else {
       if (_incomeType == IncomeType.oneOff) {
-        controller.addOneOffIncome(amount: _amount, source: source, date: _selectedDate!);
+        controller.addOneOffIncome(
+          amount: _amount, 
+          source: source, 
+          date: _selectedDate!,
+          reference: reference.isEmpty ? null : reference,
+          iconCodePoint: _selectedIcon!.codePoint,
+          iconFontFamily: _selectedIcon!.fontFamily,
+        );
       } else {
         controller.addRecurringIncome(
           amount: _amount,
@@ -120,6 +128,10 @@ class _IncomeFormState extends ConsumerState<IncomeForm> {
           startDate: _selectedDate!,
           endDate: _endDate,
           recurrence: _recurrence,
+          recurrenceFrequency: _recurrenceFrequency,
+          reference: reference.isEmpty ? null : reference,
+          iconCodePoint: _selectedIcon!.codePoint,
+          iconFontFamily: _selectedIcon!.fontFamily,
         );
       }
     }
@@ -135,14 +147,16 @@ class _IncomeFormState extends ConsumerState<IncomeForm> {
           if (!isEditing)
             Padding(
               padding: const EdgeInsets.only(bottom: 24.0),
-              child: CustomToggle(
-                options: const ['One-Off', 'Recurring'],
-                selectedValue: _incomeType == IncomeType.oneOff ? 'One-Off' : 'Recurring',
-                onChanged: (value) {
-                  setState(() {
-                    _incomeType = value == 'One-Off' ? IncomeType.oneOff : IncomeType.recurring;
-                  });
-                },
+              child: Center(
+                child: CustomToggle(
+                  options: const ['One-Off', 'Recurring'],
+                  selectedValue: _incomeType == IncomeType.oneOff ? 'One-Off' : 'Recurring',
+                  onChanged: (value) {
+                    setState(() {
+                      _incomeType = value == 'One-Off' ? IncomeType.oneOff : IncomeType.recurring;
+                    });
+                  },
+                ),
               ),
             ),
           
@@ -154,49 +168,77 @@ class _IncomeFormState extends ConsumerState<IncomeForm> {
             onChanged: (value) => _amount = value,
           ),
           const SizedBox(height: 16),
-          
+          CustomTextInputField(controller: _referenceController, labelText: 'Reference (Optional)'),
+          const SizedBox(height: 16),
+          IconPickerField(
+            selectedIcon: _selectedIcon,
+            onIconSelected: (icon) {
+              setState(() {
+                _selectedIcon = icon;
+              });
+            },
+          ),
+          const SizedBox(height: 16),
+
           if (_incomeType == IncomeType.recurring) ...[
+            // 2. Replace recurring date buttons
+            PeriodSelectorField(
+              frequency: _recurrenceFrequency,
+              period: _recurrence,
+              onFrequencyChanged: (frequency) {
+                setState(() {
+                  _recurrenceFrequency = frequency;
+                });
+              },
+              onPeriodChanged: (period) {
+                setState(() {
+                  _recurrence = period;
+                });
+              },
+            ),
+            const SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
-                  child: TextButton.icon(
-                    icon: const Icon(Icons.calendar_today),
-                    label: Text(_selectedDate == null ? 'Start Date' : DateFormat.yMd().format(_selectedDate!)),
-                    onPressed: () => _selectDate(context, isStartDate: true),
+                  child: DateSelectorField(
+                    labelText: 'Start Date',
+                    selectedDate: _selectedDate,
+                    layout: DateSelectorLayout.vertical,
+                    onDateSelected: (date) => setState(() => _selectedDate = date),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: TextButton.icon(
-                    icon: const Icon(Icons.calendar_today),
-                    label: Text(_endDate == null ? 'End Date (Optional)' : DateFormat.yMd().format(_endDate!)),
-                    onPressed: () => _selectDate(context, isStartDate: false),
+                  child: DateSelectorField(
+                    labelText: 'End Date',
+                    selectedDate: _endDate,
+                    layout: DateSelectorLayout.vertical,
+                    onDateSelected: (date) => setState(() => _endDate = date),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            CustomDropdownField<RecurrencePeriod>(
-              labelText: 'Repeats',
-              value: _recurrence,
-              onChanged: (value) => setState(() => _recurrence = value!),
-              items: RecurrencePeriod.values.map((period) => DropdownMenuItem(
-                value: period,
-                child: Text(period.toString().split('.').last),
-              )).toList(),
-            ),
           ] else ... [
-            TextButton.icon(
-              icon: const Icon(Icons.calendar_today),
-              label: Text(_selectedDate == null ? 'Date' : DateFormat.yMd().format(_selectedDate!)),
-              onPressed: () => _selectDate(context, isStartDate: true),
+            // 3. Replace one-off date button
+            DateSelectorField(
+              labelText: 'Date',
+              selectedDate: _selectedDate,
+              onDateSelected: (date) => setState(() => _selectedDate = date),
             ),
           ],
           
           const SizedBox(height: 32),
-          ElevatedButton(
-            onPressed: _submitForm,
-            child: Text(isEditing ? 'Save Changes' : 'Save Income'),
+          Center(
+            child: ElevatedButton(
+              onPressed: _submitForm,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
+                foregroundColor: Theme.of(context).colorScheme.onSurface,
+                elevation: 0,
+                fixedSize: const Size(250, 50),
+              ),
+              child: Text(isEditing ? 'Save Changes' : 'Save Income'),
+            ),
           ),
         ],
       ),
