@@ -6,7 +6,7 @@ import 'package:budgit/src/features/wallet/presentation/providers/wallet_categor
 import 'package:budgit/src/features/wallet/presentation/widgets/category/animated_wallet_gauge.dart';
 import 'package:budgit/src/features/wallet/presentation/controllers/boost_controller.dart';
 import 'package:budgit/src/features/wallet/presentation/widgets/category/category_display_widget.dart';
-import 'package:budgit/src/features/categories/presentation/edit_category_screen.dart';
+import 'package:budgit/src/features/categories/presentation/screens/edit_category_screen.dart';
 import 'package:budgit/src/features/wallet/presentation/widgets/category/expanded_mode.dart';
 
 class WalletCategoryDetailScreen extends ConsumerStatefulWidget {
@@ -61,6 +61,9 @@ class _WalletCategoryDetailScreenState
       final spent = data.spentInCompletedDays + data.spendingToday;
       final remaining = total - spent;
 
+      final brightness = ThemeData.estimateBrightnessForColor(widget.category.color);
+      final contentColor = brightness == Brightness.dark ? Colors.white : Color(0xFF121212).withAlpha(200);
+
       final boostStateAsync = ref.watch(boostStateProvider(widget.category));
       final totalBoostAmount = boostStateAsync.maybeWhen(
         data: (boostMap) =>
@@ -105,7 +108,7 @@ class _WalletCategoryDetailScreenState
                   pentagonHorizontalPadding: 36.0,
                   recommendedSpending: data.recommendedDailySpending,
                   actionCardColor:
-                      Theme.of(context).colorScheme.surfaceContainer,
+                      Theme.of(context).colorScheme.surfaceContainerLowest,
                   daysRemaining: data.daysRemaining,
                 ),
               ),
@@ -121,9 +124,8 @@ class _WalletCategoryDetailScreenState
                 icon: data.category.icon,
                 tooltip: 'Category Page',
                 onPressed: () {},
-                backgroundColor:
-                    Theme.of(context).colorScheme.surfaceContainerLow,
-                iconColor: data.category.color,
+                backgroundColor: data.category.color,
+                iconColor: contentColor,
                 iconSize: 28,
                 size: 48,
               ),
@@ -136,7 +138,7 @@ class _WalletCategoryDetailScreenState
               opacity: _expandedMode != ExpandedMode.none ? 0.0 : 1.0,
               duration: const Duration(milliseconds: 300),
               child: CornerActionButton(
-                icon: Icons.settings,
+                icon: Icons.edit_outlined,
                 tooltip: 'Edit Category',
                 onPressed: () {
                   Navigator.of(context).push(MaterialPageRoute(
@@ -144,7 +146,7 @@ class _WalletCategoryDetailScreenState
                   ));
                 },
                 backgroundColor: Theme.of(context).colorScheme.surface,
-                iconColor: Theme.of(context).colorScheme.surfaceContainer,
+                iconColor: Theme.of(context).colorScheme.secondary,
                 size: 52,
                 iconSize: 36,
               ),

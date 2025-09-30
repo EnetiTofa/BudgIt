@@ -4,6 +4,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:budgit/src/app.dart';
 import 'package:budgit/src/features/savings/domain/savings_goal.dart';
 import 'package:budgit/src/features/categories/domain/category.dart';
+import 'package:budgit/src/features/categories/domain/budget_enum.dart';
 import 'package:budgit/src/features/transactions/domain/transaction.dart';
 import 'package:budgit/src/features/wallet/domain/wallet_adjustment.dart';
 

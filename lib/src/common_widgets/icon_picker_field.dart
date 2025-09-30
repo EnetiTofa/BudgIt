@@ -1,4 +1,7 @@
+// lib/src/common_widgets/icon_picker_field.dart
+
 import 'package:flutter/material.dart';
+import 'package:budgit/src/constants/app_icons.dart'; // Import your app icons
 
 class IconPickerField extends StatelessWidget {
   const IconPickerField({
@@ -12,13 +15,7 @@ class IconPickerField extends StatelessWidget {
   final ValueChanged<IconData> onIconSelected;
   final String labelText;
 
-  // A sample list of icons you can choose from.
-  static const List<IconData> _icons = [
-    Icons.business_center, Icons.work, Icons.paid, Icons.account_balance,
-    Icons.card_giftcard, Icons.monetization_on, Icons.trending_up,
-    Icons.receipt_long, Icons.savings, Icons.lightbulb, Icons.school,
-    Icons.redeem, Icons.show_chart, Icons.attach_money, Icons.add_card,
-  ];
+  // REMOVED: The old hardcoded list is no longer needed.
 
   void _showIconPicker(BuildContext context) {
     showModalBottomSheet(
@@ -30,9 +27,10 @@ class IconPickerField extends StatelessWidget {
           crossAxisSpacing: 16.0,
           mainAxisSpacing: 16.0,
         ),
-        itemCount: _icons.length,
+        // UPDATED: Use the icon list from AppIcons
+        itemCount: AppIcons.categoryIcons.length,
         itemBuilder: (context, index) {
-          final icon = _icons[index];
+          final icon = AppIcons.categoryIcons[index];
           return InkWell(
             borderRadius: BorderRadius.circular(50),
             onTap: () {
@@ -65,12 +63,12 @@ class IconPickerField extends StatelessWidget {
         const SizedBox(height: 8),
         InkWell(
           onTap: () => _showIconPicker(context),
-          borderRadius: BorderRadius.circular(12.0), // Match the new radius
+          borderRadius: BorderRadius.circular(12.0),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
             decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerLow, // Set your desired background color
-              borderRadius: BorderRadius.circular(12.0), // Set your desired corner radius
+              color: colorScheme.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(12.0),
             ),
             child: Row(
               children: [

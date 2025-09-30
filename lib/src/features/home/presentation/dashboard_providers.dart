@@ -1,7 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:budgit/src/features/categories/domain/category.dart';
 import 'package:budgit/src/features/transactions/domain/transaction.dart';
-import 'package:budgit/src/features/categories/presentation/category_list_provider.dart';
+import 'package:budgit/src/features/categories/presentation/providers/category_list_provider.dart';
 import 'package:budgit/src/features/transactions/presentation/providers/transaction_log_provider.dart';
 import 'package:budgit/src/utils/clock_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -23,21 +23,6 @@ Future<MonthlySummary> monthlySummary(Ref ref) async {
   final transactionLog = ref.watch(transactionLogProvider);
   final now = ref.watch(clockProvider).now();
   double totalMonthlyBudget = 0;
-
-  // Normalize all category budgets to a monthly amount
-  for (final category in categories) {
-    switch (category.budgetPeriod) {
-      case BudgetPeriod.weekly:
-        totalMonthlyBudget += category.budgetAmount * 4.345; // Avg weeks in a month
-        break;
-      case BudgetPeriod.monthly:
-        totalMonthlyBudget += category.budgetAmount;
-        break;
-      case BudgetPeriod.yearly:
-        totalMonthlyBudget += category.budgetAmount / 12;
-        break;
-    }
-  }
 
   // Calculate total spending for the current month
  return transactionLog.when(

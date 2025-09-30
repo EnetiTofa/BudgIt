@@ -12,6 +12,7 @@ class FakeTransactionRepository implements TransactionRepository {
   final List<Transaction> _transactions = [];
   final List<Category> _categories = [];
   final List<WalletAdjustment> _adjustments = [];
+  List<String>? _categoryOrder;
   SavingsGoal? _savingsGoal;
   double _totalSavings = 0.0;
   double _lastWeekWalletSpending = 0.0;
@@ -73,6 +74,16 @@ class FakeTransactionRepository implements TransactionRepository {
       return false;
     });
     _categories.removeWhere((c) => c.id == categoryId);
+  }
+
+  @override
+  Future<List<String>?> getCategoryOrder() async {
+    return _categoryOrder;
+  }
+
+  @override
+  Future<void> saveCategoryOrder(List<String> categoryIds) async {
+    _categoryOrder = categoryIds;
   }
 
   // --- Wallet Methods ---

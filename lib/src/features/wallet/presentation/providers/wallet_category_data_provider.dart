@@ -1,7 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:budgit/src/features/transactions/domain/transaction.dart';
-import 'package:budgit/src/features/categories/presentation/category_list_provider.dart';
+import 'package:budgit/src/features/categories/presentation/providers/category_list_provider.dart';
 import 'package:budgit/src/features/transactions/presentation/providers/transaction_log_provider.dart';
 import 'package:budgit/src/features/wallet/domain/wallet_category_data.dart';
 import 'package:budgit/src/utils/clock_provider.dart';

@@ -57,7 +57,13 @@ class TransactionLogScreen extends ConsumerWidget {
                   listTileContent = ListTile(
                     leading: CircleAvatar(
                       backgroundColor: transaction.category.color,
-                      child: Icon(transaction.category.icon, color: colorScheme.surface),
+                      // UPDATED LOGIC TO DISPLAY CUSTOM ICON
+                      child: Icon(
+                        transaction.iconCodePoint != null
+                            ? IconData(transaction.iconCodePoint!, fontFamily: transaction.iconFontFamily)
+                            : transaction.category.icon,
+                        color: colorScheme.surface,
+                      ),
                     ),
                     title: Text(transaction.itemName, maxLines: 1, overflow: TextOverflow.ellipsis),
                     subtitle: Text(transaction.store),

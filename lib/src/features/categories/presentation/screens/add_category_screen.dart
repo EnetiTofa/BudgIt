@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:budgit/src/features/categories/presentation/category_form.dart';
+import 'package:budgit/src/features/categories/presentation/widgets/category_form.dart';
 
 class AddCategoryScreen extends StatelessWidget {
   const AddCategoryScreen({super.key});

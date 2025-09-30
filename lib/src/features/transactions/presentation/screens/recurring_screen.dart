@@ -83,50 +83,66 @@ class RecurringScreen extends ConsumerWidget {
       itemBuilder: (context, index) {
         final item = transactions[index];
 
-        return Dismissible(
-          key: Key(item.id),
-          background: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
-            decoration: BoxDecoration(
-              color: Colors.red,
-              borderRadius: BorderRadius.circular(12),
+        // --- TEMPORARY TEST CODE ---
+        try {
+          // This is the original widget that is potentially crashing.
+          return Dismissible(
+            key: Key(item.id),
+            background: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
+              decoration: BoxDecoration(
+                color: Colors.red,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              alignment: Alignment.centerRight,
+              padding: const EdgeInsets.symmetric(horizontal: 20.0),
+              child: const Icon(Icons.delete, color: Colors.white),
             ),
-            alignment: Alignment.centerRight,
-            padding: const EdgeInsets.symmetric(horizontal: 20.0),
-            child: const Icon(Icons.delete, color: Colors.white),
-          ),
-          direction: DismissDirection.endToStart,
-          // --- NEW: Use confirmDismiss to show the dialog ---
-          confirmDismiss: (direction) async {
-            final bool confirmed = await _showDeleteConfirmationDialog(
-              context: context,
-              transaction: item,
-            );
-            
-            // If the user confirmed, we proceed with the deletion.
-            if (confirmed) {
-              await ref
-                  .read(recurringTransactionsProvider.notifier)
-                  .removeTransaction(item.id);
-            }
-            
-            // Return the result to the Dismissible widget.
-            // If true, it will proceed with the dismiss animation.
-            // If false, it will animate back to its original position.
-            return confirmed;
-          },
-          // --- UPDATED: onDismissed now only shows the SnackBar ---
-          // This code only runs IF confirmDismiss returns true.
-          onDismissed: (direction) {
-            final name = item is RecurringPayment
-                ? item.paymentName
-                : (item as RecurringIncome).source;
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('$name rule deleted')),
-            );
-          },
-          child: RecurringTransactionCard(transaction: item),
-        );
+            direction: DismissDirection.endToStart,
+            confirmDismiss: (direction) async {
+              final bool confirmed = await _showDeleteConfirmationDialog(
+                context: context,
+                transaction: item,
+              );
+              
+              if (confirmed) {
+                await ref
+                    .read(recurringTransactionsProvider.notifier)
+                    .removeTransaction(item.id);
+              }
+              
+              return confirmed;
+            },
+            onDismissed: (direction) {
+              final name = item is RecurringPayment
+                  ? item.paymentName
+                  : (item as RecurringIncome).source;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('$name rule deleted')),
+              );
+            },
+            child: RecurringTransactionCard(transaction: item),
+          );
+        } catch (e, stack) {
+          // If an exception is thrown, we catch it and display an error.
+          debugPrint('--- ERROR BUILDING RECURRING TRANSACTION ITEM ---');
+          debugPrint('Transaction ID: ${item.id}');
+          debugPrint('Exception: $e');
+          debugPrint('Stack Trace: $stack');
+          debugPrint('--------------------------------------------------');
+          
+          // Return a visible error widget instead of crashing.
+          return Container(
+            color: Colors.red.withOpacity(0.1),
+            margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
+            padding: const EdgeInsets.all(12.0),
+            child: Text(
+              'Error building this item. Check your debug console for details.\n\nException: $e',
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          );
+        }
+        // --- END OF TEMPORARY TEST CODE ---
       },
     );
   }

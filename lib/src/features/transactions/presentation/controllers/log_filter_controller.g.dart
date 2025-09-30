@@ -6,12 +6,11 @@ part of 'log_filter_controller.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$logFilterHash() => r'7d96937c8f185902f865f0bdfda8586880d4e660';
+String _$logFilterHash() => r'1ae0376ef7417545485eceb4f8325301dd7c9f4e';
 
 /// See also [LogFilter].
 @ProviderFor(LogFilter)
-final logFilterProvider =
-    AutoDisposeNotifierProvider<LogFilter, LogFilterState>.internal(
+final logFilterProvider = NotifierProvider<LogFilter, LogFilterState>.internal(
   LogFilter.new,
   name: r'logFilterProvider',
   debugGetCreateSourceHash:
@@ -20,6 +19,6 @@ final logFilterProvider =
   allTransitiveDependencies: null,
 );
 
-typedef _$LogFilter = AutoDisposeNotifier<LogFilterState>;
+typedef _$LogFilter = Notifier<LogFilterState>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

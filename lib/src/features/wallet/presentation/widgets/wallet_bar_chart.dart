@@ -1,7 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:budgit/src/features/categories/presentation/category_list_provider.dart';
+import 'package:budgit/src/features/categories/presentation/providers/category_list_provider.dart';
 import 'package:budgit/src/features/wallet/presentation/providers/wallet_bar_chart_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:budgit/src/features/settings/presentation/settings_provider.dart';

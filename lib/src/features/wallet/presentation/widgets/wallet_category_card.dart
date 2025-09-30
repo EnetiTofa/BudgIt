@@ -61,7 +61,7 @@ class _WalletCategoryCardState extends ConsumerState<WalletCategoryCard> with Si
       elevation: 0,
       clipBehavior: Clip.antiAlias,
       color: data.category.color, // Use category color for the background
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       margin: const EdgeInsets.symmetric(vertical: 6.0),
       child: InkWell(
         onTap: () {

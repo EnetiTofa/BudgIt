@@ -27,11 +27,16 @@ abstract class TransactionRepository {
   Future<void> updateCategory(Category category);
   /// Deletes a category.
   Future<void> deleteCategory(String categoryId);
+  /// Retrieves the saved order of category IDs.
+  Future<List<String>?> getCategoryOrder();
+  /// Saves the order of category IDs.
+  Future<void> saveCategoryOrder(List<String> categoryIds);
 
+  /// Adds Boost Adjustment to Wallet.
   Future<void> addWalletAdjustment(WalletAdjustment adjustment);
-
+  /// Gets all Boost Adjustments.
   Future<List<WalletAdjustment>> getWalletAdjustmentsForWeek(DateTime dateInWeek);
-
+  /// Deletes Boost Adjustment to Wallet.
   Future<void> deleteWalletAdjustments(String toCategoryId, DateTime dateInWeek);
 
   Future<void> setSavingsGoal(SavingsGoal goal);
@@ -40,11 +45,12 @@ abstract class TransactionRepository {
 
   Future<void> addToSavings(double amount);
 
-  Future<double> getLastWeekWalletSpending();
-
   Future<double> getTotalSavings();
 
   Future<void> saveCheckInSummary({required double lastWeekWalletSpending});
+
+  /// Gets Last Weeks Wallet Spending for Check In.
+  Future<double> getLastWeekWalletSpending();
   
   Future<void> debugResetCheckInData();
   

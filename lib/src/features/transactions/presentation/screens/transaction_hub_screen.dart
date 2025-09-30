@@ -1,5 +1,7 @@
+// lib/src/features/transactions/presentation/screens/transaction_hub_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:budgit/src/app/navigation_provider.dart';
 import 'package:budgit/src/common_widgets/general_search_bar.dart';
 import 'package:budgit/src/features/transactions/domain/log_filter_state.dart';
 import 'package:budgit/src/features/transactions/presentation/controllers/log_filter_controller.dart';
@@ -13,8 +15,7 @@ import 'package:budgit/src/features/transactions/presentation/widgets/sort_dropd
 enum ActiveDropdown { none, sort, filter }
 
 class TransactionHubScreen extends ConsumerStatefulWidget {
-  final int initialTabIndex;
-  const TransactionHubScreen({super.key, this.initialTabIndex = 0});
+  const TransactionHubScreen({super.key});
 
   @override
   ConsumerState<TransactionHubScreen> createState() =>
@@ -43,7 +44,11 @@ class _TransactionHubScreenState extends ConsumerState<TransactionHubScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this, initialIndex: widget.initialTabIndex);
+    // Get the initial tab index from the provider.
+    // This allows other screens to set which tab should be open.
+    final initialIndex = ref.read(transactionHubTabIndexProvider);
+    _tabController = TabController(length: 2, vsync: this, initialIndex: initialIndex);
+    
     _searchController.text = ref.read(logFilterProvider).searchQuery;
     _searchFocusNode.addListener(() {
       setState(() {
@@ -74,7 +79,6 @@ class _TransactionHubScreenState extends ConsumerState<TransactionHubScreen>
   void _removeOverlay() {
     if (_overlayEntry != null) {
       if (mounted) {
-        // Update both the local state and the global provider
         setState(() => _activeDropdown = ActiveDropdown.none);
         ref.read(dropdownActiveProvider.notifier).state = false;
       }
@@ -86,18 +90,13 @@ class _TransactionHubScreenState extends ConsumerState<TransactionHubScreen>
   }
 
   void _showOverlay({required Widget child, required ActiveDropdown type}) {
-    // If the same button that's already active is tapped, close the overlay.
     if (_overlayEntry != null && type == _activeDropdown) {
       _removeOverlay();
       return;
     }
 
-    // If a different button is tapped while one is already open, 
-    // we don't need to rebuild the overlay, just update the state and content.
-    // For simplicity here, we'll just rebuild it.
     if (_overlayEntry != null) {
       _removeOverlay();
-      // Add a small delay to allow the old overlay to animate out before the new one animates in.
       Future.delayed(const Duration(milliseconds: 260), () {
         _showOverlay(child: child, type: type);
       });
@@ -147,11 +146,17 @@ class _TransactionHubScreenState extends ConsumerState<TransactionHubScreen>
 
   @override
   Widget build(BuildContext context) {
+    // This listens for programmatic changes to the tab index from other screens.
+    ref.listen<int>(transactionHubTabIndexProvider, (previous, next) {
+      if (next != _tabController.index) {
+        _tabController.animateTo(next);
+      }
+    });
+
     final filterController = ref.read(logFilterProvider.notifier);
     final filterState = ref.watch(logFilterProvider);
     final colorScheme = Theme.of(context).colorScheme;
 
-    // The styling logic now uses the specific local state
     final bool isSortActive = _activeDropdown == ActiveDropdown.sort || filterState.sortBy != SortBy.date;
     final bool isFilterActive = _activeDropdown == ActiveDropdown.filter ||
         filterState.transactionTypeFilter != TransactionTypeFilter.all ||
@@ -171,6 +176,10 @@ class _TransactionHubScreenState extends ConsumerState<TransactionHubScreen>
         title: const Text('Transactions'),
         bottom: TabBar(
           controller: _tabController,
+          // This keeps the provider in sync when the user manually taps a tab.
+          onTap: (index) {
+            ref.read(transactionHubTabIndexProvider.notifier).setIndex(index);
+          },
           dividerColor: Colors.transparent,
           labelColor: Theme.of(context).colorScheme.primary,
           unselectedLabelColor: Theme.of(context).colorScheme.secondary,

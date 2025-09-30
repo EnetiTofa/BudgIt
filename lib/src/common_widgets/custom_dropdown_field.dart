@@ -1,3 +1,5 @@
+// lib/src/common_widgets/custom_dropdown_field.dart
+
 import 'package:flutter/material.dart';
 
 class CustomDropdownField<T> extends StatelessWidget {
@@ -20,8 +22,12 @@ class CustomDropdownField<T> extends StatelessWidget {
       value: value,
       items: items,
       onChanged: onChanged,
+      // Add this to allow the dropdown's content to fill the space.
+      isExpanded: true, 
       decoration: InputDecoration(
         labelText: labelText,
+        // Add this to make the field more compact.
+        isDense: true, 
         border: const OutlineInputBorder(),
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       ),

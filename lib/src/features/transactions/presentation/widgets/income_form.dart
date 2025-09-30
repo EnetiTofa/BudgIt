@@ -164,6 +164,7 @@ class _IncomeFormState extends ConsumerState<IncomeForm> {
           const SizedBox(height: 16),
           CurrencyInputField(
             labelText: 'Amount',
+            textStyle: TextStyle(fontWeight: FontWeight.w400),
             initialValue: _amount,
             onChanged: (value) => _amount = value,
           ),

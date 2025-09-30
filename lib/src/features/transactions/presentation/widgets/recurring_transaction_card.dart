@@ -1,3 +1,4 @@
+// lib/src/features/transactions/presentation/widgets/recurring_transaction_card.dart
 import 'package:flutter/material.dart';
 import 'package:budgit/src/features/transactions/domain/transaction.dart';
 import 'package:budgit/src/features/transactions/presentation/screens/edit_income_screen.dart';
@@ -44,7 +45,12 @@ class RecurringTransactionCard extends StatelessWidget {
       listTile = ListTile(
         leading: CircleAvatar(
           backgroundColor: item.category.color,
-          child: Icon(item.category.icon, color: theme.colorScheme.surfaceContainerLow),
+          child: Icon(
+            item.iconCodePoint != null
+                ? IconData(item.iconCodePoint!, fontFamily: item.iconFontFamily)
+                : item.category.icon,
+            color: theme.colorScheme.surfaceContainerLow
+          ),
         ),
         title: Text(
           item.paymentName,

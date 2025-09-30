@@ -1,13 +1,16 @@
+// lib/src/features/transactions/presentation/controllers/log_filter_controller.dart
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:budgit/src/features/transactions/domain/log_filter_state.dart';
 
 part 'log_filter_controller.g.dart';
 
-@riverpod
+// --- THE FIX IS HERE ---
+// Add `keepAlive: true` to prevent the filter state from resetting during navigation.
+@Riverpod(keepAlive: true)
+// --- END OF FIX ---
 class LogFilter extends _$LogFilter {
   @override
   LogFilterState build() {
-    // Return the default state
     return const LogFilterState();
   }
 
@@ -31,5 +34,9 @@ class LogFilter extends _$LogFilter {
       newSet.add(categoryId);
     }
     state = state.copyWith(selectedCategoryIds: newSet);
+  }
+  
+  void setSelectedCategoryIds(Set<String> ids) {
+    state = state.copyWith(selectedCategoryIds: ids);
   }
 }

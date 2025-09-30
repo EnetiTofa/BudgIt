@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:budgit/src/features/categories/domain/category.dart';
-import 'package:budgit/src/features/categories/presentation/category_list_provider.dart';
+import 'package:budgit/src/features/categories/presentation/providers/category_list_provider.dart';
 import 'package:budgit/src/features/transactions/domain/log_filter_state.dart';
 import 'package:budgit/src/features/transactions/presentation/controllers/log_filter_controller.dart';
 

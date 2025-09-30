@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:budgit/src/features/categories/presentation/manage_categories_screen.dart';
+import 'package:budgit/src/features/categories/presentation/screens/manage_categories_screen.dart';
 import 'package:budgit/src/features/check_in/presentation/check_in_screen.dart';
 import 'package:budgit/src/features/check_in/presentation/is_check_in_available_provider.dart';
 import 'package:budgit/src/features/settings/presentation/settings_provider.dart';

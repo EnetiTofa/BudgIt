@@ -123,7 +123,7 @@ class _SpendingGaugeState extends ConsumerState<_SpendingGauge> with SingleTicke
                       progressRatio: _animation.value,
                       categoryColor: widget.data.category.color,
                       strokeWidth: 9.0,
-                      backgroundColor: theme.colorScheme.surfaceContainerLowest,
+                      backgroundColor: Theme.of(context).colorScheme.surfaceDim
                     ),
                     child: child,
                   );

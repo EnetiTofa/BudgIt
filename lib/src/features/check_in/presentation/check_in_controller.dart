@@ -2,7 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:budgit/src/features/check_in/domain/check_in_state.dart';
 import 'package:budgit/src/features/transactions/data/transaction_repository_provider.dart';
 import 'package:budgit/src/features/transactions/domain/transaction.dart';
-import 'package:budgit/src/features/categories/presentation/category_list_provider.dart';
+import 'package:budgit/src/features/categories/presentation/providers/category_list_provider.dart';
 import 'package:budgit/src/features/wallet/presentation/providers/wallet_category_data_provider.dart';
 import 'package:budgit/src/features/settings/presentation/settings_provider.dart';
 import 'package:budgit/src/utils/clock_provider.dart';

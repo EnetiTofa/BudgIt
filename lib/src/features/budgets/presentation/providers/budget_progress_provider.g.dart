@@ -6,7 +6,7 @@ part of 'budget_progress_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$budgetProgressHash() => r'c2066b11aa6c7fb178c21b63858684b2cb75b866';
+String _$budgetProgressHash() => r'b2a86630ce2c564ea14d0402b880c0847812ca7e';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -40,10 +40,10 @@ class BudgetProgressFamily extends Family<AsyncValue<List<BudgetProgress>>> {
 
   /// See also [budgetProgress].
   BudgetProgressProvider call(
-    BudgetView budgetView,
+    DateTime month,
   ) {
     return BudgetProgressProvider(
-      budgetView,
+      month,
     );
   }
 
@@ -52,7 +52,7 @@ class BudgetProgressFamily extends Family<AsyncValue<List<BudgetProgress>>> {
     covariant BudgetProgressProvider provider,
   ) {
     return call(
-      provider.budgetView,
+      provider.month,
     );
   }
 
@@ -76,11 +76,11 @@ class BudgetProgressProvider
     extends AutoDisposeFutureProvider<List<BudgetProgress>> {
   /// See also [budgetProgress].
   BudgetProgressProvider(
-    BudgetView budgetView,
+    DateTime month,
   ) : this._internal(
           (ref) => budgetProgress(
             ref as BudgetProgressRef,
-            budgetView,
+            month,
           ),
           from: budgetProgressProvider,
           name: r'budgetProgressProvider',
@@ -91,7 +91,7 @@ class BudgetProgressProvider
           dependencies: BudgetProgressFamily._dependencies,
           allTransitiveDependencies:
               BudgetProgressFamily._allTransitiveDependencies,
-          budgetView: budgetView,
+          month: month,
         );
 
   BudgetProgressProvider._internal(
@@ -101,10 +101,10 @@ class BudgetProgressProvider
     required super.allTransitiveDependencies,
     required super.debugGetCreateSourceHash,
     required super.from,
-    required this.budgetView,
+    required this.month,
   }) : super.internal();
 
-  final BudgetView budgetView;
+  final DateTime month;
 
   @override
   Override overrideWith(
@@ -119,7 +119,7 @@ class BudgetProgressProvider
         dependencies: null,
         allTransitiveDependencies: null,
         debugGetCreateSourceHash: null,
-        budgetView: budgetView,
+        month: month,
       ),
     );
   }
@@ -131,13 +131,13 @@ class BudgetProgressProvider
 
   @override
   bool operator ==(Object other) {
-    return other is BudgetProgressProvider && other.budgetView == budgetView;
+    return other is BudgetProgressProvider && other.month == month;
   }
 
   @override
   int get hashCode {
     var hash = _SystemHash.combine(0, runtimeType.hashCode);
-    hash = _SystemHash.combine(hash, budgetView.hashCode);
+    hash = _SystemHash.combine(hash, month.hashCode);
 
     return _SystemHash.finish(hash);
   }
@@ -146,8 +146,8 @@ class BudgetProgressProvider
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 mixin BudgetProgressRef on AutoDisposeFutureProviderRef<List<BudgetProgress>> {
-  /// The parameter `budgetView` of this provider.
-  BudgetView get budgetView;
+  /// The parameter `month` of this provider.
+  DateTime get month;
 }
 
 class _BudgetProgressProviderElement
@@ -156,7 +156,7 @@ class _BudgetProgressProviderElement
   _BudgetProgressProviderElement(super.provider);
 
   @override
-  BudgetView get budgetView => (origin as BudgetProgressProvider).budgetView;
+  DateTime get month => (origin as BudgetProgressProvider).month;
 }
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

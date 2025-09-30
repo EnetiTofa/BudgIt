@@ -14,13 +14,14 @@ class WalletScreen extends ConsumerStatefulWidget {
 }
 
 class _WalletScreenState extends ConsumerState<WalletScreen> {
-  final _pageController = PageController();
+  // THE FIX: Set the initialPage to 1 to start on the middle page.
+  final _pageController = PageController(initialPage: 1);
   late final ValueNotifier<int> _currentPageNotifier;
 
   // This is our simple, hardcoded list of pages.
   final List<Widget> _pages = [
-    const WalletBarChart(),
     const DailySpendingGauges(),
+    const WalletBarChart(),
     const AverageSpendingSpeedometers(),
   ];
 
@@ -54,7 +55,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
         Container(
           height: screenWidth - 32,
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surfaceContainerLow,
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(16),
           ),
           child: Column(

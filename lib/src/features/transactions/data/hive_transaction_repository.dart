@@ -101,6 +101,22 @@ class HiveTransactionRepository implements TransactionRepository {
   }
 
   @override
+  Future<List<String>?> getCategoryOrder() async {
+    // Open a dedicated box to store the list of category IDs.
+    final box = await Hive.openBox<List<String>>('category_order');
+    // Retrieve the list using a fixed key, e.g., 'order'.
+    return box.get('order');
+  }
+
+  @override
+  Future<void> saveCategoryOrder(List<String> categoryIds) async {
+    final box = await Hive.openBox<List<String>>('category_order');
+    // Save the list to the box. This will overwrite any existing order.
+    await box.put('order', categoryIds);
+  }
+
+
+  @override
   Future<void> addTransaction(Transaction transaction) async {
     // For transactions, we can also use their ID as the key.
     await _transactionBox.put(transaction.id, transaction);

@@ -1,3 +1,5 @@
+// lib/src/common_widgets/currency_input_field.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -14,7 +16,6 @@ class CurrencyInputField extends StatefulWidget {
   final double? height;
   final CurrencyInputFieldStyle style;
   final TextStyle? textStyle;
-  // --- NEW: Add a backgroundColor property ---
   final Color? backgroundColor;
 
   const CurrencyInputField({
@@ -26,7 +27,6 @@ class CurrencyInputField extends StatefulWidget {
     this.height,
     this.style = CurrencyInputFieldStyle.outlined,
     this.textStyle,
-    // Initialize the new property in the constructor
     this.backgroundColor,
   });
 
@@ -38,7 +38,6 @@ class _CurrencyInputFieldState extends State<CurrencyInputField> {
   final TextEditingController _controller = TextEditingController();
   final FocusNode _focusNode = FocusNode();
 
-  // ... (initState and other methods remain the same) ...
   @override
   void initState() {
     super.initState();
@@ -55,11 +54,9 @@ class _CurrencyInputFieldState extends State<CurrencyInputField> {
     if (widget.initialValue != oldWidget.initialValue) {
       final newTextValue = widget.initialValue.toStringAsFixed(2);
       if (_controller.text != newTextValue) {
-        _controller.removeListener(_onTextChanged);
         _controller.text = _focusNode.hasFocus
             ? _formatForEditing(widget.initialValue)
             : newTextValue;
-        _controller.addListener(_onTextChanged);
       }
     }
   }
@@ -71,14 +68,15 @@ class _CurrencyInputFieldState extends State<CurrencyInputField> {
 
   void _onFocusChanged() {
     if (mounted) {
-      if (_focusNode.hasFocus) {
-        final value = double.tryParse(_controller.text) ?? 0.0;
-        _controller.text = _formatForEditing(value);
-      } else if (_controller.text.isNotEmpty) {
-        final value = double.tryParse(_controller.text) ?? 0.0;
-        _controller.text = value.toStringAsFixed(2);
-      }
-      setState(() {});
+      setState(() {
+        if (_focusNode.hasFocus) {
+          final value = double.tryParse(_controller.text) ?? 0.0;
+          _controller.text = _formatForEditing(value);
+        } else if (_controller.text.isNotEmpty) {
+          final value = double.tryParse(_controller.text) ?? 0.0;
+          _controller.text = value.toStringAsFixed(2);
+        }
+      });
     }
   }
 
@@ -88,11 +86,30 @@ class _CurrencyInputFieldState extends State<CurrencyInputField> {
   }
 
   @override
+  void dispose() {
+    _controller.removeListener(_onTextChanged);
+    _focusNode.removeListener(_onFocusChanged);
+    _controller.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final defaultStyle = TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.bold,
-        color: Theme.of(context).colorScheme.onSurface);
+    // **THE FIX: Base the style on the app's theme.**
+    // 1. Get a base style from the app's theme (e.g., bodyLarge).
+    final themeTextStyle = Theme.of(context).textTheme.bodyLarge;
+    // 2. Create the default style by copying the theme's style and applying custom attributes.
+    final defaultStyle = themeTextStyle?.copyWith(
+          fontWeight: FontWeight.bold,
+          color: Theme.of(context).colorScheme.onSurface,
+        ) ??
+        // Provide a fallback TextStyle just in case bodyLarge is null.
+        TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: Theme.of(context).colorScheme.onSurface,
+        );
     final textStyle = defaultStyle.merge(widget.textStyle);
 
     final inputContent = Stack(
@@ -133,7 +150,6 @@ class _CurrencyInputFieldState extends State<CurrencyInputField> {
         content = Container(
           padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
           decoration: BoxDecoration(
-            // --- MODIFIED: Use the backgroundColor, defaulting to transparent ---
             color: widget.backgroundColor ?? Colors.transparent,
             borderRadius: BorderRadius.circular(8.0),
           ),
@@ -145,7 +161,6 @@ class _CurrencyInputFieldState extends State<CurrencyInputField> {
           content = Container(
             padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
             decoration: BoxDecoration(
-              // --- MODIFIED: Added backgroundColor here as well ---
               color: widget.backgroundColor ?? Colors.transparent,
               border: Border.all(
                   color: _focusNode.hasFocus
@@ -161,7 +176,6 @@ class _CurrencyInputFieldState extends State<CurrencyInputField> {
             child: InputDecorator(
               decoration: InputDecoration(
                 labelText: widget.labelText,
-                // --- MODIFIED: Added fill color for the outlined decorator style ---
                 fillColor: widget.backgroundColor,
                 filled: widget.backgroundColor != null,
                 border: OutlineInputBorder(
@@ -230,25 +244,5 @@ class _CurrencyInputFieldState extends State<CurrencyInputField> {
       textDirection: TextDirection.ltr,
     )..layout();
     return textPainter.width;
-  }
-
-  @override
-  void dispose() {
-    _controller.removeListener(_onTextChanged);
-    _focusNode.removeListener(_onFocusChanged);
-    _controller.dispose();
-    _focusNode.dispose();
-    super.dispose();
-  }
-}
-
-extension ColorValues on Color {
-  Color withValues({double? alpha, double? red, double? green, double? blue}) {
-    return Color.fromARGB(
-      (alpha != null ? (alpha * 255).round() : this.alpha),
-      (red != null ? (red * 255).round() : this.red),
-      (green != null ? (green * 255).round() : this.green),
-      (blue != null ? (blue * 255).round() : this.blue),
-    );
   }
 }

@@ -6,7 +6,7 @@ part of 'dashboard_providers.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$monthlySummaryHash() => r'05ef0853213db2a2e630898deffae8d9f0471bcb';
+String _$monthlySummaryHash() => r'0d869a2cf1dfa324c291d38a20567668e6ee1f98';
 
 /// See also [monthlySummary].
 @ProviderFor(monthlySummary)

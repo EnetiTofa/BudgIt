@@ -40,6 +40,8 @@ class OneOffPayment extends Transaction with HiveObjectMixin {
     required this.category,
     this.isWalleted = false,
     this.parentRecurringId,
+    this.iconCodePoint,    // ADD THIS
+    this.iconFontFamily,   // ADD THIS
   }) : super(id: id, notes: notes, createdAt: createdAt, amount: amount);
 
   @HiveField(0)
@@ -68,6 +70,13 @@ class OneOffPayment extends Transaction with HiveObjectMixin {
 
   @HiveField(9)
   final String? parentRecurringId;
+
+  // ADD NEW HIVE FIELDS
+  @HiveField(10)
+  final int? iconCodePoint;
+
+  @HiveField(11)
+  final String? iconFontFamily;
 }
 
 @HiveType(typeId: 4)
@@ -84,6 +93,8 @@ class RecurringPayment extends Transaction with HiveObjectMixin {
     required this.recurrenceFrequency,
     required this.startDate,
     this.endDate,
+    this.iconCodePoint,
+    this.iconFontFamily,
   }) : super(id: id, notes: notes, createdAt: createdAt, amount: amount);
 
   @HiveField(0)
@@ -107,6 +118,12 @@ class RecurringPayment extends Transaction with HiveObjectMixin {
   @HiveField(10, defaultValue: 1)
   final int recurrenceFrequency;
 
+  @HiveField(11)
+  final int? iconCodePoint;
+
+  @HiveField(12)
+  final String? iconFontFamily;
+
   List<PaymentOccurrence> generateOccurrences({required DateTime upToDate}) {
     final occurrences = <PaymentOccurrence>[];
     DateTime currentDate = startDate;
@@ -127,6 +144,9 @@ class RecurringPayment extends Transaction with HiveObjectMixin {
           itemName: paymentName,
           store: payee,
           category: category,
+          // PASS ICON DATA TO THE OCCURRENCE
+          iconCodePoint: iconCodePoint,
+          iconFontFamily: iconFontFamily,
         ),
       );
 
@@ -149,6 +169,7 @@ class RecurringPayment extends Transaction with HiveObjectMixin {
   }
 }
 
+// ... (OneOffIncome and RecurringIncome remain the same) ...
 @HiveType(typeId: 5)
 class OneOffIncome extends Transaction with HiveObjectMixin {
    OneOffIncome({
@@ -274,6 +295,7 @@ class RecurringIncome extends Transaction with HiveObjectMixin {
   }
 }
 
+
 @HiveType(typeId: 7)
 class PaymentOccurrence extends OneOffPayment {
    PaymentOccurrence({
@@ -287,6 +309,8 @@ class PaymentOccurrence extends OneOffPayment {
     required super.store,
     required super.category,
     super.isWalleted = false,
+    super.iconCodePoint,    // ADD THIS
+    super.iconFontFamily,   // ADD THIS
   });
 }
 

@@ -1,3 +1,4 @@
+// lib/src/features/transactions/presentation/widgets/payment_form.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:budgit/src/common_widgets/currency_input_field.dart';
@@ -7,11 +8,12 @@ import 'package:budgit/src/features/categories/presentation/widgets/category_sel
 import 'package:budgit/src/features/categories/domain/category.dart';
 import 'package:budgit/src/features/transactions/domain/transaction.dart';
 import 'package:budgit/src/features/transactions/presentation/controllers/add_transaction_controller.dart';
-import 'package:budgit/src/features/categories/presentation/category_list_provider.dart';
+import 'package:budgit/src/features/categories/presentation/providers/category_list_provider.dart';
 import 'package:budgit/src/utils/clock_provider.dart';
 import 'package:budgit/src/features/transactions/presentation/widgets/wallet_toggle.dart';
 import 'package:budgit/src/features/transactions/presentation/widgets/date_selector_field.dart';
 import 'package:budgit/src/features/transactions/presentation/widgets/period_selector_field.dart';
+import 'package:budgit/src/common_widgets/icon_picker_field.dart';
 
 
 enum PaymentType { oneOff, recurring }
@@ -34,6 +36,7 @@ class _PaymentFormState extends ConsumerState<PaymentForm> {
   final _payeeController = TextEditingController();
   
   Category? _selectedCategory;
+  IconData? _selectedIcon;
   DateTime? _selectedDate;
   DateTime? _endDate;
   RecurrencePeriod _recurrence = RecurrencePeriod.monthly;
@@ -65,6 +68,12 @@ class _PaymentFormState extends ConsumerState<PaymentForm> {
         _endDate = transaction.endDate;
         _recurrence = transaction.recurrence;
         _recurrenceFrequency = transaction.recurrenceFrequency;
+        if (transaction.iconCodePoint != null) {
+          _selectedIcon = IconData(
+            transaction.iconCodePoint!,
+            fontFamily: transaction.iconFontFamily,
+          );
+        }
       }
     } else {
       _selectedDate = ref.read(clockProvider).now();
@@ -116,6 +125,8 @@ class _PaymentFormState extends ConsumerState<PaymentForm> {
           recurrenceFrequency: _recurrenceFrequency,
           startDate: _selectedDate!,
           endDate: _endDate,
+          iconCodePoint: _selectedIcon?.codePoint,
+          iconFontFamily: _selectedIcon?.fontFamily,
         );
         controller.updateTransaction(updatedTx);
       }
@@ -139,6 +150,8 @@ class _PaymentFormState extends ConsumerState<PaymentForm> {
               category: _selectedCategory!,
               recurrence: _recurrence,
               recurrenceFrequency: _recurrenceFrequency,
+              iconCodePoint: _selectedIcon?.codePoint,
+              iconFontFamily: _selectedIcon?.fontFamily,
             );
       }
     }
@@ -176,6 +189,7 @@ class _PaymentFormState extends ConsumerState<PaymentForm> {
             CurrencyInputField(
               labelText: 'Amount',
               initialValue: _amount,
+              textStyle: TextStyle(fontWeight: FontWeight.w400),
               onChanged: (value) => _amount = value,
             ),
             const SizedBox(height: 16),
@@ -218,6 +232,7 @@ class _PaymentFormState extends ConsumerState<PaymentForm> {
             const SizedBox(height: 16),
             CurrencyInputField(
               labelText: 'Amount',
+              textStyle: TextStyle(fontWeight: FontWeight.w400),
               initialValue: _amount,
               onChanged: (value) => _amount = value,
             ),
@@ -229,6 +244,16 @@ class _PaymentFormState extends ConsumerState<PaymentForm> {
               onCategorySelected: (category) {
                 setState(() {
                   _selectedCategory = category;
+                });
+              },
+            ),
+            const SizedBox(height: 16),
+            IconPickerField(
+              labelText: 'Custom Icon (Optional)',
+              selectedIcon: _selectedIcon,
+              onIconSelected: (icon) {
+                setState(() {
+                  _selectedIcon = icon;
                 });
               },
             ),

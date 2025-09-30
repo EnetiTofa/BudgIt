@@ -5,7 +5,6 @@ import 'package:budgit/src/features/transactions/data/transaction_repository_pro
 import 'package:budgit/src/features/transactions/domain/log_filter_state.dart';
 import 'package:budgit/src/features/transactions/domain/transaction.dart';
 import 'package:budgit/src/features/transactions/presentation/controllers/log_filter_controller.dart';
-// Add this import to access the controller
 import 'package:budgit/src/features/transactions/presentation/controllers/add_transaction_controller.dart';
 
 
@@ -19,26 +18,41 @@ class RecurringTransactions extends _$RecurringTransactions {
     final repository = ref.watch(transactionRepositoryProvider);
     final allTransactions = await repository.getAllTransactions();
 
-    final recurringItems = allTransactions
+    List<Transaction> recurringItems = allTransactions
         .where((t) => t is RecurringPayment || t is RecurringIncome)
         .toList();
 
-    // Apply the type filter
+    // 1. Apply the transaction type filter first.
     switch (filter.transactionTypeFilter) {
       case TransactionTypeFilter.payment:
-        return recurringItems.whereType<RecurringPayment>().toList();
+        recurringItems = recurringItems.whereType<RecurringPayment>().toList();
+        break;
       case TransactionTypeFilter.income:
-        return recurringItems.whereType<RecurringIncome>().toList();
+        recurringItems = recurringItems.whereType<RecurringIncome>().toList();
+        break;
       case TransactionTypeFilter.all:
-        return recurringItems;
+        // No change needed
+        break;
     }
+
+    // --- THE FIX IS HERE ---
+    // 2. Now, apply the category filter if one is selected.
+    if (filter.selectedCategoryIds.isNotEmpty) {
+      recurringItems = recurringItems.where((transaction) {
+        if (transaction is RecurringPayment) {
+          // Keep the payment if its category is in the filter set.
+          return filter.selectedCategoryIds.contains(transaction.category.id);
+        }
+        // Recurring income doesn't have categories, so it's filtered out.
+        return false;
+      }).toList();
+    }
+    // --- END OF FIX ---
+
+    return recurringItems;
   }
 
-  // --- UPDATED METHOD ---
-  // This method now delegates the deletion to the central controller.
   Future<void> removeTransaction(String transactionId) async {
-    // The controller will handle deleting from the repository and invalidating
-    // all necessary providers (like the transaction log), which will trigger a rebuild.
     await ref.read(addTransactionControllerProvider.notifier)
                .deleteTransaction(transactionId);
   }

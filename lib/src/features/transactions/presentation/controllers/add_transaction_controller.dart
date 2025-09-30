@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:budgit/src/features/budgets/presentation/budget_progress_provider.dart';
+import 'package:budgit/src/features/budgets/presentation/providers/budget_progress_provider.dart';
 import 'package:budgit/src/features/transactions/data/transaction_repository_provider.dart';
 import 'package:budgit/src/features/categories/domain/category.dart';
 import 'package:budgit/src/features/transactions/domain/transaction.dart';
-import 'package:budgit/src/features/categories/presentation/category_list_provider.dart';
+import 'package:budgit/src/features/categories/presentation/providers/category_list_provider.dart';
 import 'package:budgit/src/features/transactions/presentation/providers/recurring_transactions_provider.dart';
 import 'package:budgit/src/features/transactions/presentation/providers/transaction_log_provider.dart';
 import 'package:budgit/src/utils/clock_provider.dart';
@@ -53,6 +53,7 @@ class AddTransactionController extends _$AddTransactionController {
       itemName: itemName,
       store: store, // We can make this a form field later
       category: category,
+      isWalleted: isWalleted,
     );
 
     final repository = ref.read(transactionRepositoryProvider);
@@ -68,6 +69,8 @@ class AddTransactionController extends _$AddTransactionController {
     required Category category,
     required RecurrencePeriod recurrence,
     required int recurrenceFrequency,
+    int? iconCodePoint,     // Added
+    String? iconFontFamily, // Added
   }) async {
     final payment = RecurringPayment(
       id: DateTime.now().toIso8601String(),
@@ -81,6 +84,8 @@ class AddTransactionController extends _$AddTransactionController {
       category: category,
       recurrence: recurrence,
       recurrenceFrequency: recurrenceFrequency,
+      iconCodePoint: iconCodePoint,   // Added
+      iconFontFamily: iconFontFamily, // Added
     );
 
     final repository = ref.read(transactionRepositoryProvider);
@@ -154,8 +159,7 @@ class AddTransactionController extends _$AddTransactionController {
   }
   Future<void> addCategory({
     required String name,
-    required double budgetAmount,     // Now required
-    required BudgetPeriod budgetPeriod,
+    required double budgetAmount,
     required IconData icon,   // Add this
     required Color color, // Now required
     double? walletAmount, 
@@ -168,7 +172,6 @@ class AddTransactionController extends _$AddTransactionController {
       iconFontFamily: icon.fontFamily,
       colorValue: color.value,
       budgetAmount: budgetAmount,
-      budgetPeriod: budgetPeriod,
       walletAmount: walletAmount,
     );
 
@@ -181,7 +184,6 @@ class AddTransactionController extends _$AddTransactionController {
     required String id, // We need the original ID to update the correct item
     required String name,
     required double budgetAmount,
-    required BudgetPeriod budgetPeriod,
     double? walletAmount,
     required IconData icon,
     required Color color,
@@ -193,7 +195,6 @@ class AddTransactionController extends _$AddTransactionController {
       iconFontFamily: icon.fontFamily,
       colorValue: color.value,
       budgetAmount: budgetAmount,
-      budgetPeriod: budgetPeriod,
       walletAmount: walletAmount,
     );
 
