@@ -40,4 +40,24 @@ class Category extends Equatable with HiveObjectMixin {
 
   @override
   List<Object?> get props => [id];
+
+  Category copyWith({
+    String? id,
+    String? name,
+    double? budgetAmount,
+    double? walletAmount,
+    int? iconCodePoint,
+    String? iconFontFamily,
+    int? colorValue,
+  }) {
+    return Category(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      budgetAmount: budgetAmount ?? this.budgetAmount,
+      walletAmount: walletAmount ?? this.walletAmount,
+      iconCodePoint: iconCodePoint ?? this.iconCodePoint,
+      iconFontFamily: iconFontFamily ?? this.iconFontFamily,
+      colorValue: colorValue ?? this.colorValue,
+    );
+  }
 }

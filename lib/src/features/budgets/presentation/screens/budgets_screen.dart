@@ -1,15 +1,15 @@
 // lib/src/features/budgets/presentation/screens/budgets_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:budgit/src/features/budgets/presentation/providers/budget_screen_data_provider.dart';
 import 'package:budgit/src/features/budgets/presentation/widgets/budget_gauge.dart';
 import 'package:budgit/src/features/budgets/presentation/widgets/budget_list.dart';
 import 'package:budgit/src/features/budgets/presentation/widgets/budget_timeline.dart';
-import 'package:budgit/src/features/budgets/presentation/widgets/monthly_summary_card.dart';
-import 'package:budgit/src/features/categories/domain/category.dart';
-import 'package:budgit/src/features/budgets/presentation/widgets/category_detail_view.dart';
+import 'package:budgit/src/common_widgets/summary_stat_card.dart';
+// We no longer need this direct import
+import 'package:budgit/src/features/budgets/presentation/screens/category_drilldown_screen.dart';
 
-final selectedCategoryProvider = StateProvider.autoDispose<Category?>((ref) => null);
 final selectedMonthProvider = StateProvider<DateTime?>((ref) => null);
 
 class BudgetsScreen extends ConsumerWidget {
@@ -17,56 +17,33 @@ class BudgetsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // This is now the ONLY async provider we need to watch for the main UI
     final budgetDataAsync = ref.watch(budgetScreenDataProvider);
-    final selectedCategory = ref.watch(selectedCategoryProvider);
 
-    return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      body: budgetDataAsync.when(
-        skipLoadingOnReload: true,
-        loading: () => const SizedBox.shrink(),
-        error: (error, stack) => Center(child: Text('Error: $error')),
-        data: (screenData) {
-          final selectedMonth = ref.watch(selectedMonthProvider) ??
-              (screenData.historicalSpending.isNotEmpty
-                  ? screenData.historicalSpending.last.date
-                  : DateTime.now());
-          
-          return AnimatedSize(
-            duration: const Duration(milliseconds: 150),
-            curve: Curves.easeInOut,
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 150),
-              transitionBuilder: (Widget child, Animation<double> animation) {
-                return FadeTransition(
-                  opacity: animation,
-                  child: child,
-                );
-              },
-              // --- THE FIX IS HERE ---
-              child: selectedCategory == null
-                // 1. Pass a key to the overview widget.
-                ? _buildOverview(context, ref, screenData, selectedMonth, key: const ValueKey('overview'))
-                // 2. Pass a unique key and the categoryId to the detail view.
-                : CategoryDetailView(
-                    key: ValueKey(selectedCategory.id),
-                    categoryId: selectedCategory.id,
-                  ),
-              // --- END OF FIX ---
-            ),
-          );
-        },
-      ),
+    return budgetDataAsync.when(
+      skipLoadingOnReload: true,
+      // Change the main loading state to prevent layout jumps
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => Center(child: Text('Error: $error')),
+      data: (screenData) {
+        final selectedMonth = ref.watch(selectedMonthProvider) ??
+            (screenData.historicalSpending.isNotEmpty
+                ? screenData.historicalSpending.last.date
+                : DateTime.now());
+        
+        return _buildOverview(context, ref, screenData, selectedMonth);
+      },
     );
   }
 
-  // MODIFIED: Add the optional Key parameter to the method signature.
-  Widget _buildOverview(BuildContext context, WidgetRef ref, BudgetScreenData screenData, DateTime selectedMonth, {Key? key}) {
-    // Pass the key to the root widget of this build method.
+  Widget _buildOverview(BuildContext context, WidgetRef ref, BudgetScreenData screenData, DateTime selectedMonth) {
+    // Get the summary details directly from our consolidated data object
+    final summary = screenData.summaryDetails;
+    
     return SingleChildScrollView(
-      key: key,
       child: Column(
         children: [
+          // ... (BudgetGauge, BudgetTimeline, BudgetList widgets remain the same)
           Padding(
             padding: const EdgeInsets.fromLTRB(62.0, 0.0, 62.0, 0.0),
             child: BudgetGauge(
@@ -79,22 +56,61 @@ class BudgetsScreen extends ConsumerWidget {
             spendingData: screenData.historicalSpending,
             selectedMonth: selectedMonth,
             onMonthSelected: (newMonth) {
-              ref.read(selectedMonthProvider.notifier).state =
-                  newMonth;
+              ref.read(selectedMonthProvider.notifier).state = newMonth;
             },
           ),
           const SizedBox(height: 12),
           BudgetList(
             progressList: screenData.budgetProgress,
-            onCategoryTap: (category) {
-              ref.read(selectedCategoryProvider.notifier).state = category;
+            onCategoryTap: (tappedCategory) {
+              final allCategories = screenData.budgetProgress.map((p) => p.category).toList();
+              final initialIndex = allCategories.indexWhere((c) => c.id == tappedCategory.id);
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => CategoryDrilldownScreen(
+                    categories: allCategories,
+                    initialIndex: initialIndex,
+                  ),
+                ),
+              );
             },
           ),
           const SizedBox(height: 12),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.0),
-            child: MonthlySummaryCard(),
+
+          // --- MODIFICATION START ---
+          // The SummaryStatCard is now built directly with data, no .when() needed here.
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: SummaryStatCard(
+              stats: [
+                SummaryStat(
+                  value: '\$${summary.totalSpending.toStringAsFixed(2)}',
+                  unit: 'NZD',
+                  title: 'Total Spending',
+                  description: 'The total amount spent in the selected month.',
+                ),
+                 SummaryStat(
+                  value: '\$${summary.dailyAverage.toStringAsFixed(2)}',
+                  unit: 'NZD / day',
+                  title: 'Daily Average',
+                  description: 'Your average spending per day for this month.',
+                ),
+                 SummaryStat(
+                  value: summary.monthsCounted.toString(),
+                  unit: 'Months',
+                  title: 'Months Counted',
+                  description: 'The total number of months with transaction data.',
+                ),
+                SummaryStat(
+                  value: summary.highestMonth,
+                  unit: 'Month',
+                  title: 'Highest Month',
+                  description: 'The month where you spent the most amount.',
+                ),
+              ],
+            ),
           ),
+          // --- MODIFICATION END ---
           const SizedBox(height: 16),
         ],
       ),

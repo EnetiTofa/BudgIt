@@ -11,7 +11,7 @@ import 'package:budgit/src/features/transactions/presentation/controllers/add_tr
 import 'package:budgit/src/features/categories/presentation/providers/category_list_provider.dart';
 import 'package:budgit/src/utils/clock_provider.dart';
 import 'package:budgit/src/features/transactions/presentation/widgets/wallet_toggle.dart';
-import 'package:budgit/src/features/transactions/presentation/widgets/date_selector_field.dart';
+import 'package:budgit/src/common_widgets/date_selector_field.dart';
 import 'package:budgit/src/features/transactions/presentation/widgets/period_selector_field.dart';
 import 'package:budgit/src/common_widgets/icon_picker_field.dart';
 
@@ -41,7 +41,7 @@ class _PaymentFormState extends ConsumerState<PaymentForm> {
   DateTime? _endDate;
   RecurrencePeriod _recurrence = RecurrencePeriod.monthly;
   int _recurrenceFrequency = 1;
-  bool _isWalleted = true; // Default to selected
+  bool _isWalleted = true;
 
   bool get isEditing => widget.initialTransaction != null;
 
@@ -77,7 +77,7 @@ class _PaymentFormState extends ConsumerState<PaymentForm> {
       }
     } else {
       _selectedDate = ref.read(clockProvider).now();
-      _isWalleted = true; // Ensure default is selected for new transactions
+      _isWalleted = true;
     }
   }
 
@@ -90,7 +90,35 @@ class _PaymentFormState extends ConsumerState<PaymentForm> {
     super.dispose();
   }
 
-  void _submitForm() {
+  Future<bool?> _showBudgetConfirmationDialog(double newMonthlyAmount) {
+    final oldBudget = _selectedCategory!.budgetAmount;
+    final newBudget = oldBudget + newMonthlyAmount;
+
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Increase Budget?'),
+        content: Text(
+          'Adding this recurring payment will increase the monthly budget for the "${_selectedCategory!.name}" category.\n\n'
+          'Current Budget: \$${oldBudget.toStringAsFixed(2)}\n'
+          'Increase by: \$${newMonthlyAmount.toStringAsFixed(2)}\n\n'
+          'New Budget: \$${newBudget.toStringAsFixed(2)}',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Confirm'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _submitForm() async {
     if (_amount <= 0 || _selectedCategory == null || _selectedDate == null) {
       return;
     }
@@ -98,64 +126,74 @@ class _PaymentFormState extends ConsumerState<PaymentForm> {
     final controller = ref.read(addTransactionControllerProvider.notifier);
     
     if (isEditing) {
+      // --- EDITING LOGIC (UNCHANGED) ---
       final originalTx = widget.initialTransaction!;
       if(originalTx is OneOffPayment) {
         final updatedTx = OneOffPayment(
-          id: originalTx.id,
-          notes: originalTx.notes,
-          createdAt: originalTx.createdAt,
-          amount: _amount,
-          date: _selectedDate!,
-          itemName: _itemNameController.text,
-          store: _storeController.text,
-          category: _selectedCategory!,
-          isWalleted: _isWalleted,
+          id: originalTx.id, notes: originalTx.notes, createdAt: originalTx.createdAt,
+          amount: _amount, date: _selectedDate!, itemName: _itemNameController.text,
+          store: _storeController.text, category: _selectedCategory!, isWalleted: _isWalleted,
         );
-        controller.updateTransaction(updatedTx);
+        await controller.updateTransaction(updatedTx);
       } else if (originalTx is RecurringPayment) {
         final updatedTx = RecurringPayment(
-          id: originalTx.id,
-          notes: originalTx.notes,
-          createdAt: originalTx.createdAt,
-          amount: _amount,
-          paymentName: _paymentNameController.text,
-          payee: _payeeController.text,
-          category: _selectedCategory!,
-          recurrence: _recurrence,
-          recurrenceFrequency: _recurrenceFrequency,
-          startDate: _selectedDate!,
-          endDate: _endDate,
-          iconCodePoint: _selectedIcon?.codePoint,
+          id: originalTx.id, notes: originalTx.notes, createdAt: originalTx.createdAt,
+          amount: _amount, paymentName: _paymentNameController.text, payee: _payeeController.text,
+          category: _selectedCategory!, recurrence: _recurrence, recurrenceFrequency: _recurrenceFrequency,
+          startDate: _selectedDate!, endDate: _endDate, iconCodePoint: _selectedIcon?.codePoint,
           iconFontFamily: _selectedIcon?.fontFamily,
         );
-        controller.updateTransaction(updatedTx);
+        await controller.updateTransaction(updatedTx);
       }
     } else {
+      // --- ADDING NEW TRANSACTION LOGIC ---
       if (_paymentType == PaymentType.oneOff) {
-        controller.addOneOffPayment(
-              amount: _amount,
-              itemName: _itemNameController.text,
-              date: _selectedDate!,
-              category: _selectedCategory!,
-              store: _storeController.text,
-              isWalleted: _isWalleted,
-            );
+        await controller.addOneOffPayment(
+          amount: _amount, itemName: _itemNameController.text, date: _selectedDate!,
+          category: _selectedCategory!, store: _storeController.text, isWalleted: _isWalleted,
+        );
       } else { // Recurring
-        controller.addRecurringPayment(
-              amount: _amount,
-              paymentName: _paymentNameController.text,
-              payee: _payeeController.text,
-              startDate: _selectedDate!,
-              endDate: _endDate,
-              category: _selectedCategory!,
-              recurrence: _recurrence,
-              recurrenceFrequency: _recurrenceFrequency,
-              iconCodePoint: _selectedIcon?.codePoint,
-              iconFontFamily: _selectedIcon?.fontFamily,
-            );
+        
+        // 1. Calculate the monthly value of the new payment
+        double monthlyIncrease = 0;
+        switch (_recurrence) {
+          case RecurrencePeriod.daily: monthlyIncrease = _amount * 30.44; break;
+          case RecurrencePeriod.weekly: monthlyIncrease = _amount * 4.33; break;
+          case RecurrencePeriod.monthly: monthlyIncrease = _amount; break;
+          case RecurrencePeriod.yearly: monthlyIncrease = _amount / 12; break;
+        }
+
+        // 2. Show confirmation dialog and exit if cancelled
+        final bool? confirmed = await _showBudgetConfirmationDialog(monthlyIncrease);
+        if (confirmed != true) {
+          return; // User cancelled
+        }
+
+        // 3. Add the recurring payment
+        await controller.addRecurringPayment(
+          amount: _amount, paymentName: _paymentNameController.text, payee: _payeeController.text,
+          startDate: _selectedDate!, endDate: _endDate, category: _selectedCategory!,
+          recurrence: _recurrence, recurrenceFrequency: _recurrenceFrequency,
+          iconCodePoint: _selectedIcon?.codePoint, iconFontFamily: _selectedIcon?.fontFamily,
+        );
+        
+        // 4. Update the category's budget
+        final newTotalBudget = _selectedCategory!.budgetAmount + monthlyIncrease;
+        final updatedCategory = _selectedCategory!.copyWith(budgetAmount: newTotalBudget);
+        await controller.updateCategory(
+          id: updatedCategory.id,
+          name: updatedCategory.name,
+          budgetAmount: updatedCategory.budgetAmount,
+          walletAmount: updatedCategory.walletAmount,
+          icon: updatedCategory.icon,
+          color: updatedCategory.color,
+        );
       }
     }
-    Navigator.of(context).pop();
+    
+    if (mounted) {
+      Navigator.of(context).pop();
+    }
   }
 
   @override
@@ -170,7 +208,7 @@ class _PaymentFormState extends ConsumerState<PaymentForm> {
           if (!isEditing)
             Padding(
               padding: const EdgeInsets.only(bottom: 24.0),
-              child: Center( // Wrap the CustomToggle with a Center widget
+              child: Center(
                 child: CustomToggle(
                   options: const ['One-Off', 'Recurring'],
                   selectedValue: _paymentType == PaymentType.oneOff ? 'One-Off' : 'Recurring',
@@ -187,37 +225,24 @@ class _PaymentFormState extends ConsumerState<PaymentForm> {
             CustomTextInputField(controller: _itemNameController, labelText: 'Item Name'),
             const SizedBox(height: 16),
             CurrencyInputField(
-              labelText: 'Amount',
-              initialValue: _amount,
-              textStyle: TextStyle(fontWeight: FontWeight.w400),
+              labelText: 'Amount', initialValue: _amount,
+              textStyle: const TextStyle(fontWeight: FontWeight.w400),
               onChanged: (value) => _amount = value,
             ),
             const SizedBox(height: 16),
-            CustomTextInputField(
-              controller: _storeController, 
-              labelText: 'Store (Optional)', 
-            ),
+            CustomTextInputField(controller: _storeController, labelText: 'Store (Optional)'),
             const SizedBox(height: 8),
             CategorySelectorField(
               selectedCategory: _selectedCategory,
-              onCategorySelected: (category) {
-                setState(() {
-                  _selectedCategory = category;
-                });
-              },
+              onCategorySelected: (category) => setState(() => _selectedCategory = category),
             ),
             const SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
                   child: DateSelectorField(
-                    labelText: 'Date',
-                    selectedDate: _selectedDate,
-                    onDateSelected: (date) {
-                      setState(() {
-                        _selectedDate = date;
-                      });
-                    },
+                    labelText: 'Date', selectedDate: _selectedDate,
+                    onDateSelected: (date) => setState(() => _selectedDate = date),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -231,9 +256,8 @@ class _PaymentFormState extends ConsumerState<PaymentForm> {
             CustomTextInputField(controller: _paymentNameController, labelText: 'Payment Name'),
             const SizedBox(height: 16),
             CurrencyInputField(
-              labelText: 'Amount',
-              textStyle: TextStyle(fontWeight: FontWeight.w400),
-              initialValue: _amount,
+              labelText: 'Amount', initialValue: _amount,
+              textStyle: const TextStyle(fontWeight: FontWeight.w400),
               onChanged: (value) => _amount = value,
             ),
             const SizedBox(height: 16),
@@ -241,63 +265,35 @@ class _PaymentFormState extends ConsumerState<PaymentForm> {
             const SizedBox(height: 8),
             CategorySelectorField(
               selectedCategory: _selectedCategory,
-              onCategorySelected: (category) {
-                setState(() {
-                  _selectedCategory = category;
-                });
-              },
+              onCategorySelected: (category) => setState(() => _selectedCategory = category),
             ),
             const SizedBox(height: 16),
             IconPickerField(
-              labelText: 'Custom Icon (Optional)',
-              selectedIcon: _selectedIcon,
-              onIconSelected: (icon) {
-                setState(() {
-                  _selectedIcon = icon;
-                });
-              },
+              labelText: 'Custom Icon (Optional)', selectedIcon: _selectedIcon,
+              onIconSelected: (icon) => setState(() => _selectedIcon = icon),
             ),
             const SizedBox(height: 16),
             PeriodSelectorField(
-              frequency: _recurrenceFrequency,
-              period: _recurrence,
-              onFrequencyChanged: (frequency) {
-                setState(() {
-                  _recurrenceFrequency = frequency;
-                });
-              },
-              onPeriodChanged: (period) {
-                setState(() {
-                  _recurrence = period;
-                });
-              },
+              frequency: _recurrenceFrequency, period: _recurrence,
+              onFrequencyChanged: (frequency) => setState(() => _recurrenceFrequency = frequency),
+              onPeriodChanged: (period) => setState(() => _recurrence = period),
             ),
             const SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
                   child: DateSelectorField(
-                    labelText: 'Start Date',
-                    selectedDate: _selectedDate,
-                    layout: DateSelectorLayout.vertical, // Use the new layout
-                    onDateSelected: (date) {
-                      setState(() {
-                        _selectedDate = date;
-                      });
-                    },
+                    labelText: 'Start Date', selectedDate: _selectedDate,
+                    layout: DateSelectorLayout.vertical,
+                    onDateSelected: (date) => setState(() => _selectedDate = date),
                   ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: DateSelectorField(
-                    labelText: 'End Date',
-                    selectedDate: _endDate,
-                    layout: DateSelectorLayout.vertical, // Use the new layout
-                    onDateSelected: (date) {
-                      setState(() {
-                        _endDate = date;
-                      });
-                    },
+                    labelText: 'End Date', selectedDate: _endDate,
+                    layout: DateSelectorLayout.vertical,
+                    onDateSelected: (date) => setState(() => _endDate = date),
                   ),
                 ),
               ],
@@ -305,15 +301,13 @@ class _PaymentFormState extends ConsumerState<PaymentForm> {
           ],
           
           const SizedBox(height: 32),
-          // --- UPDATED BUTTON ---
-          Center( // Center the button
+          Center(
             child: ElevatedButton(
               onPressed: _submitForm,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
                 foregroundColor: Theme.of(context).colorScheme.onSurface,
                 elevation: 0,
-                // Set a fixed width and height
                 fixedSize: const Size(200, 50), 
               ),
               child: Text(isEditing ? 'Save Changes' : 'Save Payment'),

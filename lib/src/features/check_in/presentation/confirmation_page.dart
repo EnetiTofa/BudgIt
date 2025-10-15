@@ -11,7 +11,7 @@ class ConfirmationPage extends ConsumerWidget {
     final checkInState = ref.watch(checkInControllerProvider);
     final textTheme = Theme.of(context).textTheme;
 
-    // --- View Logic to Calculate Totals ---
+    // --- View Logic to Calculate Totals (remains the same) ---
     double totalToSave = 0;
     double totalToRollover = 0;
 
@@ -30,28 +30,50 @@ class ConfirmationPage extends ConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Confirm Your Check-in', style: textTheme.headlineSmall, textAlign: TextAlign.center),
+            Text(
+              'Confirm Your Check-in',
+              style: textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w600),
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: 32),
+            
+            // --- MODIFICATION: The summary card layout is now a Row ---
             Card(
+              color: Theme.of(context).colorScheme.surfaceContainerLow,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
+                padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
+                child: Row(
                   children: [
-                    _SummaryRow(
-                      label: 'Amount to Save:',
-                      amount: totalToSave,
-                      color: Colors.green,
+                    Expanded(
+                      child: _SummaryStat(
+                        label: 'Amount to Save',
+                        amount: totalToSave,
+                        color: Colors.greenAccent,
+                      ),
                     ),
-                    const Divider(height: 24),
-                    _SummaryRow(
-                      label: 'Amount to Rollover:',
-                      amount: totalToRollover,
-                      color: Theme.of(context).colorScheme.primary,
+                    SizedBox(
+                      height: 50,
+                      child: VerticalDivider(
+                        color: Theme.of(context).dividerColor.withOpacity(0.5),
+                        width: 16,
+                      ),
+                    ),
+                    Expanded(
+                      child: _SummaryStat(
+                        label: 'Amount to Rollover',
+                        amount: totalToRollover,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                     ),
                   ],
                 ),
               ),
             ),
+            // --- END MODIFICATION ---
           ],
         ),
       ),
@@ -59,21 +81,34 @@ class ConfirmationPage extends ConsumerWidget {
   }
 }
 
-class _SummaryRow extends StatelessWidget {
-  const _SummaryRow({required this.label, required this.amount, this.color});
+// --- MODIFICATION: Replaced _SummaryRow with the vertical _SummaryStat widget ---
+class _SummaryStat extends StatelessWidget {
+  const _SummaryStat({required this.label, required this.amount, this.color});
   final String label;
   final double amount;
   final Color? color;
-  
+
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    final theme = Theme.of(context);
+    return Column(
       children: [
-        Text(label, style: Theme.of(context).textTheme.titleMedium),
         Text(
           '\$${amount.toStringAsFixed(2)}',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: color),
+          style: theme.textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.secondary,
+          ),
+          textAlign: TextAlign.center,
         ),
       ],
     );

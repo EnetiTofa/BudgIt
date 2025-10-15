@@ -1,7 +1,11 @@
+// lib/src/features/budgets/presentation/providers/budget_screen_data_provider.dart
+
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:budgit/src/features/budgets/domain/budget_progress.dart';
 import 'package:budgit/src/features/budgets/domain/monthly_spending.dart';
+// Import the summary details class
+import 'package:budgit/src/features/budgets/presentation/providers/monthly_summary_provider.dart';
 import 'package:budgit/src/features/budgets/presentation/providers/budget_progress_provider.dart';
 import 'package:budgit/src/features/budgets/presentation/providers/historical_spending_provider.dart';
 import 'package:budgit/src/features/budgets/presentation/screens/budgets_screen.dart';
@@ -13,14 +17,16 @@ class BudgetScreenData {
   const BudgetScreenData({
     required this.historicalSpending,
     required this.budgetProgress,
+    required this.summaryDetails,
   });
   final List<MonthlySpending> historicalSpending;
   final List<BudgetProgress> budgetProgress;
+  final BudgetSummaryDetails summaryDetails;
 }
 
 /// This provider fetches all necessary data for the budget screen.
-/// It ensures that both historical and progress data are loaded before the UI builds,
-/// preventing the "zero-out" flicker on the timeline.
+/// It ensures that all data is loaded before the UI builds,
+/// preventing flickering on month changes.
 @riverpod
 Future<BudgetScreenData> budgetScreenData(Ref ref) async {
   // First, get all historical spending data.
@@ -32,12 +38,16 @@ Future<BudgetScreenData> budgetScreenData(Ref ref) async {
           ? historicalSpending.last.date
           : DateTime.now());
 
-  // Then, get the budget progress for that specific month.
-  final budgetProgress = await ref.watch(budgetProgressProvider(selectedMonth).future);
+  // Use Future.wait to fetch month-specific data concurrently.
+  final (budgetProgress, summaryDetails) = await (
+    ref.watch(budgetProgressProvider(selectedMonth).future),
+    ref.watch(budgetSummaryDetailsProvider(selectedMonth).future),
+  ).wait;
 
-  // Return both sets of data together in a single object.
+  // Return all data together in a single object.
   return BudgetScreenData(
     historicalSpending: historicalSpending,
     budgetProgress: budgetProgress,
+    summaryDetails: summaryDetails,
   );
 }

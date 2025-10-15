@@ -1,4 +1,5 @@
 // lib/src/features/budgets/presentation/widgets/upcoming_transaction_card.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -6,12 +7,9 @@ import 'package:budgit/src/features/transactions/presentation/providers/next_rec
 import 'package:budgit/src/features/transactions/presentation/controllers/log_filter_controller.dart';
 import 'package:budgit/src/features/transactions/domain/log_filter_state.dart';
 import 'package:budgit/src/app/navigation_provider.dart';
-import 'package:budgit/src/features/budgets/presentation/screens/budgets_screen.dart';
-
 
 class UpcomingTransactionCard extends ConsumerWidget {
   final String categoryId;
-
   const UpcomingTransactionCard({super.key, required this.categoryId});
 
   @override
@@ -26,24 +24,22 @@ class UpcomingTransactionCard extends ConsumerWidget {
       color: colorScheme.surfaceContainerLow,
       child: InkWell(
         onTap: () {
-          // 1. Set the data filters for the recurring screen
+          // 1. Pop the current detail screen to return to the overview
+          Navigator.of(context).pop();
+          
+          // 2. Set the data filters for the recurring screen
           final filterNotifier = ref.read(logFilterProvider.notifier);
           filterNotifier.setTransactionType(TransactionTypeFilter.payment);
           filterNotifier.setSelectedCategoryIds({categoryId});
           
-          // 2. Set the navigation state to switch tabs
+          // 3. Set the navigation state to switch main app tabs
           ref.read(transactionHubTabIndexProvider.notifier).setIndex(1);
-          ref.read(mainPageIndexProvider.notifier).setIndex(1);
-          
-          // --- THE FIX IS HERE ---
-          // 3. "Pop" the detail view by setting its controlling provider to null.
-          // This tells the AnimatedSwitcher in BudgetsScreen to switch back.
-          ref.read(selectedCategoryProvider.notifier).state = null;
-          // --- END OF FIX ---
+          ref.read(mainPageIndexProvider.notifier).setIndex(1); // Or 2, etc.
         },
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
+            // ...rest of the widget code is unchanged...
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(

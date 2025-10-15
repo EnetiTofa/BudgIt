@@ -1,6 +1,9 @@
 // lib/src/app.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:budgit/src/features/check_in/presentation/app_bar_info_provider.dart';
 import 'package:budgit/src/app/navigation_provider.dart';
 import 'package:budgit/src/features/budgets/presentation/screens/budget_hub_screen.dart';
 import 'package:budgit/src/features/categories/presentation/screens/add_category_screen.dart';
@@ -45,32 +48,136 @@ class _AppShellState extends ConsumerState<AppShell> {
     MenuScreen(key: ValueKey('MenuScreen')),
   ];
 
-  // --- REMOVED ---
-  // The _previousIndex variable is no longer needed.
+  final List<String> _screenTitles = const [
+    'Dashboard',
+    'Transactions',
+    'Financial Overview',
+    'Menu',
+  ];
 
   @override
   void initState() {
     super.initState();
-    // --- SIMPLIFIED ---
-    // The logic for setting the initial index is no longer needed.
     ref.read(allTransactionOccurrencesProvider);
   }
 
   @override
   Widget build(BuildContext context) {
-    // --- REMOVED ---
-    // The ref.listen block is no longer needed because we don't have to
-    // manage any animation state.
-
     final selectedIndex = ref.watch(mainPageIndexProvider);
+    final theme = Theme.of(context);
+    final formattedDate = DateFormat('d MMMM').format(DateTime.now());
 
     return Scaffold(
-      // --- THE CHANGE IS HERE ---
-      // We directly show the selected screen from the list.
-      // When selectedIndex changes, ref.watch triggers a rebuild,
-      // and this line instantly displays the new screen.
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        elevation: 0,
+        backgroundColor: theme.scaffoldBackgroundColor,
+        titleSpacing: 16.0,
+        toolbarHeight: 48.0,
+        // --- MODIFICATION: Replaced Stack with a Row for proper alignment ---
+        title: Stack(
+          alignment: Alignment.center,
+          children: [
+            // --- Left-aligned streak indicator ---
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Consumer(
+                builder: (context, ref, child) {
+                  final appBarInfoAsync = ref.watch(appBarInfoProvider);
+                  return appBarInfoAsync.when(
+                    loading: () => Container(
+                      height: 34.0,
+                      width: 72,
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surfaceContainer,
+                        borderRadius: BorderRadius.circular(17),
+                      ),
+                    ),
+                    error: (e, s) => SizedBox(
+                      height: 34.0,
+                      child: Center(
+                        child: Icon(Icons.cloud_off, color: theme.colorScheme.tertiary),
+                      ),
+                    ),
+                    data: (info) {
+                      final isHeated = info.isCheckInCompleted;
+                      return Container(
+                        height: 34.0,
+                        padding: const EdgeInsets.only(left: 14.0, right: 16.0),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surfaceContainerLow,
+                          borderRadius: BorderRadius.circular(17),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                if (isHeated)
+                                  Icon(
+                                    Icons.circle,
+                                    color: Colors.yellow.shade600,
+                                    size: 16,
+                                  ),
+                                FaIcon(
+                                  FontAwesomeIcons.fire,
+                                  size: 20,
+                                  color: isHeated
+                                      ? Colors.orange.shade700
+                                      : theme.colorScheme.secondary,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              info.streakCount.toString(),
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: theme.colorScheme.primary,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+            // --- Centered title with padding to prevent overlap ---
+            Padding(
+              // This padding creates a safe zone for the title
+              padding: const EdgeInsets.symmetric(horizontal: 90.0),
+              child: Center(
+                child: Text(
+                  _screenTitles[selectedIndex],
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 17,
+                  ),
+                  overflow: TextOverflow.ellipsis, // Handle long titles gracefully
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+            // --- Right-aligned date ---
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                formattedDate,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.tertiary,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
       body: _screens[selectedIndex],
-      // --- END OF CHANGE ---
       bottomNavigationBar: BottomAppBar(
         shape: const CircularNotchedRectangle(),
         notchMargin: 8.0,
@@ -99,7 +206,7 @@ class _AppShellState extends ConsumerState<AppShell> {
       ),
     );
   }
-  
+
   Widget _buildAddMenuItem(BuildContext context) {
     return InkWell(
       onTap: () => _showAddMenu(context),

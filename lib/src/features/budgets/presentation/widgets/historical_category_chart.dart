@@ -1,6 +1,9 @@
 // lib/src/features/budgets/presentation/widgets/historical_category_chart.dart
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' hide TextDirection;
+// Note: The parent widget that builds this chart is now responsible for
+// creating and passing the color palette using:
+// generateSpendingPalette(category.color).historicalChartList
 
 // Placeholder data models (unchanged)
 class MonthlySpendingBreakdown {
@@ -39,14 +42,12 @@ class _HistoricalCategoryChartState extends State<HistoricalCategoryChart> {
   void initState() {
     super.initState();
     _scrollController = ScrollController();
-    // Scroll to the end when the widget is first built.
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToEnd());
   }
 
   @override
   void didUpdateWidget(covariant HistoricalCategoryChart oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // If the data changes, scroll to the end again.
     if (widget.data.length != oldWidget.data.length) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToEnd());
     }
@@ -118,7 +119,6 @@ class _HistoricalCategoryChartState extends State<HistoricalCategoryChart> {
   }
 }
 
-// ChartPainter class remains unchanged
 class ChartPainter extends CustomPainter {
   const ChartPainter({
     required this.spendingData,
@@ -157,7 +157,14 @@ class ChartPainter extends CustomPainter {
       final barX = (itemWidth * i) + (itemWidth - barWidth) / 2;
       double currentY = size.height - bottomPadding;
 
-      final segments = [item.oneOff, item.wallet, item.recurring];
+      // --- MODIFIED CODE ---
+      // Changed stack order for a better visual progression of color
+      // (darkest at bottom, lightest at top).
+      // The colorPalette prop must now be passed in this order:
+      // [oneOffColor, recurringColor, walletColor]
+      final segments = [item.oneOff, item.recurring, item.wallet];
+      // --- END OF MODIFICATION ---
+
       for (int j = 0; j < segments.length; j++) {
         final segmentHeight = (segments[j] / effectiveMaxAmount) * chartHeight;
         final segmentPaint = Paint()..color = isSelected ? colorPalette[j] : colorPalette[j].withOpacity(0.5);

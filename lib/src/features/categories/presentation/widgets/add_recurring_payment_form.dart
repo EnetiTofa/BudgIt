@@ -1,24 +1,29 @@
-// lib/src/features/transactions/presentation/widgets/add_recurring_payment_form.dart
-
+// lib/src/features/categories/presentation/widgets/add_recurring_payment_form.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
 import 'package:budgit/src/common_widgets/currency_input_field.dart';
 import 'package:budgit/src/common_widgets/custom_text_input_field.dart';
-import 'package:budgit/src/common_widgets/icon_picker_field.dart'; // ADD THIS
+import 'package:budgit/src/common_widgets/icon_picker_field.dart';
 import 'package:budgit/src/features/transactions/domain/transaction.dart';
-import 'package:budgit/src/features/transactions/presentation/widgets/date_selector_field.dart';
+import 'package:budgit/src/common_widgets/date_selector_field.dart';
 import 'package:budgit/src/features/transactions/presentation/widgets/period_selector_field.dart';
-import 'package:budgit/src/features/categories/presentation/controllers/add_category_controller.dart';
-import 'package:budgit/src/features/categories/presentation/providers/add_category_providers.dart';
+import 'package:budgit/src/features/categories/domain/category.dart';
 import 'package:budgit/src/utils/clock_provider.dart';
 
 
 class AddRecurringPaymentForm extends ConsumerStatefulWidget {
   final RecurringPayment? initialPayment;
+  // --- MODIFIED ---
+  // Category is now required as this form is only used for existing categories.
+  final Category category;
 
-  const AddRecurringPaymentForm({super.key, this.initialPayment});
+  const AddRecurringPaymentForm({
+    super.key, 
+    this.initialPayment,
+    required this.category,
+  });
 
   @override
   ConsumerState<AddRecurringPaymentForm> createState() =>
@@ -27,20 +32,15 @@ class AddRecurringPaymentForm extends ConsumerStatefulWidget {
 
 class _AddRecurringPaymentFormState
     extends ConsumerState<AddRecurringPaymentForm> {
-  // Use a local variable for amount, updated on focus change
   double _amount = 0.0;
-
   final _paymentNameController = TextEditingController();
   final _payeeController = TextEditingController();
-  
-  // Add a FocusNode to detect when the user clicks off the amount field
   final _amountFocusNode = FocusNode();
-
   DateTime? _selectedDate;
   DateTime? _endDate;
   RecurrencePeriod _recurrence = RecurrencePeriod.monthly;
   int _recurrenceFrequency = 1;
-  IconData? _selectedIcon; // ADD THIS
+  IconData? _selectedIcon;
 
   bool get isEditing => widget.initialPayment != null;
 
@@ -56,7 +56,6 @@ class _AddRecurringPaymentFormState
       _endDate = p.endDate;
       _recurrence = p.recurrence;
       _recurrenceFrequency = p.recurrenceFrequency;
-      // POPULATE ICON IF IT EXISTS
       if (p.iconCodePoint != null) {
         _selectedIcon = IconData(
           p.iconCodePoint!,
@@ -72,17 +71,17 @@ class _AddRecurringPaymentFormState
   void dispose() {
     _paymentNameController.dispose();
     _payeeController.dispose();
-    _amountFocusNode.dispose(); // Dispose the focus node
+    _amountFocusNode.dispose();
     super.dispose();
   }
 
   void _submitForm() {
-    // Manually unfocus to ensure the last-typed amount is saved before submitting
     _amountFocusNode.unfocus();
     
-    // Use a short delay to allow the state to update from the focus listener
     Future.delayed(const Duration(milliseconds: 50), () {
-      final category = ref.read(addCategoryControllerProvider).toCategory();
+      // --- MODIFIED ---
+      // Removed the old wizard logic. We now get the category directly from the widget.
+      final category = widget.category;
 
       if (_amount <= 0 ||
           _paymentNameController.text.trim().isEmpty ||
@@ -93,8 +92,9 @@ class _AddRecurringPaymentFormState
         return;
       }
 
+      final RecurringPayment result;
       if (isEditing) {
-        final updatedPayment = RecurringPayment(
+        result = RecurringPayment(
           id: widget.initialPayment!.id,
           notes: widget.initialPayment!.notes,
           createdAt: widget.initialPayment!.createdAt,
@@ -106,15 +106,11 @@ class _AddRecurringPaymentFormState
           recurrenceFrequency: _recurrenceFrequency,
           startDate: _selectedDate!,
           endDate: _endDate,
-          // ADD ICON DATA
           iconCodePoint: _selectedIcon?.codePoint,
           iconFontFamily: _selectedIcon?.fontFamily,
         );
-        ref
-            .read(tempRecurringPaymentsProvider.notifier)
-            .updatePayment(updatedPayment);
       } else {
-        final newPayment = RecurringPayment(
+        result = RecurringPayment(
           id: const Uuid().v4(),
           notes: '',
           createdAt: ref.read(clockProvider).now(),
@@ -126,14 +122,12 @@ class _AddRecurringPaymentFormState
           recurrenceFrequency: _recurrenceFrequency,
           startDate: _selectedDate!,
           endDate: _endDate,
-          // ADD ICON DATA
           iconCodePoint: _selectedIcon?.codePoint,
           iconFontFamily: _selectedIcon?.fontFamily,
         );
-        ref.read(tempRecurringPaymentsProvider.notifier).addPayment(newPayment);
       }
 
-      Navigator.of(context).pop();
+      Navigator.of(context).pop(result);
     });
   }
 
@@ -154,12 +148,9 @@ class _AddRecurringPaymentFormState
               labelText: 'Amount',
               initialValue: _amount,
               onChanged: (value) {
-                // Schedule the state update to run after the build is complete.
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (mounted) {
-                    setState(() {
-                      _amount = value;
-                    });
+                    setState(() { _amount = value; });
                   }
                 });
               },
@@ -168,14 +159,11 @@ class _AddRecurringPaymentFormState
             CustomTextInputField(
                 controller: _payeeController, labelText: 'Payee (Optional)'),
             const SizedBox(height: 16),
-            // ADD THE ICON PICKER FIELD
             IconPickerField(
               labelText: 'Custom Icon (Optional)',
               selectedIcon: _selectedIcon,
               onIconSelected: (icon) {
-                setState(() {
-                  _selectedIcon = icon;
-                });
+                setState(() { _selectedIcon = icon; });
               },
             ),
             const SizedBox(height: 16),
@@ -183,14 +171,10 @@ class _AddRecurringPaymentFormState
               frequency: _recurrenceFrequency,
               period: _recurrence,
               onFrequencyChanged: (frequency) {
-                setState(() {
-                  _recurrenceFrequency = frequency;
-                });
+                setState(() { _recurrenceFrequency = frequency; });
               },
               onPeriodChanged: (period) {
-                setState(() {
-                  _recurrence = period;
-                });
+                setState(() { _recurrence = period; });
               },
             ),
             const SizedBox(height: 16),
@@ -202,9 +186,7 @@ class _AddRecurringPaymentFormState
                     selectedDate: _selectedDate,
                     layout: DateSelectorLayout.vertical,
                     onDateSelected: (date) {
-                      setState(() {
-                        _selectedDate = date;
-                      });
+                      setState(() { _selectedDate = date; });
                     },
                   ),
                 ),
@@ -215,9 +197,7 @@ class _AddRecurringPaymentFormState
                     selectedDate: _endDate,
                     layout: DateSelectorLayout.vertical,
                     onDateSelected: (date) {
-                      setState(() {
-                        _endDate = date;
-                      });
+                      setState(() { _endDate = date; });
                     },
                   ),
                 ),

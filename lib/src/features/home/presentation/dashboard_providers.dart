@@ -1,7 +1,5 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:budgit/src/features/categories/domain/category.dart';
 import 'package:budgit/src/features/transactions/domain/transaction.dart';
-import 'package:budgit/src/features/categories/presentation/providers/category_list_provider.dart';
 import 'package:budgit/src/features/transactions/presentation/providers/transaction_log_provider.dart';
 import 'package:budgit/src/utils/clock_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -19,7 +17,6 @@ class MonthlySummary {
 
 @riverpod
 Future<MonthlySummary> monthlySummary(Ref ref) async {
-  final categories = await ref.watch(categoryListProvider.future);
   final transactionLog = ref.watch(transactionLogProvider);
   final now = ref.watch(clockProvider).now();
   double totalMonthlyBudget = 0;

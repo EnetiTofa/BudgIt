@@ -26,10 +26,19 @@ class CustomDropdownField<T> extends StatelessWidget {
       isExpanded: true, 
       decoration: InputDecoration(
         labelText: labelText,
-        // Add this to make the field more compact.
-        isDense: true, 
-        border: const OutlineInputBorder(),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        isDense: true,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16), // Match input height
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12), // Match CurrencyInputField corner radius
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Theme.of(context).colorScheme.secondary),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
+        ),
       ),
     );
   }

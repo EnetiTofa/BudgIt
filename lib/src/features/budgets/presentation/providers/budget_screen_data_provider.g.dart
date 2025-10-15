@@ -6,11 +6,11 @@ part of 'budget_screen_data_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$budgetScreenDataHash() => r'994e297eca47de7f1f1a6491de024940f34467e6';
+String _$budgetScreenDataHash() => r'8c8c81d054e7094934115d2c907af8848dd6e609';
 
 /// This provider fetches all necessary data for the budget screen.
-/// It ensures that both historical and progress data are loaded before the UI builds,
-/// preventing the "zero-out" flicker on the timeline.
+/// It ensures that all data is loaded before the UI builds,
+/// preventing flickering on month changes.
 ///
 /// Copied from [budgetScreenData].
 @ProviderFor(budgetScreenData)

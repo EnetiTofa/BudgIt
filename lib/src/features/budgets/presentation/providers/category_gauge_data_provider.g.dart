@@ -6,7 +6,7 @@ part of 'category_gauge_data_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$categoryGaugeDataHash() => r'94f2206170a5c5e0a470a3c01a9bb71ac40ee458';
+String _$categoryGaugeDataHash() => r'e18b56e55e03e289374b9a55dd4f1fb540109f89';
 
 /// Copied from Dart SDK
 class _SystemHash {

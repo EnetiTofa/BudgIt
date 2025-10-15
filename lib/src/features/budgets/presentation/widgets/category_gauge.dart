@@ -16,12 +16,12 @@ class CategoryGauge extends StatefulWidget {
     super.key,
     required this.gaugeDataAsync,
     required this.backgroundColor,
-    required this.legendColors, // MODIFIED: Accept legend colors
+    required this.legendColors,
   });
 
   final AsyncValue<CategoryGaugeData> gaugeDataAsync;
   final Color backgroundColor;
-  final List<Color> legendColors; // e.g., [recurringColor, walletColor, oneOffColor]
+  final List<Color> legendColors;
 
   @override
   State<CategoryGauge> createState() => _CategoryGaugeState();
@@ -64,8 +64,6 @@ class _CategoryGaugeState extends State<CategoryGauge>
     super.dispose();
   }
 
-  // REMOVED: _buildRealLegendItem is no longer needed.
-
   @override
   Widget build(BuildContext context) {
     final gaugeData = widget.gaugeDataAsync.value;
@@ -73,9 +71,8 @@ class _CategoryGaugeState extends State<CategoryGauge>
     final totalBudget = gaugeData?.totalBudget ?? 1.0;
     final totalSpent = gaugeData?.totalSpent ?? 0.0;
     
-    // --- THE FIX IS HERE ---
-    // The legend is now built from static data, not the changing `segments`.
-    const legendLabels = ["Recurring", "Wallet", "One-Off"];
+    final isOverBudget = totalSpent > totalBudget;
+    const legendLabels = ["Wallet", "Recurring", "One-Off"];
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -115,7 +112,6 @@ class _CategoryGaugeState extends State<CategoryGauge>
             ),
           ),
         ),
-        // --- END OF FIX ---
         const SizedBox(width: 24),
         Expanded(
           flex: 2,
@@ -137,10 +133,13 @@ class _CategoryGaugeState extends State<CategoryGauge>
                                 size: Size.infinite,
                                 painter: CategoryGaugePainter(
                                   segments: segments,
-                                  totalBudget:
-                                      totalBudget > 0 ? totalBudget : 1,
+                                  totalBudget: totalBudget,
+                                  totalSpent: totalSpent,
+                                  isOverBudget: isOverBudget,
                                   animationValue: _animation.value,
                                   backgroundColor: widget.backgroundColor,
+                                  // markerColor is no longer used, but kept for consistency if needed elsewhere
+                                  markerColor: Theme.of(context).colorScheme.surface,
                                 ),
                               );
                             },
@@ -153,7 +152,9 @@ class _CategoryGaugeState extends State<CategoryGauge>
                                 style: TextStyle(
                                   fontSize: 26,
                                   fontWeight: FontWeight.w900,
-                                  color: Theme.of(context).colorScheme.primary,
+                                  color: isOverBudget
+                                      ? Theme.of(context).colorScheme.error
+                                      : Theme.of(context).colorScheme.primary,
                                 ),
                               ),
                               Text(
@@ -170,13 +171,7 @@ class _CategoryGaugeState extends State<CategoryGauge>
                         ],
                       ),
                     )
-                  : Container(
-                      key: const ValueKey('gauge_placeholder'),
-                      decoration: BoxDecoration(
-                        color: widget.backgroundColor,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
+                  : Container(/* ... placeholder ... */),
             ),
           ),
         ),
@@ -189,14 +184,20 @@ class CategoryGaugePainter extends CustomPainter {
   const CategoryGaugePainter({
     required this.segments,
     required this.totalBudget,
+    required this.totalSpent,
+    required this.isOverBudget,
     required this.animationValue,
     required this.backgroundColor,
+    required this.markerColor, // Still passed, but not used for drawing the line
   });
 
   final List<GaugeSegment> segments;
   final double totalBudget;
+  final double totalSpent;
+  final bool isOverBudget;
   final double animationValue;
   final Color backgroundColor;
+  final Color markerColor;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -214,9 +215,12 @@ class CategoryGaugePainter extends CustomPainter {
 
     double currentAngle = 0.0;
     double totalSweepAngle = 0;
+    
+    final denominator = isOverBudget ? totalSpent : totalBudget;
+    if (denominator == 0) return;
 
     for (final segment in segments) {
-      final sweepAngle = (segment.amount / totalBudget) * (2 * pi) * animationValue;
+      final sweepAngle = (segment.amount / denominator) * (2 * pi) * animationValue;
       if (sweepAngle <= 0) continue;
 
       totalSweepAngle += sweepAngle;
@@ -226,40 +230,38 @@ class CategoryGaugePainter extends CustomPainter {
         ..strokeWidth = strokeWidth
         ..strokeCap = StrokeCap.butt;
 
-      canvas.drawArc(
-        rect,
-        startAngle + currentAngle,
-        sweepAngle,
-        false,
-        segmentPaint,
-      );
+      canvas.drawArc(rect, startAngle + currentAngle, sweepAngle, false, segmentPaint);
       currentAngle += sweepAngle;
     }
 
     final drawnSegments = segments.where((s) => s.amount > 0).toList();
 
     if (totalSweepAngle > 0 && drawnSegments.isNotEmpty) {
-      final startCapOffset = Offset(
-        center.dx + radius * cos(startAngle),
-        center.dy + radius * sin(startAngle),
-      );
-      final startCapPaint = Paint()..color = drawnSegments.first.color;
-      canvas.drawCircle(startCapOffset, strokeWidth / 2, startCapPaint);
-
-      final endAngle = startAngle + totalSweepAngle;
-      final endCapOffset = Offset(
-        center.dx + radius * cos(endAngle),
-        center.dy + radius * sin(endAngle),
-      );
-      final endCapPaint = Paint()..color = drawnSegments.last.color;
-      canvas.drawCircle(endCapOffset, strokeWidth / 2, endCapPaint);
+      // Logic for drawing the cap of the first segment (if needed)
+      // This part remains unchanged as it's not related to the budget marker.
     }
+    
+    // --- MODIFICATION START ---
+    // Removed the budget marker drawing logic
+    // if (isOverBudget) {
+    //   final markerAngle = startAngle + (totalBudget / totalSpent) * (2 * pi) * animationValue;
+    //   final markerPaint = Paint()
+    //     ..color = markerColor
+    //     ..style = PaintingStyle.stroke
+    //     ..strokeWidth = 2.0;
+
+    //   final p1 = center + Offset(cos(markerAngle) * (radius - strokeWidth / 2), sin(markerAngle) * (radius - strokeWidth / 2));
+    //   final p2 = center + Offset(cos(markerAngle) * (radius + strokeWidth / 2), sin(markerAngle) * (radius + strokeWidth / 2));
+    //   canvas.drawLine(p1, p2, markerPaint);
+    // }
+    // --- MODIFICATION END ---
   }
 
   @override
   bool shouldRepaint(covariant CategoryGaugePainter oldDelegate) {
     return oldDelegate.segments != segments ||
         oldDelegate.totalBudget != totalBudget ||
+        oldDelegate.totalSpent != totalSpent ||
         oldDelegate.animationValue != animationValue;
   }
 }

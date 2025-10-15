@@ -6,13 +6,46 @@ part of 'savings_providers.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$averageWeeklySavingsHash() =>
-    r'e34bc67f4130b05012ccc61f4e297f0f75e8bca3';
+String _$savingsScreenDataHash() => r'cce79a06e1996714a960fba7d5adf9113358a68d';
 
-/// The "Financial Analyst" provider.
-/// Calculates the user's average weekly unspent wallet funds based on historical data.
-///
-/// Copied from [averageWeeklySavings].
+/// See also [savingsScreenData].
+@ProviderFor(savingsScreenData)
+final savingsScreenDataProvider =
+    AutoDisposeFutureProvider<SavingsScreenData>.internal(
+  savingsScreenData,
+  name: r'savingsScreenDataProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$savingsScreenDataHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef SavingsScreenDataRef = AutoDisposeFutureProviderRef<SavingsScreenData>;
+String _$savingsGaugeDataHash() => r'f0ce5b4ce9e52588dee4e28fb689acf16be3aa23';
+
+/// See also [savingsGaugeData].
+@ProviderFor(savingsGaugeData)
+final savingsGaugeDataProvider =
+    AutoDisposeFutureProvider<SavingsGaugeData>.internal(
+  savingsGaugeData,
+  name: r'savingsGaugeDataProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$savingsGaugeDataHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef SavingsGaugeDataRef = AutoDisposeFutureProviderRef<SavingsGaugeData>;
+String _$averageWeeklySavingsHash() =>
+    r'8847f6c843015e1e79f0e67b3c4313e3de0e5f2f';
+
+/// See also [averageWeeklySavings].
 @ProviderFor(averageWeeklySavings)
 final averageWeeklySavingsProvider = AutoDisposeFutureProvider<double>.internal(
   averageWeeklySavings,
@@ -29,9 +62,7 @@ final averageWeeklySavingsProvider = AutoDisposeFutureProvider<double>.internal(
 typedef AverageWeeklySavingsRef = AutoDisposeFutureProviderRef<double>;
 String _$totalSavingsHash() => r'd4ce2abe82e3aa1e0b1da051b5a353eef0b025cf';
 
-/// Fetches total savings from the repository (snapshot data).
-///
-/// Copied from [totalSavings].
+/// See also [totalSavings].
 @ProviderFor(totalSavings)
 final totalSavingsProvider = AutoDisposeFutureProvider<double>.internal(
   totalSavings,
@@ -48,10 +79,7 @@ typedef TotalSavingsRef = AutoDisposeFutureProviderRef<double>;
 String _$potentialWeeklySavingsHash() =>
     r'a072cdc653511ed3014e1d82db337876dc757ced';
 
-/// The "Motivator" provider.
-/// Calculates the potential weekly savings if the user sticks to a simple rule.
-///
-/// Copied from [potentialWeeklySavings].
+/// See also [potentialWeeklySavings].
 @ProviderFor(potentialWeeklySavings)
 final potentialWeeklySavingsProvider =
     AutoDisposeFutureProvider<double>.internal(

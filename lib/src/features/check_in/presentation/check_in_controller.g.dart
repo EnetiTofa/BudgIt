@@ -6,7 +6,7 @@ part of 'check_in_controller.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$checkInControllerHash() => r'8f8b1a2f82c4d2afeac412a9d824ea855d9b00ca';
+String _$checkInControllerHash() => r'fd149dc646c562cb5ce19b2bff73b64f7918294c';
 
 /// See also [CheckInController].
 @ProviderFor(CheckInController)

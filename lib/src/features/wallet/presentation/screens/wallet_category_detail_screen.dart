@@ -6,8 +6,8 @@ import 'package:budgit/src/features/wallet/presentation/providers/wallet_categor
 import 'package:budgit/src/features/wallet/presentation/widgets/category/animated_wallet_gauge.dart';
 import 'package:budgit/src/features/wallet/presentation/controllers/boost_controller.dart';
 import 'package:budgit/src/features/wallet/presentation/widgets/category/category_display_widget.dart';
-import 'package:budgit/src/features/categories/presentation/screens/edit_category_screen.dart';
 import 'package:budgit/src/features/wallet/presentation/widgets/category/expanded_mode.dart';
+import 'package:budgit/src/features/categories/presentation/screens/edit_basic_category_screen.dart';
 
 class WalletCategoryDetailScreen extends ConsumerStatefulWidget {
   final Category category;
@@ -67,7 +67,7 @@ class _WalletCategoryDetailScreenState
       final boostStateAsync = ref.watch(boostStateProvider(widget.category));
       final totalBoostAmount = boostStateAsync.maybeWhen(
         data: (boostMap) =>
-            boostMap.values.fold(0.0, (sum, amount) => sum + amount),
+            boostMap.currentBoosts.values.fold(0.0, (sum, amount) => sum + amount),
         orElse: () => 0.0,
       );
 
@@ -123,7 +123,8 @@ class _WalletCategoryDetailScreenState
               child: CornerActionButton(
                 icon: data.category.icon,
                 tooltip: 'Category Page',
-                onPressed: () {},
+                onPressed: () {
+                },
                 backgroundColor: data.category.color,
                 iconColor: contentColor,
                 iconSize: 28,
@@ -141,14 +142,17 @@ class _WalletCategoryDetailScreenState
                 icon: Icons.edit_outlined,
                 tooltip: 'Edit Category',
                 onPressed: () {
-                  Navigator.of(context).push(MaterialPageRoute(
-                    builder: (_) => EditCategoryScreen(category: data.category),
-                  ));
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          EditBasicCategoryScreen(category: widget.category),
+                    ),
+                  );
                 },
                 backgroundColor: Theme.of(context).colorScheme.surface,
                 iconColor: Theme.of(context).colorScheme.secondary,
-                size: 52,
-                iconSize: 36,
+                size: 36,
+                iconSize: 28,
               ),
             ),
           ),

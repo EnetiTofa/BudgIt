@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:budgit/src/features/categories/domain/category.dart';
 import 'package:budgit/src/features/wallet/presentation/controllers/boost_controller.dart';
-import 'package:budgit/src/features/wallet/presentation/widgets/category/boost_slider_card.dart'; // Adjust the path if needed
-import 'package:budgit/src/features/wallet/presentation/providers/wallet_category_data_provider.dart'; // Add this line
+import 'package:budgit/src/features/wallet/presentation/widgets/category/boost_slider_card.dart';
+import 'package:budgit/src/features/wallet/presentation/providers/wallet_category_data_provider.dart';
 import 'package:budgit/src/features/wallet/presentation/widgets/category/expanded_mode.dart';
 
 
@@ -79,9 +79,9 @@ class CategoryDisplayWidget extends StatelessWidget {
                   title,
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w800, // Keeps the text bold
-                        fontSize: 18, // Example: Sets a specific font size
-                        color: Theme.of(context).colorScheme.primary, // Example: Changes the text color to blue
+                        fontWeight: FontWeight.w800,
+                        fontSize: 18,
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                 ),
                 Align(
@@ -89,7 +89,6 @@ class CategoryDisplayWidget extends StatelessWidget {
                   child: IconButton(
                     icon: const Icon(Icons.keyboard_arrow_down),
                     iconSize: 32,
-                    // MODIFIED: Dismiss keyboard before collapsing
                     onPressed: () {
                       FocusScope.of(context).unfocus();
                       onCollapse();
@@ -121,7 +120,7 @@ class CategoryDisplayWidget extends StatelessWidget {
 
     final bool isExpanded = expandedMode != ExpandedMode.none;
     final brightness = ThemeData.estimateBrightnessForColor(categoryColor);
-    final contentColor = brightness == Brightness.dark ? Colors.white : Color(0xFF121212).withAlpha(200);
+    final contentColor = brightness == Brightness.dark ? Colors.white : const Color(0xFF121212).withAlpha(200);
 
     return Stack(
       children: [
@@ -291,7 +290,6 @@ class _BoostContent extends ConsumerWidget {
     return switch (boostStateAsync) {
       AsyncLoading() => const Center(child: CircularProgressIndicator()),
       AsyncError(:final error) => Center(child: Text('Error: $error')),
-      // --- MODIFIED: Correctly extract 'value' and assign it to 'boostData' ---
       AsyncData(value: final boostData) => switch (availableCategoriesAsync) {
           AsyncLoading() => const Center(child: CircularProgressIndicator()),
           AsyncError() => const Center(child: Text('Could not load categories.')),
@@ -301,8 +299,13 @@ class _BoostContent extends ConsumerWidget {
                 ...value
                     .where((data) => data.category.id != toCategory.id)
                     .where((data) {
-                      final hasRemaining = data.amountRemainingThisWeek > 0.01;
-                      final isAlreadyBoosting = boostData.containsKey(data.category.id);
+                      // Manually calculate the remaining amount for the category
+                      final amountRemaining = data.amountRemainingThisWeek;
+                      final hasRemaining = amountRemaining > 0.01;
+                      
+                      // --- FIX: Access the 'currentBoosts' map inside the state object ---
+                      final isAlreadyBoosting = boostData.currentBoosts.containsKey(data.category.id);
+                      
                       return hasRemaining || isAlreadyBoosting;
                     })
                     .map((data) => Padding(
@@ -310,7 +313,6 @@ class _BoostContent extends ConsumerWidget {
                           child: BoostSliderCard(
                             fromCategory: data.category,
                             toCategory: toCategory,
-                            maxAmount: data.amountRemainingThisWeek + (boostData[data.category.id] ?? 0.0),
                           ),
                         )),
                 Padding(
@@ -385,11 +387,11 @@ class _DetailActionCard extends StatelessWidget {
           onTap: onPressed,
           borderRadius: BorderRadius.circular(16),
           child: SingleChildScrollView(
-            physics: const ClampingScrollPhysics(), // Prevents overscrolling
+            physics: const ClampingScrollPhysics(),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const SizedBox(height: 20), // Add padding to the top
+                const SizedBox(height: 20),
                 SizedBox(
                   height: 80,
                   child: Center(child: mainContent),

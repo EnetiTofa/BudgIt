@@ -1,4 +1,6 @@
+// lib/src/features/wallet/presentation/controllers/boost_controller.dart
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:equatable/equatable.dart';
 import 'package:budgit/src/features/transactions/data/transaction_repository_provider.dart';
 import 'package:budgit/src/features/categories/domain/category.dart';
 import 'package:budgit/src/features/wallet/domain/wallet_adjustment.dart';
@@ -7,48 +9,78 @@ import 'package:budgit/src/utils/clock_provider.dart';
 
 part 'boost_controller.g.dart';
 
-// The provider is no longer kept alive. It will re-fetch its state each time you enter the screen.
+/// A dedicated state class to hold the initial (confirmed) boost values
+/// separately from the current (edited) values.
+class BoostControllerState extends Equatable {
+  final Map<String, double> initialBoosts;
+  final Map<String, double> currentBoosts;
+
+  const BoostControllerState({
+    required this.initialBoosts,
+    required this.currentBoosts,
+  });
+
+  @override
+  List<Object?> get props => [initialBoosts, currentBoosts];
+
+  BoostControllerState copyWith({
+    Map<String, double>? initialBoosts,
+    Map<String, double>? currentBoosts,
+  }) {
+    return BoostControllerState(
+      initialBoosts: initialBoosts ?? this.initialBoosts,
+      currentBoosts: currentBoosts ?? this.currentBoosts,
+    );
+  }
+}
+
 @riverpod
 class BoostState extends _$BoostState {
-  
-  /// The build method is now async. It fetches the current week's adjustments
-  /// and builds the initial state map.
+  /// Fetches the current week's adjustments and builds the initial state.
   @override
-  Future<Map<String, double>> build(Category toCategory) async {
+  Future<BoostControllerState> build(Category toCategory) async {
     final repository = ref.watch(transactionRepositoryProvider);
     final clock = ref.watch(clockProvider);
     final adjustments = await repository.getWalletAdjustmentsForWeek(clock.now());
 
     final boostMap = <String, double>{};
-    // We only care about boosts TO the current category we are editing.
     for (final adj in adjustments.where((a) => a.toCategoryId == toCategory.id)) {
       boostMap[adj.fromCategoryId] = adj.amount;
     }
-    return boostMap;
+
+    // Both initial and current boosts start with the same confirmed data from the database.
+    return BoostControllerState(
+      initialBoosts: boostMap,
+      currentBoosts: Map.from(boostMap),
+    );
   }
 
-  /// Called by the slider widget to update the in-memory state.
+  /// Updates the temporary 'currentBoosts' state when the slider moves,
+  /// leaving the 'initialBoosts' state untouched.
   void updateAmount(String fromCategoryId, double amount) {
-    if (state.hasError || state.isLoading) return; // Don't update while loading
-    final newState = Map<String, double>.from(state.value!);
+    if (state.hasError || state.isLoading) return;
+    
+    final newCurrentBoosts = Map<String, double>.from(state.value!.currentBoosts);
     if (amount > 0) {
-      newState[fromCategoryId] = amount;
+      newCurrentBoosts[fromCategoryId] = amount;
     } else {
-      newState.remove(fromCategoryId);
+      newCurrentBoosts.remove(fromCategoryId);
     }
-    state = AsyncValue.data(newState);
+    
+    state = AsyncValue.data(state.value!.copyWith(currentBoosts: newCurrentBoosts));
   }
 
-  /// Called when the user presses "Confirm".
+  /// Saves the final 'currentBoosts' state to the database upon confirmation.
   Future<void> confirmBoosts() async {
+    if (state.hasError || state.isLoading) return;
     final repository = ref.read(transactionRepositoryProvider);
     final clock = ref.read(clockProvider);
-    
-    // First, delete all old adjustments for this "to" category for the week
-    // to prevent duplicates.
+
+    // First, delete old adjustments to prevent duplicates.
     await repository.deleteWalletAdjustments(toCategory.id, clock.now());
 
-    for (var entry in state.value!.entries) {
+    // Save the edited 'currentBoosts' to the database.
+    for (var entry in state.value!.currentBoosts.entries) {
       final adjustment = WalletAdjustment(
         id: DateTime.now().toIso8601String(),
         fromCategoryId: entry.key,
@@ -59,7 +91,7 @@ class BoostState extends _$BoostState {
       await repository.addWalletAdjustment(adjustment);
     }
     
-    // Invalidate providers to refresh the WalletScreen UI.
+    // Invalidate the main wallet data provider to refresh the UI.
     ref.invalidate(walletCategoryDataProvider);
   }
 }

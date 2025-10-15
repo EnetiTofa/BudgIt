@@ -31,7 +31,17 @@ class AllTransactionOccurrences extends _$AllTransactionOccurrences {
     }
 
     occurrences.removeWhere((t) {
-      final date = t is OneOffPayment ? t.date : (t as OneOffIncome).date;
+      // Safely get the date from either type
+      final DateTime date;
+      if (t is OneOffPayment) {
+        date = t.date;
+      } else if (t is OneOffIncome) {
+        date = t.date;
+      } else {
+        // If the transaction type doesn't have a date, don't remove it.
+        // Or handle as an error, depending on your logic.
+        return false;
+      }
       return date.isAfter(clock.now());
     });
 
@@ -50,7 +60,6 @@ class AllTransactionOccurrences extends _$AllTransactionOccurrences {
     );
 
     // Perform the database deletion in the background
-    // Note: We no longer need to invalidate here because this notifier manages its own state
     await ref.read(addTransactionControllerProvider.notifier)
                .deleteTransaction(transactionId);
   }
@@ -74,17 +83,15 @@ AsyncValue<List<Transaction>> transactionLog(Ref ref) {
   final List<Transaction> typeFilteredList;
   switch (filter.transactionTypeFilter) {
     case TransactionTypeFilter.payment:
-      typeFilteredList = occurrences.whereType<OneOffPayment>().toList();
+      typeFilteredList = occurrences.where((t) => t is OneOffPayment || t is PaymentOccurrence).toList();
       break;
     case TransactionTypeFilter.income:
-      typeFilteredList = occurrences.whereType<OneOffIncome>().toList();
+      typeFilteredList = occurrences.where((t) => t is OneOffIncome || t is IncomeOccurrence).toList();
       break;
     case TransactionTypeFilter.all:
       typeFilteredList = occurrences;
   }
   
-  // --- THE FIX IS HERE ---
-  // Use the 'typeFilteredList' here instead of the original 'occurrences' list.
   final filteredList = typeFilteredList.where((tx) {
     final query = filter.searchQuery.toLowerCase();
     bool matchesQuery = true;
@@ -109,7 +116,8 @@ AsyncValue<List<Transaction>> transactionLog(Ref ref) {
     return matchesQuery && matchesCategory;
   }).toList();
 
-  // Sorting logic (unchanged)
+  // --- THE FIX IS HERE ---
+  // Sorting logic now correctly compares DateTime objects.
   filteredList.sort((a, b) {
     switch (filter.sortBy) {
       case SortBy.category:
@@ -120,10 +128,32 @@ AsyncValue<List<Transaction>> transactionLog(Ref ref) {
         final storeA = a is OneOffPayment ? a.store : 'Income';
         final storeB = b is OneOffPayment ? b.store : 'Income';
         return storeA.compareTo(storeB);
+        
       case SortBy.date:
-        final dateA = a is OneOffPayment ? a.date : (a as OneOffIncome).date;
-        final dateB = b is OneOffPayment ? b.date : (b as OneOffIncome).date;
-        return dateB.compareTo(dateA); // Already descending
+        DateTime? dateA;
+        DateTime? dateB;
+
+        // More robust way to get the date from transaction 'a'
+        if (a is OneOffPayment) {
+          dateA = a.date;
+        } else if (a is OneOffIncome) {
+          dateA = a.date;
+        }
+
+        // More robust way to get the date from transaction 'b'
+        if (b is OneOffPayment) {
+          dateB = b.date;
+        } else if (b is OneOffIncome) {
+          dateB = b.date;
+        }
+
+        // Failsafe in case one of the dates is null
+        if (dateA == null || dateB == null) {
+          return 0; // Don't change order if a date is missing
+        }
+
+        // The actual comparison
+        return dateB.compareTo(dateA);
     }
   });
 

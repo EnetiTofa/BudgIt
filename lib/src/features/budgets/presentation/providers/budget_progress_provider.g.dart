@@ -6,7 +6,7 @@ part of 'budget_progress_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$budgetProgressHash() => r'b2a86630ce2c564ea14d0402b880c0847812ca7e';
+String _$budgetProgressHash() => r'ef0930eb3edb94ef45f7a3907ad2ce17d2e18498';
 
 /// Copied from Dart SDK
 class _SystemHash {

@@ -13,9 +13,6 @@ import 'package:budgit/src/features/savings/presentation/savings_providers.dart'
 import 'package:budgit/src/features/check_in/presentation/streak_provider.dart';
 import 'package:budgit/src/features/check_in/presentation/is_check_in_available_provider.dart';
 
-
-
-
 part 'add_transaction_controller.g.dart';
 
 @riverpod
@@ -209,26 +206,50 @@ class AddTransactionController extends _$AddTransactionController {
     _invalidateProviders();
   }
 
-  Future<void> setSavingsGoal(double targetAmount) async {
+   Future<void> setSavingsGoal(
+    double targetAmount, {
+    DateTime? startDate, // Add optional startDate parameter
+  }) async {
     final repository = ref.read(transactionRepositoryProvider);
     final clock = ref.read(clockProvider);
     
     final newGoal = SavingsGoal(
       id: 'activeGoal',
       targetAmount: targetAmount,
-      createdAt: clock.now(),
+      // Use the provided startDate, or default to now
+      createdAt: startDate ?? clock.now(),
     );
     
     await repository.setSavingsGoal(newGoal);
     
     ref.invalidate(savingsGoalProvider);
-    ref.invalidate(potentialWeeklySavingsProvider); // This might change if logic depends on the goal
+    ref.invalidate(potentialWeeklySavingsProvider);
   }
 
   Future<void> addToSavings(double amount) async {
     final repository = ref.read(transactionRepositoryProvider);
     await repository.addToSavings(amount);
     ref.invalidate(totalSavingsProvider);
+  }
+
+  Future<void> deleteSavingsGoal() async {
+    final repository = ref.read(transactionRepositoryProvider);
+    await repository.deleteSavingsGoal();
+    // Invalidate providers to update the UI
+    ref.invalidate(savingsGoalProvider);
+    ref.invalidate(savingsGaugeDataProvider);
+  }
+
+  Future<void> generateDummyData() async {
+    final repository = ref.read(transactionRepositoryProvider);
+    await repository.generateDummyData();
+    _invalidateProviders();
+  }
+
+  Future<void> deleteAllData() async {
+    final repository = ref.read(transactionRepositoryProvider);
+    await repository.deleteAllData();
+    _invalidateProviders();
   }
 
   Future<void> debugResetCheckInData() async {

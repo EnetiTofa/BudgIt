@@ -1,7 +1,7 @@
 // lib/src/features/budgets/presentation/providers/budget_progress_provider.dart
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:budgit/src/features/budgets/domain/budget_progress.dart';
-import 'package:budgit/src/features/categories/domain/category.dart';
 import 'package:budgit/src/features/transactions/domain/transaction.dart';
 import 'package:budgit/src/features/categories/presentation/providers/category_list_provider.dart';
 import 'package:budgit/src/features/transactions/presentation/providers/transaction_log_provider.dart';
@@ -11,7 +11,7 @@ part 'budget_progress_provider.g.dart';
 // MODIFIED: The provider now accepts a 'month' parameter instead of 'budgetView'.
 @riverpod
 Future<List<BudgetProgress>> budgetProgress(
-    BudgetProgressRef ref, DateTime month) async {
+    Ref ref, DateTime month) async {
   final categories = await ref.watch(categoryListProvider.future);
   final allOccurrences = await ref.watch(allTransactionOccurrencesProvider.future);
 

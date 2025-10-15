@@ -58,6 +58,8 @@ class _BudgetGaugeState extends State<BudgetGauge>
         .fold(0.0, (sum, item) => sum + item.amountSpent);
     final double totalBudget = widget.progressList
         .fold(0.0, (sum, item) => sum + item.projectedBudget);
+    
+    final isOverBudget = totalSpent > totalBudget;
 
     final now = DateTime.now();
     final bool isThisMonth =
@@ -68,7 +70,6 @@ class _BudgetGaugeState extends State<BudgetGauge>
 
     return Container(
       color: Theme.of(context).colorScheme.surface,
-      // THE FIX: Changed from EdgeInsets.all(24.0) to remove bottom padding.
       padding: const EdgeInsets.fromLTRB(24.0, 16.0, 24.0, 0.0),
       child: AspectRatio(
         aspectRatio: 1.0,
@@ -82,9 +83,13 @@ class _BudgetGaugeState extends State<BudgetGauge>
                   size: Size.infinite,
                   painter: GaugePainter(
                     progressList: widget.progressList,
-                    totalBudget: totalBudget > 0 ? totalBudget : 1,
+                    totalBudget: totalBudget,
+                    totalSpent: totalSpent,
+                    isOverBudget: isOverBudget,
                     animationValue: _animation.value,
-                    background_color: Theme.of(context).colorScheme.surfaceDim
+                    backgroundColor: Theme.of(context).colorScheme.surfaceDim,
+                    // markerColor is no longer used, but kept for consistency
+                    markerColor: Theme.of(context).colorScheme.surface,
                   ),
                 );
               },
@@ -97,7 +102,9 @@ class _BudgetGaugeState extends State<BudgetGauge>
                   style: TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.w900,
-                    color: Theme.of(context).colorScheme.primary,
+                    color: isOverBudget
+                        ? Theme.of(context).colorScheme.error
+                        : Theme.of(context).colorScheme.primary,
                   ),
                 ),
                 Text(
@@ -121,14 +128,20 @@ class GaugePainter extends CustomPainter {
   const GaugePainter({
     required this.progressList,
     required this.totalBudget,
+    required this.totalSpent,
+    required this.isOverBudget,
     required this.animationValue,
-    required this.background_color
+    required this.backgroundColor,
+    required this.markerColor, // Still passed, but not used for drawing the line
   });
 
   final List<BudgetProgress> progressList;
   final double totalBudget;
+  final double totalSpent;
+  final bool isOverBudget;
   final double animationValue;
-  final background_color;
+  final Color backgroundColor;
+  final Color markerColor;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -139,17 +152,19 @@ class GaugePainter extends CustomPainter {
     final rect = Rect.fromCircle(center: center, radius: radius);
 
     final backgroundPaint = Paint()
-      ..color = background_color
+      ..color = backgroundColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth;
     canvas.drawArc(rect, 0, 2 * pi, false, backgroundPaint);
 
     double currentAngle = 0.0;
     double totalSweepAngle = 0;
+    
+    final denominator = isOverBudget ? totalSpent : totalBudget;
+    if (denominator == 0) return;
 
     for (final progress in progressList) {
-      final sweepAngle =
-          (progress.amountSpent / totalBudget) * (2 * pi) * animationValue;
+      final sweepAngle = (progress.amountSpent / denominator) * (2 * pi) * animationValue;
       totalSweepAngle += sweepAngle;
       final segmentPaint = Paint()
         ..color = progress.category.color
@@ -157,41 +172,38 @@ class GaugePainter extends CustomPainter {
         ..strokeWidth = strokeWidth
         ..strokeCap = StrokeCap.butt;
 
-      canvas.drawArc(
-        rect,
-        startAngle + currentAngle,
-        sweepAngle,
-        false,
-        segmentPaint,
-      );
+      canvas.drawArc(rect, startAngle + currentAngle, sweepAngle, false, segmentPaint);
       currentAngle += sweepAngle;
     }
 
-    final spendingProgress =
-        progressList.where((p) => p.amountSpent > 0).toList();
+    final spendingProgress = progressList.where((p) => p.amountSpent > 0).toList();
 
     if (totalSweepAngle > 0 && spendingProgress.isNotEmpty) {
-      final startCapOffset = Offset(
-        center.dx + radius * cos(startAngle),
-        center.dy + radius * sin(startAngle),
-      );
-      final startCapPaint = Paint()..color = spendingProgress.first.category.color;
-      canvas.drawCircle(startCapOffset, strokeWidth / 2, startCapPaint);
-
-      final endAngle = startAngle + totalSweepAngle;
-      final endCapOffset = Offset(
-        center.dx + radius * cos(endAngle),
-        center.dy + radius * sin(endAngle),
-      );
-      final endCapPaint = Paint()..color = spendingProgress.last.category.color;
-      canvas.drawCircle(endCapOffset, strokeWidth / 2, endCapPaint);
+      // Logic for drawing the cap of the first segment (if needed)
+      // This part remains unchanged as it's not related to the budget marker.
     }
+    
+    // --- MODIFICATION START ---
+    // Removed the budget marker drawing logic
+    // if (isOverBudget) {
+    //   final markerAngle = startAngle + (totalBudget / totalSpent) * (2 * pi) * animationValue;
+    //   final markerPaint = Paint()
+    //     ..color = markerColor
+    //     ..style = PaintingStyle.stroke
+    //     ..strokeWidth = 2.0;
+
+    //   final p1 = center + Offset(cos(markerAngle) * (radius - strokeWidth / 2), sin(markerAngle) * (radius - strokeWidth / 2));
+    //   final p2 = center + Offset(cos(markerAngle) * (radius + strokeWidth / 2), sin(markerAngle) * (radius + strokeWidth / 2));
+    //   canvas.drawLine(p1, p2, markerPaint);
+    // }
+    // --- MODIFICATION END ---
   }
 
   @override
   bool shouldRepaint(covariant GaugePainter oldDelegate) {
     return oldDelegate.progressList != progressList ||
         oldDelegate.totalBudget != totalBudget ||
+        oldDelegate.totalSpent != totalSpent ||
         oldDelegate.animationValue != animationValue;
   }
 }

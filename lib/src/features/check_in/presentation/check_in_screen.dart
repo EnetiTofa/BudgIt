@@ -1,9 +1,11 @@
+// lib/src/features/check_in/presentation/check_in_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:budgit/src/features/check_in/presentation/check_in_controller.dart';
 import 'package:budgit/src/features/check_in/presentation/wallet_review_page.dart';
 import 'package:budgit/src/features/check_in/presentation/rollover_save_page.dart';
 import 'package:budgit/src/features/check_in/presentation/confirmation_page.dart';
+import 'package:budgit/src/features/check_in/presentation/streak_provider.dart';
 import 'package:budgit/src/features/check_in/presentation/streak_screen.dart';
 
 class CheckInScreen extends ConsumerStatefulWidget {
@@ -36,8 +38,7 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
     _pageController.dispose();
     super.dispose();
   }
-  
-  // --- This is the new back button logic ---
+
   void _onBack() {
     if (_currentPage > 0) {
       _pageController.previousPage(
@@ -45,24 +46,33 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
         curve: Curves.easeOut,
       );
     } else {
-      // If on the first page, exit the check-in
       Navigator.of(context).pop();
     }
   }
 
-  void _onContinue() {
+  // --- THIS IS THE CORRECTED NAVIGATION LOGIC ---
+  void _onContinue() async {
     if (_currentPage < _checkInPages.length - 1) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeIn,
       );
     } else {
-      ref.read(checkInControllerProvider.notifier).completeCheckIn().then((_) {
-        Navigator.of(context).pop();
+      // 1. Await the controller method that updates the database
+      await ref.read(checkInControllerProvider.notifier).completeCheckIn();
+
+      // 2. Read the provider again to get the NEW value after invalidation
+      final newStreakCount = await ref.read(checkInStreakProvider.future);
+
+      // 3. Navigate, passing the confirmed new value to the StreakScreen
+      if (mounted) {
+        Navigator.of(context).pop(); // Close the check-in screen
         Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const StreakScreen()),
+          MaterialPageRoute(
+            builder: (_) => StreakScreen(streakCount: newStreakCount),
+          ),
         );
-      });
+      }
     }
   }
 
@@ -71,7 +81,6 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Weekly Check-in'),
-        // --- This custom leading button overrides the default back button ---
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: _onBack,
@@ -84,10 +93,28 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
         children: _checkInPages,
       ),
       bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: ElevatedButton(
-          onPressed: _onContinue,
-          child: Text(_currentPage == _checkInPages.length - 1 ? 'Complete Check-in' : 'Continue'),
+        padding: const EdgeInsets.all(32.0),
+        child: SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: FilledButton(
+            onPressed: _onContinue,
+            style: FilledButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(25),
+              ),
+            ),
+            child: Text(
+              _currentPage == _checkInPages.length - 1
+                  ? 'Complete Check-in'
+                  : 'Continue',
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
         ),
       ),
     );

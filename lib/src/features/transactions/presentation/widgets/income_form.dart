@@ -8,7 +8,7 @@ import 'package:budgit/src/features/transactions/presentation/controllers/add_tr
 import 'package:budgit/src/utils/clock_provider.dart';
 import 'package:budgit/src/common_widgets/icon_picker_field.dart';
 import 'package:budgit/src/features/transactions/presentation/widgets/period_selector_field.dart';
-import 'package:budgit/src/features/transactions/presentation/widgets/date_selector_field.dart'; // 1. Add the import
+import 'package:budgit/src/common_widgets/date_selector_field.dart'; // 1. Add the import
 
 enum IncomeType { oneOff, recurring }
 

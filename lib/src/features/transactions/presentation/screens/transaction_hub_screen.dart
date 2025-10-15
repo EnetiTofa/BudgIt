@@ -11,7 +11,6 @@ import 'package:budgit/src/features/transactions/presentation/screens/transactio
 import 'package:budgit/src/features/transactions/presentation/widgets/filter_dropdown.dart';
 import 'package:budgit/src/features/transactions/presentation/widgets/sort_dropdown.dart';
 
-// An enum to track which specific dropdown is open
 enum ActiveDropdown { none, sort, filter }
 
 class TransactionHubScreen extends ConsumerStatefulWidget {
@@ -28,24 +27,16 @@ class _TransactionHubScreenState extends ConsumerState<TransactionHubScreen>
   final _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
   bool _isSearchFocused = false;
-
-  // Keys to find the position of UI elements for the overlay
   final _barKey = GlobalKey();
   final _bodyKey = GlobalKey();
-
-  // Overlay and animation state
   OverlayEntry? _overlayEntry;
   late final AnimationController _overlayAnimationController;
   late final Animation<double> _fadeAnimation;
-
-  // Local state to track the active dropdown
   ActiveDropdown _activeDropdown = ActiveDropdown.none;
 
   @override
   void initState() {
     super.initState();
-    // Get the initial tab index from the provider.
-    // This allows other screens to set which tab should be open.
     final initialIndex = ref.read(transactionHubTabIndexProvider);
     _tabController = TabController(length: 2, vsync: this, initialIndex: initialIndex);
     
@@ -90,6 +81,7 @@ class _TransactionHubScreenState extends ConsumerState<TransactionHubScreen>
   }
 
   void _showOverlay({required Widget child, required ActiveDropdown type}) {
+    // ... (This method's implementation remains the same)
     if (_overlayEntry != null && type == _activeDropdown) {
       _removeOverlay();
       return;
@@ -146,7 +138,6 @@ class _TransactionHubScreenState extends ConsumerState<TransactionHubScreen>
 
   @override
   Widget build(BuildContext context) {
-    // This listens for programmatic changes to the tab index from other screens.
     ref.listen<int>(transactionHubTabIndexProvider, (previous, next) {
       if (next != _tabController.index) {
         _tabController.animateTo(next);
@@ -171,115 +162,114 @@ class _TransactionHubScreenState extends ConsumerState<TransactionHubScreen>
       backgroundColor: WidgetStateProperty.all(colorScheme.surfaceContainerLow),
     );
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Transactions'),
-        bottom: TabBar(
-          controller: _tabController,
-          // This keeps the provider in sync when the user manually taps a tab.
-          onTap: (index) {
-            ref.read(transactionHubTabIndexProvider.notifier).setIndex(index);
-          },
-          dividerColor: Colors.transparent,
-          labelColor: Theme.of(context).colorScheme.primary,
-          unselectedLabelColor: Theme.of(context).colorScheme.secondary,
-          indicator: UnderlineTabIndicator(
-            borderSide: BorderSide(
-              width: 4.0,
-              color: Theme.of(context).colorScheme.primary,
+    // --- MODIFICATION: Removed Scaffold and AppBar ---
+    return Column(
+      children: [
+        // --- MODIFICATION: The TabBar now lives here ---
+        Container(
+          color: Theme.of(context).appBarTheme.backgroundColor,
+          child: TabBar(
+            controller: _tabController,
+            onTap: (index) {
+              ref.read(transactionHubTabIndexProvider.notifier).setIndex(index);
+            },
+            dividerColor: Colors.transparent,
+            labelColor: Theme.of(context).colorScheme.primary,
+            unselectedLabelColor: Theme.of(context).colorScheme.secondary,
+            indicator: UnderlineTabIndicator(
+              borderSide: BorderSide(
+                width: 4.0,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              borderRadius: const BorderRadius.all(Radius.circular(2)),
             ),
-            borderRadius: const BorderRadius.all(Radius.circular(2)),
+            tabs: const [
+              Tab(text: 'History', icon: Icon(Icons.history)),
+              Tab(text: 'Recurring', icon: Icon(Icons.event_repeat)),
+            ],
           ),
-          tabs: const [
-            Tab(text: 'History', icon: Icon(Icons.history)),
-            Tab(text: 'Recurring', icon: Icon(Icons.event_repeat)),
-          ],
         ),
-      ),
-      body: Column(
-        children: [
-          Container(
-            key: _barKey,
-            padding: const EdgeInsets.all(16.0),
-            color: colorScheme.surface,
-            child: SizedBox(
-              height: 38,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Focus(
-                      focusNode: _searchFocusNode,
-                      child: GeneralSearchBar(
-                        initialQuery: filterState.searchQuery,
-                        hintText: '',
-                        onChanged: filterController.setSearchQuery,
-                        onClear: () => filterController.setSearchQuery(''),
-                        hasOutline: false,
-                        backgroundColor: colorScheme.surfaceContainerLow,
-                      ),
+        Container(
+          key: _barKey,
+          padding: const EdgeInsets.all(16.0),
+          color: colorScheme.surface,
+          child: SizedBox(
+            height: 38,
+            child: Row(
+              children: [
+                Expanded(
+                  child: Focus(
+                    focusNode: _searchFocusNode,
+                    child: GeneralSearchBar(
+                      initialQuery: filterState.searchQuery,
+                      hintText: '',
+                      onChanged: filterController.setSearchQuery,
+                      onClear: () => filterController.setSearchQuery(''),
+                      hasOutline: false,
+                      backgroundColor: colorScheme.surfaceContainerLow,
                     ),
                   ),
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 200),
-                    transitionBuilder: (child, animation) {
-                      return FadeTransition(
-                        opacity: animation,
-                        child: SizeTransition(
-                          sizeFactor: animation,
-                          axis: Axis.horizontal,
-                          child: child,
+                ),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  transitionBuilder: (child, animation) {
+                    return FadeTransition(
+                      opacity: animation,
+                      child: SizeTransition(
+                        sizeFactor: animation,
+                        axis: Axis.horizontal,
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: _isSearchFocused
+                      ? const SizedBox.shrink()
+                      : Row(
+                          key: const ValueKey('buttons'),
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            const SizedBox(width: 8),
+                            FilledButton.tonalIcon(
+                              style: isSortActive ? activeStyle : inactiveStyle,
+                              onPressed: () => _showOverlay(
+                                child: const SortDropdown(),
+                                type: ActiveDropdown.sort,
+                              ),
+                              icon: const Icon(Icons.sort),
+                              label: const Text('Sort'),
+                            ),
+                            const SizedBox(width: 8),
+                            FilledButton.tonalIcon(
+                              style: isFilterActive ? activeStyle : inactiveStyle,
+                              onPressed: () {
+                                _showOverlay(
+                                  child: const FilterDropdown(),
+                                  type: ActiveDropdown.filter,
+                                );
+                              },
+                              icon: const Icon(Icons.filter_list),
+                              label: const Text('Filter'),
+                            ),
+                          ],
                         ),
-                      );
-                    },
-                    child: _isSearchFocused
-                        ? const SizedBox.shrink()
-                        : Row(
-                            key: const ValueKey('buttons'),
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              const SizedBox(width: 8),
-                              FilledButton.tonalIcon(
-                                style: isSortActive ? activeStyle : inactiveStyle,
-                                onPressed: () => _showOverlay(
-                                  child: const SortDropdown(),
-                                  type: ActiveDropdown.sort,
-                                ),
-                                icon: const Icon(Icons.sort),
-                                label: const Text('Sort'),
-                              ),
-                              const SizedBox(width: 8),
-                              FilledButton.tonalIcon(
-                                style: isFilterActive ? activeStyle : inactiveStyle,
-                                onPressed: () {
-                                  _showOverlay(
-                                    child: const FilterDropdown(),
-                                    type: ActiveDropdown.filter,
-                                  );
-                                },
-                                icon: const Icon(Icons.filter_list),
-                                label: const Text('Filter'),
-                              ),
-                            ],
-                          ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
-          Expanded(
-            child: Container(
-              key: _bodyKey,
-              child: TabBarView(
-                controller: _tabController,
-                children: const [
-                  TransactionLogScreen(),
-                  RecurringScreen(),
-                ],
-              ),
+        ),
+        Expanded(
+          child: Container(
+            key: _bodyKey,
+            child: TabBarView(
+              controller: _tabController,
+              children: const [
+                TransactionLogScreen(),
+                RecurringScreen(),
+              ],
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

@@ -1,5 +1,4 @@
 // lib/src/common_widgets/currency_input_field.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -12,22 +11,28 @@ class CurrencyInputField extends StatefulWidget {
   final ValueChanged<double> onChanged;
   final double initialValue;
   final String? labelText;
+  final String? helperText;
   final double? width;
   final double? height;
   final CurrencyInputFieldStyle style;
   final TextStyle? textStyle;
   final Color? backgroundColor;
+  // --- NEW PROPERTY ---
+  final double minValue;
 
   const CurrencyInputField({
     super.key,
     required this.onChanged,
     this.initialValue = 0.0,
     this.labelText,
+    this.helperText,
     this.width,
     this.height,
     this.style = CurrencyInputFieldStyle.outlined,
     this.textStyle,
     this.backgroundColor,
+    // --- NEW PROPERTY ---
+    this.minValue = 0.0,
   });
 
   @override
@@ -54,9 +59,11 @@ class _CurrencyInputFieldState extends State<CurrencyInputField> {
     if (widget.initialValue != oldWidget.initialValue) {
       final newTextValue = widget.initialValue.toStringAsFixed(2);
       if (_controller.text != newTextValue) {
+        _controller.removeListener(_onTextChanged);
         _controller.text = _focusNode.hasFocus
             ? _formatForEditing(widget.initialValue)
             : newTextValue;
+        _controller.addListener(_onTextChanged);
       }
     }
   }
@@ -74,7 +81,18 @@ class _CurrencyInputFieldState extends State<CurrencyInputField> {
           _controller.text = _formatForEditing(value);
         } else if (_controller.text.isNotEmpty) {
           final value = double.tryParse(_controller.text) ?? 0.0;
-          _controller.text = value.toStringAsFixed(2);
+
+          // --- THIS IS THE NEW LOGIC ---
+          // If the value is > 0 but less than the minimum, snap to the minimum.
+          if (value > 0 && value < widget.minValue) {
+            widget.onChanged(widget.minValue); // Update the controller
+            _controller.text = widget.minValue.toStringAsFixed(2);
+          } else {
+            // Otherwise, just format the existing value.
+            _controller.text = value.toStringAsFixed(2);
+          }
+          // --- END OF NEW LOGIC ---
+
         }
       });
     }
@@ -96,18 +114,14 @@ class _CurrencyInputFieldState extends State<CurrencyInputField> {
 
   @override
   Widget build(BuildContext context) {
-    // **THE FIX: Base the style on the app's theme.**
-    // 1. Get a base style from the app's theme (e.g., bodyLarge).
     final themeTextStyle = Theme.of(context).textTheme.bodyLarge;
-    // 2. Create the default style by copying the theme's style and applying custom attributes.
     final defaultStyle = themeTextStyle?.copyWith(
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w500,
           color: Theme.of(context).colorScheme.onSurface,
         ) ??
-        // Provide a fallback TextStyle just in case bodyLarge is null.
         TextStyle(
           fontSize: 16,
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w500,
           color: Theme.of(context).colorScheme.onSurface,
         );
     final textStyle = defaultStyle.merge(widget.textStyle);
@@ -176,6 +190,7 @@ class _CurrencyInputFieldState extends State<CurrencyInputField> {
             child: InputDecorator(
               decoration: InputDecoration(
                 labelText: widget.labelText,
+                helperText: widget.helperText,
                 fillColor: widget.backgroundColor,
                 filled: widget.backgroundColor != null,
                 border: OutlineInputBorder(

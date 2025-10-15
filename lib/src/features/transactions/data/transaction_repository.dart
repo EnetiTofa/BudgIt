@@ -32,6 +32,10 @@ abstract class TransactionRepository {
   /// Saves the order of category IDs.
   Future<void> saveCategoryOrder(List<String> categoryIds);
 
+  Future<Category?> getCategory(String categoryId);
+
+  Future<List<RecurringPayment>> getRecurringTransactionsForCategory(String categoryId);
+
   /// Adds Boost Adjustment to Wallet.
   Future<void> addWalletAdjustment(WalletAdjustment adjustment);
   /// Gets all Boost Adjustments.
@@ -47,6 +51,8 @@ abstract class TransactionRepository {
 
   Future<double> getTotalSavings();
 
+  Future<void> deleteSavingsGoal();
+
   Future<void> saveCheckInSummary({required double lastWeekWalletSpending});
 
   /// Gets Last Weeks Wallet Spending for Check In.
@@ -60,4 +66,11 @@ abstract class TransactionRepository {
 
   Future<void> setLastCheckInDate(DateTime date);
   Future<DateTime?> getLastCheckInDate();
+
+  /// Generates a year's worth of dummy transactions for debugging.
+  Future<void> generateDummyData();
+  
+  /// Deletes all transactions and adjustments.
+  Future<void> deleteAllData();
+
 }

@@ -6,7 +6,7 @@ part of 'boost_controller.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$boostStateHash() => r'fd70704be1300ce91e26fbc6089dac348d45c912';
+String _$boostStateHash() => r'8ca67fea597486063d5dda793182a9f3457bd431';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -30,10 +30,10 @@ class _SystemHash {
 }
 
 abstract class _$BoostState
-    extends BuildlessAutoDisposeAsyncNotifier<Map<String, double>> {
+    extends BuildlessAutoDisposeAsyncNotifier<BoostControllerState> {
   late final Category toCategory;
 
-  FutureOr<Map<String, double>> build(
+  FutureOr<BoostControllerState> build(
     Category toCategory,
   );
 }
@@ -43,7 +43,7 @@ abstract class _$BoostState
 const boostStateProvider = BoostStateFamily();
 
 /// See also [BoostState].
-class BoostStateFamily extends Family<AsyncValue<Map<String, double>>> {
+class BoostStateFamily extends Family<AsyncValue<BoostControllerState>> {
   /// See also [BoostState].
   const BoostStateFamily();
 
@@ -82,7 +82,7 @@ class BoostStateFamily extends Family<AsyncValue<Map<String, double>>> {
 
 /// See also [BoostState].
 class BoostStateProvider extends AutoDisposeAsyncNotifierProviderImpl<
-    BoostState, Map<String, double>> {
+    BoostState, BoostControllerState> {
   /// See also [BoostState].
   BoostStateProvider(
     Category toCategory,
@@ -113,7 +113,7 @@ class BoostStateProvider extends AutoDisposeAsyncNotifierProviderImpl<
   final Category toCategory;
 
   @override
-  FutureOr<Map<String, double>> runNotifierBuild(
+  FutureOr<BoostControllerState> runNotifierBuild(
     covariant BoostState notifier,
   ) {
     return notifier.build(
@@ -138,7 +138,7 @@ class BoostStateProvider extends AutoDisposeAsyncNotifierProviderImpl<
   }
 
   @override
-  AutoDisposeAsyncNotifierProviderElement<BoostState, Map<String, double>>
+  AutoDisposeAsyncNotifierProviderElement<BoostState, BoostControllerState>
       createElement() {
     return _BoostStateProviderElement(this);
   }
@@ -160,14 +160,14 @@ class BoostStateProvider extends AutoDisposeAsyncNotifierProviderImpl<
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 mixin BoostStateRef
-    on AutoDisposeAsyncNotifierProviderRef<Map<String, double>> {
+    on AutoDisposeAsyncNotifierProviderRef<BoostControllerState> {
   /// The parameter `toCategory` of this provider.
   Category get toCategory;
 }
 
 class _BoostStateProviderElement
     extends AutoDisposeAsyncNotifierProviderElement<BoostState,
-        Map<String, double>> with BoostStateRef {
+        BoostControllerState> with BoostStateRef {
   _BoostStateProviderElement(super.provider);
 
   @override

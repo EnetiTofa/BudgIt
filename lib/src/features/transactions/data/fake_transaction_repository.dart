@@ -60,6 +60,27 @@ class FakeTransactionRepository implements TransactionRepository {
     return List.unmodifiable(_categories);
   }
 
+  // --- NEW METHOD ---
+  @override
+  Future<Category?> getCategory(String categoryId) async {
+    try {
+      return _categories.firstWhere((c) => c.id == categoryId);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // --- NEW METHOD ---
+  @override
+  Future<List<RecurringPayment>> getRecurringTransactionsForCategory(
+      String categoryId) async {
+    return _transactions
+        .whereType<RecurringPayment>()
+        .where((p) => p.category.id == categoryId)
+        .toList();
+  }
+
+
   @override
   Future<void> updateCategory(Category category) async {
     final index = _categories.indexWhere((c) => c.id == category.id);
@@ -123,6 +144,11 @@ class FakeTransactionRepository implements TransactionRepository {
     return _totalSavings;
   }
 
+  @override
+  Future<void> deleteSavingsGoal() async {
+    _savingsGoal = null;
+  }
+
   // --- Check-in & Snapshot Methods ---
   @override
   Future<double> getLastWeekWalletSpending() async {
@@ -164,4 +190,13 @@ class FakeTransactionRepository implements TransactionRepository {
     _lastWeekWalletSpending = 0.0;
     _adjustments.clear();
   }
+
+  @override
+  Future<void> deleteAllData() async {
+  }
+
+  @override
+  Future<void> generateDummyData() async {
+  }
+
 }

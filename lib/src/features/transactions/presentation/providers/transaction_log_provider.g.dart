@@ -6,7 +6,7 @@ part of 'transaction_log_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$transactionLogHash() => r'69f708b0d1dbd136f54d84e0c7abfd1148505db6';
+String _$transactionLogHash() => r'cbac92fcf65027e8aaff3ec04e15bc0cc59d0351';
 
 /// See also [transactionLog].
 @ProviderFor(transactionLog)
@@ -26,7 +26,7 @@ final transactionLogProvider =
 typedef TransactionLogRef
     = AutoDisposeProviderRef<AsyncValue<List<Transaction>>>;
 String _$allTransactionOccurrencesHash() =>
-    r'9a91f70a02a2e2dc284f4af26a17d0bc347a8c41';
+    r'7f73149f5e3336679cda0c845321cd18aab84932';
 
 /// See also [AllTransactionOccurrences].
 @ProviderFor(AllTransactionOccurrences)

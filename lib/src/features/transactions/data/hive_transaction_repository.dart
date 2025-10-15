@@ -1,3 +1,5 @@
+import 'dart:math';
+import 'package:uuid/uuid.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:budgit/src/features/transactions/data/transaction_repository.dart';
 import 'package:budgit/src/features/categories/domain/category.dart';
@@ -7,6 +9,25 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:budgit/src/features/settings/presentation/settings_provider.dart';
 import 'package:budgit/src/features/savings/domain/savings_goal.dart';
 import 'package:budgit/src/utils/clock_provider.dart';
+
+double _generateNormalRandom(Random random, double mean, double stdDev) {
+  // Using the Marsaglia polar method for efficiency
+  double u1, u2, w;
+  do {
+    u1 = random.nextDouble() * 2.0 - 1.0;
+    u2 = random.nextDouble() * 2.0 - 1.0;
+    w = u1 * u1 + u2 * u2;
+  } while (w >= 1.0);
+
+  w = sqrt((-2.0 * log(w)) / w);
+  double z = u1 * w;
+
+  // Scale to the desired mean and standard deviation
+  final result = mean + z * stdDev;
+  // Ensure we don't return a negative amount for spending
+  return result < 0 ? 0 : result;
+}
+
 
 // You'll need to make the repository accept the Riverpod reader
 class HiveTransactionRepository implements TransactionRepository {
@@ -115,6 +136,19 @@ class HiveTransactionRepository implements TransactionRepository {
     await box.put('order', categoryIds);
   }
 
+  @override
+  Future<Category?> getCategory(String categoryId) async {
+    return _categoryBox.get(categoryId);
+  }
+
+  @override
+  Future<List<RecurringPayment>> getRecurringTransactionsForCategory(String categoryId) async {
+    return _transactionBox.values
+        .whereType<RecurringPayment>()
+        .where((p) => p.category.id == categoryId)
+        .toList();
+  }
+
 
   @override
   Future<void> addTransaction(Transaction transaction) async {
@@ -168,7 +202,11 @@ class HiveTransactionRepository implements TransactionRepository {
     await _settingsBox.put('totalSavings', currentSavings + amount);
   }
 
-  
+  @override
+  Future<void> deleteSavingsGoal() async {
+    await _savingsGoalBox.delete('activeGoal');
+  }
+
   @override
   Future<double> getLastWeekWalletSpending() async {
     // Get the necessary data
@@ -233,5 +271,96 @@ class HiveTransactionRepository implements TransactionRepository {
   @override
   Future<DateTime?> getLastCheckInDate() async {
     return _settingsBox.get('lastCheckInDate') as DateTime?;
+  }
+
+  @override
+  Future<void> deleteAllData() async {
+    await _transactionBox.clear();
+    await _adjustmentBox.clear();
+  }
+
+  @override
+  Future<void> generateDummyData() async {
+    final random = Random();
+    const uuid = Uuid();
+    final allCategories = await getAllCategories();
+    final now = ref.read(clockProvider).now();
+    final oneYearAgo = DateTime(now.year - 1, now.month, now.day);
+
+    final List<Transaction> generatedTransactions = [];
+
+    // 1. Generate one recurring payment rule per category
+    for (final category in allCategories) {
+      if (category.budgetAmount > 0) {
+        generatedTransactions.add(RecurringPayment(
+          id: uuid.v4(),
+          notes: 'Generated recurring payment',
+          createdAt: now,
+          amount: random.nextDouble() * 60 + 20, // Random: $20 to $80
+          paymentName: '${category.name} Subscription',
+          payee: 'Generated Merchant',
+          category: category,
+          recurrence: RecurrencePeriod.monthly,
+          recurrenceFrequency: 1,
+          startDate: oneYearAgo,
+        ));
+      }
+    }
+    
+    // 2. Generate one-off payments for the past year
+    for (final category in allCategories) {
+        // --- CORRECTION START ---
+        // Use `walletAmount` and calculate budgets correctly.
+        final monthlyWalletBudget = category.walletAmount ?? 0.0;
+        final weeklyWalletBudget = monthlyWalletBudget / 4.0; // Assume 4 weeks in a month for simplicity
+        final monthlyOneOffBudget = category.budgetAmount - monthlyWalletBudget;
+        // --- CORRECTION END ---
+
+        // Generate weekly wallet transactions
+        if (weeklyWalletBudget > 0) {
+            final mean = weeklyWalletBudget * 0.8;
+            final stdDev = sqrt(weeklyWalletBudget * 0.6);
+
+            for (int i = 0; i < 52; i++) { // 52 weeks in a year
+                final transactionDate = now.subtract(Duration(days: i * 7));
+                generatedTransactions.add(OneOffPayment(
+                    id: uuid.v4(),
+                    notes: 'Generated wallet spending',
+                    createdAt: transactionDate,
+                    amount: _generateNormalRandom(random, mean, stdDev),
+                    date: transactionDate,
+                    itemName: 'Weekly spend for ${category.name}',
+                    store: 'Generated Store',
+                    category: category,
+                    isWalleted: true,
+                ));
+            }
+        }
+
+        // Generate monthly one-off transactions
+        if (monthlyOneOffBudget > 0) {
+            final mean = monthlyOneOffBudget * 0.8;
+            final stdDev = sqrt(monthlyOneOffBudget * 0.6);
+            
+            for (int i = 0; i < 12; i++) { // 12 months in a year
+                final transactionDate = DateTime(now.year, now.month - i, random.nextInt(27) + 1);
+                generatedTransactions.add(OneOffPayment(
+                    id: uuid.v4(),
+                    notes: 'Generated one-off spending',
+                    createdAt: transactionDate,
+                    amount: _generateNormalRandom(random, mean, stdDev),
+                    date: transactionDate,
+                    itemName: 'Monthly spend for ${category.name}',
+                    store: 'Generated Online Store',
+                    category: category,
+                    isWalleted: false,
+                ));
+            }
+        }
+    }
+
+    // Use putAll for a much faster batch write to the database
+    final transactionMap = {for (var t in generatedTransactions) t.id: t};
+    await _transactionBox.putAll(transactionMap);
   }
 }

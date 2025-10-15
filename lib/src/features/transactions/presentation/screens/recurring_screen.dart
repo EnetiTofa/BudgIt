@@ -1,19 +1,16 @@
+// lib/src/features/transactions/presentation/screens/recurring_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:budgit/src/features/transactions/domain/log_filter_state.dart';
 import 'package:budgit/src/features/transactions/domain/transaction.dart';
 import 'package:budgit/src/features/transactions/presentation/controllers/log_filter_controller.dart';
 import 'package:budgit/src/features/transactions/presentation/providers/recurring_transactions_provider.dart';
-// The transactionLogProvider is no longer needed here for invalidation
-// import 'package:budgit/src/features/transactions/presentation/providers/transaction_log_provider.dart';
 import 'package:budgit/src/features/transactions/presentation/widgets/recurring_transaction_card.dart';
+import 'package:budgit/src/features/transactions/presentation/widgets/filter_chip_bar.dart'; // Import the new widget
 
 class RecurringScreen extends ConsumerWidget {
   const RecurringScreen({super.key});
 
-  /// Shows a confirmation dialog before deleting a recurring transaction.
-  /// This will be called by the `confirmDismiss` property of the Dismissible widget.
-  /// It returns `true` if the user confirms the deletion, and `false` otherwise.
   Future<bool> _showDeleteConfirmationDialog({
     required BuildContext context,
     required Transaction transaction,
@@ -46,9 +43,6 @@ class RecurringScreen extends ConsumerWidget {
         );
       },
     );
-
-    // If shouldDelete is null (e.g., dialog dismissed by tapping outside),
-    // treat it as a cancellation. Return true only if the user explicitly tapped "Delete".
     return shouldDelete ?? false;
   }
 
@@ -56,13 +50,23 @@ class RecurringScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final recurringAsyncValue = ref.watch(recurringTransactionsProvider);
 
-    return switch (recurringAsyncValue) {
-      AsyncLoading() => const Center(child: CircularProgressIndicator()),
-      AsyncError(:final error) => Center(child: Text('Error: $error')),
-      AsyncData(:final value) =>
-        _buildTransactionList(context, ref, transactions: value),
-      _ => const SizedBox.shrink(),
-    };
+    // --- MODIFICATION START ---
+    return Column(
+      children: [
+        const FilterChipBar(),
+        Expanded(
+          child: switch (recurringAsyncValue) {
+            // We now handle loading and data states together.
+            AsyncData(:final value) || AsyncLoading(:final value?) =>
+              _buildTransactionList(context, ref, transactions: value),
+            AsyncError(:final error) => Center(child: Text('Error: $error')),
+            // This handles the initial load.
+            _ => const SizedBox.shrink(),
+          },
+        ),
+      ],
+    );
+    // --- MODIFICATION END ---
   }
 
   Widget _buildTransactionList(BuildContext context, WidgetRef ref,
@@ -82,67 +86,43 @@ class RecurringScreen extends ConsumerWidget {
       itemCount: transactions.length,
       itemBuilder: (context, index) {
         final item = transactions[index];
-
-        // --- TEMPORARY TEST CODE ---
-        try {
-          // This is the original widget that is potentially crashing.
-          return Dismissible(
-            key: Key(item.id),
-            background: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
-              decoration: BoxDecoration(
-                color: Colors.red,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              alignment: Alignment.centerRight,
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              child: const Icon(Icons.delete, color: Colors.white),
-            ),
-            direction: DismissDirection.endToStart,
-            confirmDismiss: (direction) async {
-              final bool confirmed = await _showDeleteConfirmationDialog(
-                context: context,
-                transaction: item,
-              );
-              
-              if (confirmed) {
-                await ref
-                    .read(recurringTransactionsProvider.notifier)
-                    .removeTransaction(item.id);
-              }
-              
-              return confirmed;
-            },
-            onDismissed: (direction) {
-              final name = item is RecurringPayment
-                  ? item.paymentName
-                  : (item as RecurringIncome).source;
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('$name rule deleted')),
-              );
-            },
-            child: RecurringTransactionCard(transaction: item),
-          );
-        } catch (e, stack) {
-          // If an exception is thrown, we catch it and display an error.
-          debugPrint('--- ERROR BUILDING RECURRING TRANSACTION ITEM ---');
-          debugPrint('Transaction ID: ${item.id}');
-          debugPrint('Exception: $e');
-          debugPrint('Stack Trace: $stack');
-          debugPrint('--------------------------------------------------');
-          
-          // Return a visible error widget instead of crashing.
-          return Container(
-            color: Colors.red.withOpacity(0.1),
+        return Dismissible(
+          key: Key(item.id),
+          background: Container(
             margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
-            padding: const EdgeInsets.all(12.0),
-            child: Text(
-              'Error building this item. Check your debug console for details.\n\nException: $e',
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            decoration: BoxDecoration(
+              color: Colors.red,
+              borderRadius: BorderRadius.circular(12),
             ),
-          );
-        }
-        // --- END OF TEMPORARY TEST CODE ---
+            alignment: Alignment.centerRight,
+            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+            child: const Icon(Icons.delete, color: Colors.white),
+          ),
+          direction: DismissDirection.endToStart,
+          confirmDismiss: (direction) async {
+            final bool confirmed = await _showDeleteConfirmationDialog(
+              context: context,
+              transaction: item,
+            );
+            
+            if (confirmed) {
+              await ref
+                  .read(recurringTransactionsProvider.notifier)
+                  .removeTransaction(item.id);
+            }
+            
+            return confirmed;
+          },
+          onDismissed: (direction) {
+            final name = item is RecurringPayment
+                ? item.paymentName
+                : (item as RecurringIncome).source;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('$name rule deleted')),
+            );
+          },
+          child: RecurringTransactionCard(transaction: item),
+        );
       },
     );
   }
