@@ -25,7 +25,6 @@ class Category extends Equatable with HiveObjectMixin {
   @HiveField(2)
   final double budgetAmount; // Represents the total monthly budget.
   
-  // Re-indexed the remaining fields after removing budgetPeriod
   @HiveField(3)
   final double? walletAmount;
   @HiveField(4)
@@ -37,6 +36,17 @@ class Category extends Equatable with HiveObjectMixin {
 
   IconData get icon => IconData(iconCodePoint, fontFamily: iconFontFamily);
   Color get color => Color(colorValue);
+
+  // --- MODIFICATION: Updated the luminance threshold and alpha value ---
+  Color get contentColor {
+    // computeLuminance() returns a value from 0.0 (black) to 1.0 (white).
+    final luminance = color.computeLuminance();
+    // If the background is darker than the threshold (0.3), use white.
+    // Otherwise, use a dark gray for better readability on light colors.
+    return luminance < 0.6
+        ? Colors.white
+        : const Color(0xFF121212).withAlpha(210);
+  }
 
   @override
   List<Object?> get props => [id];

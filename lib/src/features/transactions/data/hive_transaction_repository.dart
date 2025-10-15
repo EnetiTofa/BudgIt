@@ -212,7 +212,7 @@ class HiveTransactionRepository implements TransactionRepository {
     // Get the necessary data
     final settingsNotifier = ref.read(settingsProvider.notifier);
     final checkInDay = await settingsNotifier.getCheckInDay();
-    final now = ref.read(clockProvider).now();
+    final now = ref.read(clockNotifierProvider).now();
     
     // Calculate the start and end dates of the most recently completed wallet week
     final daysSinceCheckIn = (now.weekday - checkInDay + 7) % 7;
@@ -284,7 +284,7 @@ class HiveTransactionRepository implements TransactionRepository {
     final random = Random();
     const uuid = Uuid();
     final allCategories = await getAllCategories();
-    final now = ref.read(clockProvider).now();
+    final now = ref.read(clockNotifierProvider).now();
     final oneYearAgo = DateTime(now.year - 1, now.month, now.day);
 
     final List<Transaction> generatedTransactions = [];

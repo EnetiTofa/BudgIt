@@ -15,7 +15,7 @@ Future<List<MonthlySpendingBreakdown>> historicalCategorySpending(
 }) async {
   final allOccurrences =
       await ref.watch(allTransactionOccurrencesProvider.future);
-  final now = ref.watch(clockProvider).now();
+  final now = ref.watch(clockNotifierProvider).now();
 
   // Filter for payments of the specified category
   final categoryPayments = allOccurrences

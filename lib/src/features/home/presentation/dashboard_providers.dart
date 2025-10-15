@@ -18,7 +18,7 @@ class MonthlySummary {
 @riverpod
 Future<MonthlySummary> monthlySummary(Ref ref) async {
   final transactionLog = ref.watch(transactionLogProvider);
-  final now = ref.watch(clockProvider).now();
+  final now = ref.watch(clockNotifierProvider).now();
   double totalMonthlyBudget = 0;
 
   // Calculate total spending for the current month

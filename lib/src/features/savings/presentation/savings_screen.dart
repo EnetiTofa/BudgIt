@@ -2,14 +2,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:budgit/src/common_widgets/pulsing_button.dart';
+import 'package:budgit/src/common_widgets/summary_stat_card.dart';
 import 'package:budgit/src/features/savings/presentation/savings_providers.dart';
 import 'package:budgit/src/features/savings/presentation/widgets/savings_timeline.dart';
 import 'package:budgit/src/features/savings/presentation/widgets/savings_goal_gauge.dart';
 import 'package:budgit/src/features/savings/presentation/set_savings_goal_screen.dart';
-// --- MODIFICATION START ---
-// Import the reusable summary card widget
-import 'package:budgit/src/common_widgets/summary_stat_card.dart';
-// --- MODIFICATION END ---
 
 
 class SavingsScreen extends ConsumerWidget {
@@ -31,62 +29,48 @@ class SavingsScreen extends ConsumerWidget {
         final details = screenData.monthlyDetailsMap[monthKey] ?? MonthlySavingsDetails();
 
         return ListView(
-          // Removed the horizontal padding from here to give the card full width
           padding: const EdgeInsets.symmetric(vertical: 16.0),
           children: [
             goalAsync.when(
               data: (goal) {
                 if (goal == null) {
-                  return Card(
-                    color: Theme.of(context).colorScheme.surface,
-                    elevation: 0,
-                    child: Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: SizedBox(
-                          width: 220, // diameter of the circle
-                          height: 220,
-                          child: FilledButton(
-                            style: FilledButton.styleFrom(
-                              shape: const CircleBorder(),
-                              padding: const EdgeInsets.only(top: 12), // inner spacing
-                            ),
-                            onPressed: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => const SetSavingsGoalScreen(),
-                                ),
-                              );
-                            },
-                            child: const Text(
-                              'Set Savings \nGoal',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 26),
-                            ),
+                  return Padding(
+                    // --- MODIFICATION: Reduced the vertical padding to tighten the layout ---
+                    padding: const EdgeInsets.only(top: 8.0, bottom: 16.0),
+                    child: PulsingButton(
+                      label: 'Set Savings\nGoal',
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const SetSavingsGoalScreen(),
                           ),
-                        ),
-                      ),
+                        );
+                      },
                     ),
                   );
                 }
                 // If a goal exists, show the gauge and an edit button
                 return gaugeDataAsync.when(
-                  data: (gaugeData) => Column(
-                    children: [
-                      SizedBox(
-                        width: 300, // Set your desired width
-                        height: 300, // Set your desired height
-                        child: SavingsGoalGauge(data: gaugeData),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.of(context).push(MaterialPageRoute(
-                            builder: (_) => SetSavingsGoalScreen(initialGoal: goal),
-                          ));
-                        },
-                        child: const Text('Edit Goal'),
-                      ),
-                    ],
+                  // --- MODIFICATION: Wrapped the Column in Padding to control the bottom spacing ---
+                  data: (gaugeData) => Padding(
+                    padding: const EdgeInsets.only(bottom: 16.0),
+                    child: Column(
+                      children: [
+                        SizedBox(
+                          width: 300,
+                          height: 300,
+                          child: SavingsGoalGauge(data: gaugeData),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).push(MaterialPageRoute(
+                              builder: (_) => SetSavingsGoalScreen(initialGoal: goal),
+                            ));
+                          },
+                          child: const Text('Edit Goal'),
+                        ),
+                      ],
+                    ),
                   ),
                   loading: () => const Center(heightFactor: 8, child: CircularProgressIndicator()),
                   error: (e,s) => const Center(child: Text('Could not load gauge data.')),
@@ -102,8 +86,6 @@ class SavingsScreen extends ConsumerWidget {
                 ref.read(savingsScreenSelectedMonthProvider.notifier).state = newMonth;
               },
             ),
-            // --- MODIFICATION START ---
-            // Replace the old Row of cards with the new SummaryStatCard
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: SummaryStatCard(
@@ -129,7 +111,6 @@ class SavingsScreen extends ConsumerWidget {
                 ],
               ),
             ),
-            // --- MODIFICATION END ---
             const SizedBox(height: 24),
           ],
         );

@@ -15,7 +15,7 @@ class AllTransactionOccurrences extends _$AllTransactionOccurrences {
   /// The build method fetches the initial list of transactions.
   @override
   Future<List<Transaction>> build() async {
-    final clock = ref.watch(clockProvider);
+    final clock = ref.watch(clockNotifierProvider);
     final repository = ref.watch(transactionRepositoryProvider);
     final rawTransactions = await repository.getAllTransactions();
 

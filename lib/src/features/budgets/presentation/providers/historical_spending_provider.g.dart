@@ -7,7 +7,7 @@ part of 'historical_spending_provider.dart';
 // **************************************************************************
 
 String _$historicalSpendingHash() =>
-    r'1690f55f1ac7a95a5102e1b6beee61dd17faec7d';
+    r'1b7a69b41b748e976e2f8b854909ec0e31b884f1';
 
 /// See also [historicalSpending].
 @ProviderFor(historicalSpending)

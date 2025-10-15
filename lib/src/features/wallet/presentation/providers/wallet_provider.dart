@@ -13,7 +13,7 @@ Future<WalletData> walletData(Ref ref) async {
   final categories = await ref.watch(categoryListProvider.future);
   // --- This is the corrected line ---
   final transactionLog = await ref.watch(allTransactionOccurrencesProvider.future);
-  final now = ref.watch(clockProvider).now();
+  final now = ref.watch(clockNotifierProvider).now();
 
   // --- Date Calculations ---
   final startOfWeek = DateTime(now.year, now.month, now.day - (now.weekday - 1));

@@ -13,7 +13,7 @@ Future<List<MonthlySpending>> historicalSpending(
     Ref ref) async {
   final allOccurrences =
       await ref.watch(allTransactionOccurrencesProvider.future);
-  final now = ref.watch(clockProvider).now();
+  final now = ref.watch(clockNotifierProvider).now();
   final endMonth = DateTime(now.year, now.month, 1);
 
   // If there are no transactions, just return the current month.

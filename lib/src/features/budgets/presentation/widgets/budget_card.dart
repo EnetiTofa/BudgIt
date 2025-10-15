@@ -5,24 +5,21 @@ class BudgetCard extends StatelessWidget {
   const BudgetCard({
     super.key,
     required this.progress,
-    required this.onTap, // Added onTap callback
+    required this.onTap,
   });
 
   final BudgetProgress progress;
-  final VoidCallback onTap; // Added onTap callback
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final brightness = ThemeData.estimateBrightnessForColor(progress.category.color);
-    final contentColor = brightness == Brightness.dark
-        ? Colors.white
-        : const Color(0xFF121212).withAlpha(200);
+    final contentColor = progress.category.contentColor;
 
     return SizedBox(
       width: 68,
       height: 68,
       child: InkWell(
-        onTap: onTap, // Use the callback here
+        onTap: onTap,
         borderRadius: BorderRadius.circular(24),
         child: Card(
           color: progress.category.color,

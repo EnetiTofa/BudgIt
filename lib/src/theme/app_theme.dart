@@ -50,6 +50,24 @@ class AppTheme {
       color: Color(0xFFFAFAFA),
       elevation: 0,
     ),
+    // --- CORRECTED CLASS NAME ---
+    dialogTheme: DialogThemeData(
+      backgroundColor: const Color.fromARGB(255, 239, 241, 243), // surfaceContainerLow
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      titleTextStyle: const TextStyle(
+        fontFamily: 'Outfit',
+        color: Color(0xFF212529), // onSurface
+        fontSize: 22,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+    snackBarTheme: SnackBarThemeData(
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: const Color(0xFF212529), // onSurface
+      contentTextStyle: const TextStyle(color: Colors.white).copyWith(fontWeight: FontWeight.w600), // surface
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 4,
+    ),
   );
 
   static final ThemeData darkTheme = ThemeData(
@@ -98,6 +116,24 @@ class AppTheme {
     bottomAppBarTheme: const BottomAppBarTheme(
       color: Color.fromARGB(255, 15, 15, 15),
       elevation: 0,
+    ),
+    // --- CORRECTED CLASS NAME ---
+    dialogTheme: DialogThemeData(
+      backgroundColor: const Color.fromARGB(255, 24, 25, 26), // surfaceContainerLow
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      titleTextStyle: const TextStyle(
+        fontFamily: 'Outfit',
+        color: Colors.white, // onSurface
+        fontSize: 22,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+    snackBarTheme: SnackBarThemeData(
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: Colors.white, // onSurface
+      contentTextStyle: TextStyle(color: Color(0xFF121212)).copyWith(fontWeight: FontWeight.w600), // surface
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 4,
     ),
   );
 }

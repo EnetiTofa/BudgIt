@@ -7,7 +7,7 @@ part of 'next_recurring_payment_provider.dart';
 // **************************************************************************
 
 String _$nextRecurringPaymentHash() =>
-    r'd8cb10d4e4e01ee17892d027c632c16ef3196a51';
+    r'7f400a5e1e71cb62365d9dd6536ea770d6bb4ca7';
 
 /// Copied from Dart SDK
 class _SystemHash {

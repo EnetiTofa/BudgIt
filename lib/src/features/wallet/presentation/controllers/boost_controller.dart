@@ -40,7 +40,7 @@ class BoostState extends _$BoostState {
   @override
   Future<BoostControllerState> build(Category toCategory) async {
     final repository = ref.watch(transactionRepositoryProvider);
-    final clock = ref.watch(clockProvider);
+    final clock = ref.watch(clockNotifierProvider);
     final adjustments = await repository.getWalletAdjustmentsForWeek(clock.now());
 
     final boostMap = <String, double>{};
@@ -74,7 +74,7 @@ class BoostState extends _$BoostState {
   Future<void> confirmBoosts() async {
     if (state.hasError || state.isLoading) return;
     final repository = ref.read(transactionRepositoryProvider);
-    final clock = ref.read(clockProvider);
+    final clock = ref.read(clockNotifierProvider);
 
     // First, delete old adjustments to prevent duplicates.
     await repository.deleteWalletAdjustments(toCategory.id, clock.now());

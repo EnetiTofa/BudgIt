@@ -7,6 +7,9 @@ import 'package:budgit/src/features/check_in/presentation/app_bar_info_provider.
 import 'package:budgit/src/app/navigation_provider.dart';
 import 'package:budgit/src/features/budgets/presentation/screens/budget_hub_screen.dart';
 import 'package:budgit/src/features/categories/presentation/screens/add_category_screen.dart';
+import 'package:budgit/src/features/check_in/presentation/check_in_screen.dart';
+import 'package:budgit/src/features/check_in/presentation/is_check_in_available_provider.dart';
+import 'package:budgit/src/common_widgets/pulsing_button.dart';
 import 'package:budgit/src/features/home/presentation/home_screen.dart';
 import 'package:budgit/src/features/menu/presentation/menu_screen.dart';
 import 'package:budgit/src/features/transactions/presentation/screens/add_income_screen.dart';
@@ -15,6 +18,7 @@ import 'package:budgit/src/features/transactions/presentation/screens/transactio
 import 'package:budgit/src/theme/app_theme.dart';
 import 'package:budgit/src/features/settings/presentation/theme_controller.dart';
 import 'package:budgit/src/features/transactions/presentation/providers/transaction_log_provider.dart';
+import 'package:budgit/src/features/categories/presentation/providers/category_list_provider.dart';
 
 class MyApp extends ConsumerWidget {
   const MyApp({super.key});
@@ -66,6 +70,8 @@ class _AppShellState extends ConsumerState<AppShell> {
     final selectedIndex = ref.watch(mainPageIndexProvider);
     final theme = Theme.of(context);
     final formattedDate = DateFormat('d MMMM').format(DateTime.now());
+    final isCheckInAvailableAsync = ref.watch(isCheckInAvailableProvider);
+    const checkInEligibleScreenIndices = {0, 1, 2};
 
     return Scaffold(
       appBar: AppBar(
@@ -74,17 +80,17 @@ class _AppShellState extends ConsumerState<AppShell> {
         backgroundColor: theme.scaffoldBackgroundColor,
         titleSpacing: 16.0,
         toolbarHeight: 48.0,
-        // --- MODIFICATION: Replaced Stack with a Row for proper alignment ---
         title: Stack(
           alignment: Alignment.center,
           children: [
-            // --- Left-aligned streak indicator ---
             Align(
               alignment: Alignment.centerLeft,
               child: Consumer(
                 builder: (context, ref, child) {
                   final appBarInfoAsync = ref.watch(appBarInfoProvider);
+                  // --- MODIFICATION: Added `skipLoadingOnReload` to prevent flicker ---
                   return appBarInfoAsync.when(
+                    skipLoadingOnReload: true,
                     loading: () => Container(
                       height: 34.0,
                       width: 72,
@@ -147,9 +153,7 @@ class _AppShellState extends ConsumerState<AppShell> {
                 },
               ),
             ),
-            // --- Centered title with padding to prevent overlap ---
             Padding(
-              // This padding creates a safe zone for the title
               padding: const EdgeInsets.symmetric(horizontal: 90.0),
               child: Center(
                 child: Text(
@@ -158,12 +162,11 @@ class _AppShellState extends ConsumerState<AppShell> {
                     fontWeight: FontWeight.bold,
                     fontSize: 17,
                   ),
-                  overflow: TextOverflow.ellipsis, // Handle long titles gracefully
+                  overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
                 ),
               ),
             ),
-            // --- Right-aligned date ---
             Align(
               alignment: Alignment.centerRight,
               child: Text(
@@ -177,7 +180,22 @@ class _AppShellState extends ConsumerState<AppShell> {
           ],
         ),
       ),
-      body: _screens[selectedIndex],
+      body: isCheckInAvailableAsync.when(
+        data: (isAvailable) {
+          if (isAvailable && checkInEligibleScreenIndices.contains(selectedIndex)) {
+            return PulsingButton(
+              label: 'Check In',
+              onPressed: () {
+                Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CheckInScreen()));
+              },
+            );
+          } else {
+            return _screens[selectedIndex];
+          }
+        },
+        loading: () => _screens[selectedIndex],
+        error: (e, s) => _screens[selectedIndex],
+      ),
       bottomNavigationBar: BottomAppBar(
         shape: const CircularNotchedRectangle(),
         notchMargin: 8.0,
@@ -227,57 +245,103 @@ class _AppShellState extends ConsumerState<AppShell> {
     showModalBottomSheet(
       context: context,
       builder: (ctx) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 16.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildMenuButton(
-                context: ctx,
-                icon: Icons.remove_circle,
-                label: 'Payment',
-                onTap: () {
-                  Navigator.pop(ctx);
-                  Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AddPaymentScreen()));
-                },
+        return Consumer(
+          builder: (context, ref, child) {
+            final categoriesAsync = ref.watch(categoryListProvider);
+            final bool hasCategories = categoriesAsync.maybeWhen(
+              data: (categories) => categories.isNotEmpty,
+              orElse: () => false,
+            );
+            final theme = Theme.of(context);
+
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(32.0, 24.0, 32.0, 32.0),
+              child: Row(
+                children: [
+                  _buildMenuButton(
+                    context: ctx,
+                    icon: Icons.remove_circle,
+                    label: 'Payment',
+                    color: hasCategories ? Colors.red.shade400 : theme.colorScheme.surfaceContainer,
+                    contentColor: hasCategories ? Colors.white : theme.colorScheme.secondary,
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      if (hasCategories) {
+                        Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AddPaymentScreen()));
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Add a category first.')),
+                        );
+                      }
+                    },
+                  ),
+                  const SizedBox(width: 24),
+                  _buildMenuButton(
+                    context: ctx,
+                    icon: Icons.add_circle,
+                    label: 'Income',
+                    color: Colors.green.shade400,
+                    contentColor: Colors.white,
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AddIncomeScreen()));
+                    },
+                  ),
+                  const SizedBox(width: 24),
+                  _buildMenuButton(
+                    context: ctx,
+                    icon: Icons.create_new_folder,
+                    label: 'Category',
+                    color: Colors.amber.shade400,
+                    contentColor: Colors.white,
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AddCategoryScreen()));
+                    },
+                  ),
+                ],
               ),
-              _buildMenuButton(
-                context: ctx,
-                icon: Icons.add_circle,
-                label: 'Income',
-                onTap: () {
-                  Navigator.pop(ctx);
-                   Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AddIncomeScreen()));
-                },
-              ),
-              _buildMenuButton(
-                context: ctx,
-                icon: Icons.create_new_folder,
-                label: 'Category',
-                onTap: () {
-                  Navigator.pop(ctx);
-                   Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AddCategoryScreen()));
-                },
-              ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
   }
 
-  Widget _buildMenuButton({required BuildContext context, required IconData icon, required String label, required VoidCallback onTap}) {
-    final theme = Theme.of(context);
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: theme.colorScheme.primary, size: 40),
-          const SizedBox(height: 8),
-          Text(label),
-        ],
+  Widget _buildMenuButton({
+    required BuildContext context,
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    required Color color,
+    required Color contentColor,
+  }) {
+    return Expanded(
+      child: AspectRatio(
+        aspectRatio: 1.0, 
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(28),
+          child: Ink(
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(28),
+            ),
+            child: Center( 
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(icon, color: contentColor, size: 36),
+                  const SizedBox(height: 8),
+                  Text(
+                    label,
+                    style: TextStyle(color: contentColor, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

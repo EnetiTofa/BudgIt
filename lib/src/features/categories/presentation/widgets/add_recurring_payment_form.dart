@@ -63,7 +63,7 @@ class _AddRecurringPaymentFormState
         );
       }
     } else {
-      _selectedDate = ref.read(clockProvider).now();
+      _selectedDate = ref.read(clockNotifierProvider).now();
     }
   }
 
@@ -113,7 +113,7 @@ class _AddRecurringPaymentFormState
         result = RecurringPayment(
           id: const Uuid().v4(),
           notes: '',
-          createdAt: ref.read(clockProvider).now(),
+          createdAt: ref.read(clockNotifierProvider).now(),
           amount: _amount,
           paymentName: _paymentNameController.text,
           payee: _payeeController.text,

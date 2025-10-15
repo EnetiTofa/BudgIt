@@ -6,7 +6,7 @@ part of 'savings_providers.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$savingsScreenDataHash() => r'cce79a06e1996714a960fba7d5adf9113358a68d';
+String _$savingsScreenDataHash() => r'8b841da681b843cf062e6163210e3a67c895cd12';
 
 /// See also [savingsScreenData].
 @ProviderFor(savingsScreenData)
@@ -24,7 +24,7 @@ final savingsScreenDataProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef SavingsScreenDataRef = AutoDisposeFutureProviderRef<SavingsScreenData>;
-String _$savingsGaugeDataHash() => r'f0ce5b4ce9e52588dee4e28fb689acf16be3aa23';
+String _$savingsGaugeDataHash() => r'1c03b7b7a758355a0eacb934d39e24c2c5a4cb06';
 
 /// See also [savingsGaugeData].
 @ProviderFor(savingsGaugeData)

@@ -88,6 +88,7 @@ class _WalletCategoryDetailScreenState
               const SizedBox(height: 16),
               Expanded(
                 child: CategoryDisplayWidget(
+                  category: data.category,
                   expandedMode: _expandedMode,
                   toCategory: data.category,
                   onDaysPressed: () =>
@@ -102,7 +103,6 @@ class _WalletCategoryDetailScreenState
                     ref.invalidate(boostStateProvider(data.category));
                     setState(() => _expandedMode = ExpandedMode.none);
                   },
-                  categoryColor: data.category.color,
                   cornerRadius: 16.0,
                   rectangleHorizontalPadding: 16.0,
                   pentagonHorizontalPadding: 36.0,

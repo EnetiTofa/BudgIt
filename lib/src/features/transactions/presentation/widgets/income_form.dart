@@ -58,7 +58,7 @@ class _IncomeFormState extends ConsumerState<IncomeForm> {
         _selectedIcon = IconData(tx.iconCodePoint, fontFamily: tx.iconFontFamily);
       }
     } else {
-      _selectedDate = ref.read(clockProvider).now();
+      _selectedDate = ref.read(clockNotifierProvider).now();
       _selectedIcon = Icons.attach_money;
     }
   }

@@ -7,7 +7,7 @@ part of 'wallet_bar_chart_provider.dart';
 // **************************************************************************
 
 String _$walletBarChartDataHash() =>
-    r'c36dcad52185af9cd2d4ec57600b6b888530224f';
+    r'143ed6a67f7b69df0b3152b73d3620236fb8be47';
 
 /// See also [walletBarChartData].
 @ProviderFor(walletBarChartData)

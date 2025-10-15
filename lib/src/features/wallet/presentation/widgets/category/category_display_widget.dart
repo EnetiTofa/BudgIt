@@ -8,9 +8,10 @@ import 'package:budgit/src/features/wallet/presentation/widgets/category/expande
 
 
 class CategoryDisplayWidget extends StatelessWidget {
-  final Color categoryColor;
+  final Category category;
   final int daysRemaining;
   final double recommendedSpending;
+  // --- MODIFICATION: Renamed to avoid confusion ---
   final Category toCategory;
   final double rectangleHorizontalPadding;
   final double pentagonHorizontalPadding;
@@ -25,7 +26,7 @@ class CategoryDisplayWidget extends StatelessWidget {
 
   const CategoryDisplayWidget({
     super.key,
-    required this.categoryColor,
+    required this.category,
     required this.daysRemaining,
     required this.recommendedSpending,
     required this.toCategory,
@@ -119,8 +120,7 @@ class CategoryDisplayWidget extends StatelessWidget {
     const Curve animationCurve = Curves.easeInOutCubic;
 
     final bool isExpanded = expandedMode != ExpandedMode.none;
-    final brightness = ThemeData.estimateBrightnessForColor(categoryColor);
-    final contentColor = brightness == Brightness.dark ? Colors.white : const Color(0xFF121212).withAlpha(200);
+    final contentColor = category.contentColor;
 
     return Stack(
       children: [
@@ -218,7 +218,8 @@ class CategoryDisplayWidget extends StatelessWidget {
               rectangleHeightRatio: rectangleHeightRatio,
             ),
             child: Container(
-              color: categoryColor,
+              // --- MODIFICATION: Use the color from the full category object ---
+              color: category.color,
               child: Align(
                 alignment: const Alignment(0.0, -0.2),
                 child: Column(
@@ -255,7 +256,8 @@ class CategoryDisplayWidget extends StatelessWidget {
                     Text(
                       'Recommended',
                       style: TextStyle(
-                        color: Colors.black.withAlpha(135),
+                        // --- MODIFICATION: Use a faded version of the content color for consistency ---
+                        color: Theme.of(context).colorScheme.surface.withOpacity(0.7),
                         fontWeight: FontWeight.w700,
                         fontSize: 22,
                       ),

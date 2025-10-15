@@ -25,7 +25,7 @@ class CheckInController extends _$CheckInController {
   Future<void> startCheckIn() async {
     state = state.copyWith(status: CheckInStatus.loading);
 
-    final clock = ref.read(clockProvider);
+    final clock = ref.read(clockNotifierProvider);
     final categories = await ref.read(categoryListProvider.future);
     final allTransactions = await ref.read(transactionRepositoryProvider).getAllTransactions();
     final settingsNotifier = ref.read(settingsProvider.notifier);
@@ -81,7 +81,7 @@ class CheckInController extends _$CheckInController {
 
   Future<void> completeCheckIn() async {
     final repository = ref.read(transactionRepositoryProvider);
-    final clock = ref.read(clockProvider);
+    final clock = ref.read(clockNotifierProvider);
 
     double totalToSave = 0;
 

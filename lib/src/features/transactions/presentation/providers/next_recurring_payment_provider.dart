@@ -13,7 +13,7 @@ Future<PaymentOccurrence?> nextRecurringPayment(
 }) async {
   final repository = ref.watch(transactionRepositoryProvider);
   final allTransactions = await repository.getAllTransactions();
-  final now = ref.watch(clockProvider).now();
+  final now = ref.watch(clockNotifierProvider).now();
   final today = DateTime(now.year, now.month, now.day);
 
   // 1. Get all recurring payment rules for this category

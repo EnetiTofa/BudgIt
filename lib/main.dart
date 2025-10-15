@@ -9,13 +9,10 @@ import 'package:budgit/src/features/transactions/domain/transaction.dart';
 import 'package:budgit/src/features/wallet/domain/wallet_adjustment.dart';
 
 Future<void> main() async {
-  // 1. Ensure Flutter is ready
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 2. Initialize Hive
   await Hive.initFlutter();
 
-  // 3. Register all your adapters
   Hive.registerAdapter(CategoryAdapter());
   Hive.registerAdapter(BudgetPeriodAdapter());
   Hive.registerAdapter(RecurrencePeriodAdapter());

@@ -39,7 +39,7 @@ Future<WalletBarChartData> walletBarChartData(Ref ref) async {
 
   // 2. Perform the rest of the logic directly. No .when() is needed.
   final checkInDay = await settingsNotifier.getCheckInDay();
-  final now = ref.watch(clockProvider).now();
+  final now = ref.watch(clockNotifierProvider).now();
   
   final startOfWeek = DateTime(now.year, now.month, now.day - (now.weekday - checkInDay + 7) % 7);
   final startOfToday = DateTime(now.year, now.month, now.day);

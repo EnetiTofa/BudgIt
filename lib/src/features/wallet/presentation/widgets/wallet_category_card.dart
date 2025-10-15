@@ -53,14 +53,13 @@ class _WalletCategoryCardState extends ConsumerState<WalletCategoryCard> with Si
     final data = widget.data;
     final isOverspent = data.totalSpentThisWeek > data.effectiveWeeklyBudget;
     
-    // This logic automatically chooses black or white for readability
-    final brightness = ThemeData.estimateBrightnessForColor(data.category.color);
-    final contentColor = brightness == Brightness.dark ? Colors.white : Color(0xFF121212).withAlpha(200);
+    // --- MODIFICATION: Use the new contentColor property from the category model ---
+    final contentColor = data.category.contentColor;
 
     return Card(
       elevation: 0,
       clipBehavior: Clip.antiAlias,
-      color: data.category.color, // Use category color for the background
+      color: data.category.color,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       margin: const EdgeInsets.symmetric(vertical: 6.0),
       child: InkWell(
@@ -73,7 +72,6 @@ class _WalletCategoryCardState extends ConsumerState<WalletCategoryCard> with Si
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
           child: Column(
             children: [
-              // --- Header Row ---
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
@@ -105,7 +103,7 @@ class _WalletCategoryCardState extends ConsumerState<WalletCategoryCard> with Si
                         ),
                         TextSpan(
                           text: ' / ${currencyFormat.format(data.effectiveWeeklyBudget)}',
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontWeight: FontWeight.w400,
                             fontSize: 12,
                           )
@@ -116,8 +114,6 @@ class _WalletCategoryCardState extends ConsumerState<WalletCategoryCard> with Si
                 ],
               ),
               const SizedBox(height: 8),
-
-              // --- Animated Progress Bar ---
               SizedBox(
                 height: 12,
                 child: AnimatedBuilder(
@@ -137,8 +133,6 @@ class _WalletCategoryCardState extends ConsumerState<WalletCategoryCard> with Si
                 ),
               ),
               Divider(height: 24, color: contentColor.withOpacity(0.5)),
-
-              // --- "Personal Trainer" Info Row ---
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [

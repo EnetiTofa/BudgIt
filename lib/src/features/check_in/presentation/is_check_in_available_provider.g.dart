@@ -7,7 +7,7 @@ part of 'is_check_in_available_provider.dart';
 // **************************************************************************
 
 String _$isCheckInAvailableHash() =>
-    r'66d825d45c0fd9d9c9f915cfffb40c48686953d6';
+    r'250ee5ce5142b2b61e3dd56f4befc79c19a5220e';
 
 /// See also [isCheckInAvailable].
 @ProviderFor(isCheckInAvailable)

@@ -44,7 +44,7 @@ class AddTransactionController extends _$AddTransactionController {
     final payment = OneOffPayment(
       id: DateTime.now().toIso8601String(),
       notes: '',
-      createdAt: ref.read(clockProvider).now(),
+      createdAt: ref.read(clockNotifierProvider).now(),
       amount: amount,
       date: date,
       itemName: itemName,
@@ -138,7 +138,7 @@ class AddTransactionController extends _$AddTransactionController {
     final income = RecurringIncome(
       id: DateTime.now().toIso8601String(),
       notes: '',
-      createdAt: ref.read(clockProvider).now(),
+      createdAt: ref.read(clockNotifierProvider).now(),
       amount: amount,
       source: source,
       startDate: startDate,
@@ -211,7 +211,7 @@ class AddTransactionController extends _$AddTransactionController {
     DateTime? startDate, // Add optional startDate parameter
   }) async {
     final repository = ref.read(transactionRepositoryProvider);
-    final clock = ref.read(clockProvider);
+    final clock = ref.read(clockNotifierProvider);
     
     final newGoal = SavingsGoal(
       id: 'activeGoal',

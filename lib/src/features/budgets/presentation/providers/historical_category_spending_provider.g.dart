@@ -7,7 +7,7 @@ part of 'historical_category_spending_provider.dart';
 // **************************************************************************
 
 String _$historicalCategorySpendingHash() =>
-    r'b57af4a01e14e90cc1d28742996c2c91ff9d456a';
+    r'80bee6d0c04031f3918ecbe16f60c7b997e01508';
 
 /// Copied from Dart SDK
 class _SystemHash {

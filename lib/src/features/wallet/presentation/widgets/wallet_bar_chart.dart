@@ -136,7 +136,7 @@ class _WalletBarChartState extends ConsumerState<WalletBarChart> with SingleTick
                                   data: (settings) {
                                     final checkInDay = settings.getCheckInDay();
                                     
-                                    final now = ref.read(clockProvider).now();
+                                    final now = ref.read(clockNotifierProvider).now();
                                     final startOfWeek = DateTime(now.year, now.month, now.day - (now.weekday - checkInDay + 7) % 7);
                                     final date = startOfWeek.add(Duration(days: value.toInt()));
                                     final text = DateFormat.E().format(date); 

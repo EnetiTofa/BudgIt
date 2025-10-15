@@ -10,6 +10,8 @@ import 'package:budgit/src/features/settings/presentation/theme_selector_screen.
 import 'package:budgit/src/features/transactions/presentation/controllers/add_transaction_controller.dart';
 import 'package:budgit/src/features/check_in/presentation/streak_provider.dart';
 import 'package:budgit/src/features/check_in/presentation/app_bar_info_provider.dart';
+import 'package:budgit/src/features/debug/presentation/time_machine_screen.dart';
+
 
 
 class MenuScreen extends ConsumerWidget {
@@ -105,6 +107,13 @@ class MenuScreen extends ConsumerWidget {
         ),
         if (kDebugMode) ...[
           const Divider(),
+          ListTile(
+            leading: const Icon(Icons.timelapse_rounded, color: Colors.purpleAccent),
+            title: const Text('DEBUG: Time Machine'),
+            onTap: () {
+              Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TimeMachineScreen()));
+            },
+          ),
           ListTile(
             leading: const Icon(Icons.auto_awesome, color: Colors.orange),
             title: const Text('DEBUG: Generate Dummy Data'),

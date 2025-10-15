@@ -68,7 +68,7 @@ final savingsScreenSelectedMonthProvider = StateProvider<DateTime>((ref) {
 @riverpod
 Future<SavingsScreenData> savingsScreenData(SavingsScreenDataRef ref) async {
   final occurrences = await ref.watch(allTransactionOccurrencesProvider.future);
-  final now = ref.watch(clockProvider).now();
+  final now = ref.watch(clockNotifierProvider).now();
 
   final monthlyDetailsMap = <String, MonthlySavingsDetails>{};
 
@@ -122,7 +122,7 @@ Future<SavingsScreenData> savingsScreenData(SavingsScreenDataRef ref) async {
 @riverpod
 Future<SavingsGaugeData> savingsGaugeData(SavingsGaugeDataRef ref) async {
   final goal = await ref.watch(savingsGoalProvider.future);
-  final now = ref.watch(clockProvider).now();
+  final now = ref.watch(clockNotifierProvider).now();
   final settings = await ref.watch(settingsProvider.future);
   final checkInDay = await settings.getCheckInDay();
   final occurrences = await ref.watch(allTransactionOccurrencesProvider.future);

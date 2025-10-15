@@ -19,7 +19,7 @@ Future<List<WalletCategoryData>> walletCategoryData(Ref ref) async {
   final settingsRepo = await ref.watch(settingsProvider.future);
   
   final repository = ref.watch(transactionRepositoryProvider);
-  final now = ref.watch(clockProvider).now();
+  final now = ref.watch(clockNotifierProvider).now();
   
   final checkInDay = settingsRepo.getCheckInDay();
   

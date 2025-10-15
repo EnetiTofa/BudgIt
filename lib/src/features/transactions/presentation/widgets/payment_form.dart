@@ -76,7 +76,7 @@ class _PaymentFormState extends ConsumerState<PaymentForm> {
         }
       }
     } else {
-      _selectedDate = ref.read(clockProvider).now();
+      _selectedDate = ref.read(clockNotifierProvider).now();
       _isWalleted = true;
     }
   }
