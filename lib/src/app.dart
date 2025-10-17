@@ -255,7 +255,7 @@ class _AppShellState extends ConsumerState<AppShell> {
             final theme = Theme.of(context);
 
             return Padding(
-              padding: const EdgeInsets.fromLTRB(32.0, 24.0, 32.0, 32.0),
+              padding: const EdgeInsets.fromLTRB(24.0, 24.0, 24.0, 32.0),
               child: Row(
                 children: [
                   _buildMenuButton(

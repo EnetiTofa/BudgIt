@@ -249,7 +249,11 @@ class HiveTransactionRepository implements TransactionRepository {
 
   @override
   Future<int> getCheckInStreak() async {
-    return _settingsBox.get('checkInStreak', defaultValue: 0) as int;
+    final dynamic streak = _settingsBox.get('checkInStreak');
+    if (streak is int) {
+      return streak;
+    }
+    return 0;
   }
 
   @override
@@ -270,7 +274,13 @@ class HiveTransactionRepository implements TransactionRepository {
 
   @override
   Future<DateTime?> getLastCheckInDate() async {
-    return _settingsBox.get('lastCheckInDate') as DateTime?;
+    final dynamic date = _settingsBox.get('lastCheckInDate');
+
+    if (date is DateTime) {
+      return date;
+    }
+    
+    return null;
   }
 
   @override

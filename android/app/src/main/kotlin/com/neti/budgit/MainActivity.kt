@@ -1,4 +1,4 @@
-package com.example.budgit
+package com.neti.budgit
 
 import io.flutter.embedding.android.FlutterActivity
 

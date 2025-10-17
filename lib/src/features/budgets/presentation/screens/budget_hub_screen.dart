@@ -7,7 +7,7 @@ import 'package:budgit/src/features/wallet/presentation/screens/wallet_screen.da
 
 class BudgetHubScreen extends ConsumerStatefulWidget {
   final int initialTabIndex;
-  const BudgetHubScreen({super.key, this.initialTabIndex = 0});
+  const BudgetHubScreen({super.key, this.initialTabIndex = 1});
 
   @override
   ConsumerState<BudgetHubScreen> createState() => _BudgetHubScreenState();

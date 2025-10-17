@@ -1,3 +1,5 @@
+// main.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -25,14 +27,16 @@ Future<void> main() async {
   Hive.registerAdapter(WalletAdjustmentAdapter());
   Hive.registerAdapter(SavingsGoalAdapter());
 
-  // 4. Open all your boxes (ensure every line has 'await')
   await Hive.openBox<Category>('categories');
   await Hive.openBox<Transaction>('transactions');
   await Hive.openBox<WalletAdjustment>('adjustments');
   await Hive.openBox<SavingsGoal>('savings_goals');
   await Hive.openBox('settings');
+  
+  // This was the missing line that caused the error
+  await Hive.openBox<List<String>>('category_order');
 
-  // 5. Run the app
+  // Run the app
   runApp(
     const ProviderScope(
       child: MyApp(),

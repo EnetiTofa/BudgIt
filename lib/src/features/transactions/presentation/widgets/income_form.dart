@@ -215,6 +215,7 @@ class _IncomeFormState extends ConsumerState<IncomeForm> {
                     selectedDate: _endDate,
                     layout: DateSelectorLayout.vertical,
                     onDateSelected: (date) => setState(() => _endDate = date),
+                    allowFutureDates: true,
                   ),
                 ),
               ],

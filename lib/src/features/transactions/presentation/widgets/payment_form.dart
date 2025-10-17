@@ -294,6 +294,7 @@ class _PaymentFormState extends ConsumerState<PaymentForm> {
                     labelText: 'End Date', selectedDate: _endDate,
                     layout: DateSelectorLayout.vertical,
                     onDateSelected: (date) => setState(() => _endDate = date),
+                    allowFutureDates: true,
                   ),
                 ),
               ],

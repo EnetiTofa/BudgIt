@@ -1,7 +1,8 @@
+// lib/src/common_widgets/date_selector_field.dart
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-// An enum to define the available layout styles for the widget
 enum DateSelectorLayout { horizontal, vertical }
 
 class DateSelectorField extends StatelessWidget {
@@ -11,27 +12,30 @@ class DateSelectorField extends StatelessWidget {
     this.selectedDate,
     required this.onDateSelected,
     this.icon = Icons.calendar_today,
-    this.layout = DateSelectorLayout.horizontal, // Default to the original layout
+    this.layout = DateSelectorLayout.horizontal,
+    this.allowFutureDates = false, // 1. Add new property with a default
   });
 
   final String labelText;
   final DateTime? selectedDate;
   final ValueChanged<DateTime> onDateSelected;
   final IconData icon;
-  final DateSelectorLayout layout; // Parameter to control the layout
+  final DateSelectorLayout layout;
+  final bool allowFutureDates; // 2. Declare the final property
 
   Future<void> _pickDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: selectedDate ?? DateTime.now(),
       firstDate: DateTime(2000),
-      lastDate: DateTime(2101),
+      // 3. Use the new property to set the last selectable date
+      lastDate: allowFutureDates ? DateTime(2101) : DateTime.now(),
     );
     if (picked != null && picked != selectedDate) {
       onDateSelected(picked);
     }
   }
-
+  
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);

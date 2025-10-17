@@ -92,14 +92,14 @@ class _WalletBarChartState extends ConsumerState<WalletBarChart> with SingleTick
                             HorizontalLine(
                               y: chartData.dailyWalletTarget * _animation.value,
                               color: Colors.redAccent.withOpacity(0.8),
-                              strokeWidth: 2,
+                              strokeWidth: 1,
                               dashArray: [5, 5],
                             ),
                             // This is the average spending line
                             HorizontalLine(
                               y: chartData.averageDailySpend * _animation.value,
                               color: theme.colorScheme.primary.withOpacity(0.8),
-                              strokeWidth: 2,
+                              strokeWidth: 1,
                               dashArray: [5, 5],
                             ),
                           ],
