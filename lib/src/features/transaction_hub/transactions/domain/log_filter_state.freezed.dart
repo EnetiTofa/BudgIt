@@ -23,9 +23,7 @@ mixin _$LogFilterState {
   SortBy get sortBy => throw _privateConstructorUsedError;
   Set<String> get selectedCategoryIds => throw _privateConstructorUsedError;
 
-  /// Create a copy of LogFilterState
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   $LogFilterStateCopyWith<LogFilterState> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -53,8 +51,6 @@ class _$LogFilterStateCopyWithImpl<$Res, $Val extends LogFilterState>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
-  /// Create a copy of LogFilterState
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -107,8 +103,6 @@ class __$$LogFilterStateImplCopyWithImpl<$Res>
       _$LogFilterStateImpl _value, $Res Function(_$LogFilterStateImpl) _then)
       : super(_value, _then);
 
-  /// Create a copy of LogFilterState
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -195,9 +189,7 @@ class _$LogFilterStateImpl implements _LogFilterState {
       sortBy,
       const DeepCollectionEquality().hash(_selectedCategoryIds));
 
-  /// Create a copy of LogFilterState
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
   _$$LogFilterStateImplCopyWith<_$LogFilterStateImpl> get copyWith =>
@@ -212,8 +204,7 @@ abstract class _LogFilterState implements LogFilterState {
       final SortBy sortBy,
       final Set<String> selectedCategoryIds}) = _$LogFilterStateImpl;
 
-// The @Default() annotation replaces constructor default values.
-  @override
+  @override // The @Default() annotation replaces constructor default values.
   TransactionTypeFilter get transactionTypeFilter;
   @override
   String get searchQuery;
@@ -221,11 +212,8 @@ abstract class _LogFilterState implements LogFilterState {
   SortBy get sortBy;
   @override
   Set<String> get selectedCategoryIds;
-
-  /// Create a copy of LogFilterState
-  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
+  @JsonKey(ignore: true)
   _$$LogFilterStateImplCopyWith<_$LogFilterStateImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

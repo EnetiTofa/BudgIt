@@ -21,8 +21,6 @@ final savingsScreenDataProvider =
   allTransitiveDependencies: null,
 );
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
 typedef SavingsScreenDataRef = AutoDisposeFutureProviderRef<SavingsScreenData>;
 String _$savingsGaugeDataHash() => r'1c03b7b7a758355a0eacb934d39e24c2c5a4cb06';
 
@@ -39,8 +37,6 @@ final savingsGaugeDataProvider =
   allTransitiveDependencies: null,
 );
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
 typedef SavingsGaugeDataRef = AutoDisposeFutureProviderRef<SavingsGaugeData>;
 String _$averageWeeklySavingsHash() =>
     r'8847f6c843015e1e79f0e67b3c4313e3de0e5f2f';
@@ -57,8 +53,6 @@ final averageWeeklySavingsProvider = AutoDisposeFutureProvider<double>.internal(
   allTransitiveDependencies: null,
 );
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
 typedef AverageWeeklySavingsRef = AutoDisposeFutureProviderRef<double>;
 String _$totalSavingsHash() => r'd4ce2abe82e3aa1e0b1da051b5a353eef0b025cf';
 
@@ -73,8 +67,6 @@ final totalSavingsProvider = AutoDisposeFutureProvider<double>.internal(
   allTransitiveDependencies: null,
 );
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
 typedef TotalSavingsRef = AutoDisposeFutureProviderRef<double>;
 String _$potentialWeeklySavingsHash() =>
     r'a072cdc653511ed3014e1d82db337876dc757ced';
@@ -92,8 +84,6 @@ final potentialWeeklySavingsProvider =
   allTransitiveDependencies: null,
 );
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
 typedef PotentialWeeklySavingsRef = AutoDisposeFutureProviderRef<double>;
 String _$savingsGoalHash() => r'853e4e0324f30421c2b359db2db1ad2bbf2ec212';
 
@@ -108,8 +98,6 @@ final savingsGoalProvider = AutoDisposeFutureProvider<SavingsGoal?>.internal(
   allTransitiveDependencies: null,
 );
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
 typedef SavingsGoalRef = AutoDisposeFutureProviderRef<SavingsGoal?>;
 // ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
+// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member
