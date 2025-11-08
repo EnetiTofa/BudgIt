@@ -13,6 +13,7 @@ class Category extends Equatable with HiveObjectMixin {
     required this.name,
     required this.iconCodePoint,
     this.iconFontFamily,
+    this.iconFontPackage,
     required this.colorValue,
     required this.budgetAmount, // This amount is ALWAYS monthly
     this.walletAmount,
@@ -33,8 +34,14 @@ class Category extends Equatable with HiveObjectMixin {
   final String? iconFontFamily;
   @HiveField(6)
   final int colorValue;
+  @HiveField(7) // ADD THIS
+  final String? iconFontPackage;
 
-  IconData get icon => IconData(iconCodePoint, fontFamily: iconFontFamily);
+  IconData get icon => IconData(
+    iconCodePoint, 
+    fontFamily: iconFontFamily, 
+    fontPackage: iconFontPackage,
+    );
   Color get color => Color(colorValue);
 
   // --- MODIFICATION: Updated the luminance threshold and alpha value ---
@@ -58,6 +65,7 @@ class Category extends Equatable with HiveObjectMixin {
     double? walletAmount,
     int? iconCodePoint,
     String? iconFontFamily,
+    String? iconFontPackage,
     int? colorValue,
   }) {
     return Category(
@@ -67,6 +75,7 @@ class Category extends Equatable with HiveObjectMixin {
       walletAmount: walletAmount ?? this.walletAmount,
       iconCodePoint: iconCodePoint ?? this.iconCodePoint,
       iconFontFamily: iconFontFamily ?? this.iconFontFamily,
+      iconFontPackage: iconFontPackage ?? this.iconFontPackage,
       colorValue: colorValue ?? this.colorValue,
     );
   }

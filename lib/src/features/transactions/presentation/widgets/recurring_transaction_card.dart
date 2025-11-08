@@ -47,7 +47,7 @@ class RecurringTransactionCard extends StatelessWidget {
           backgroundColor: item.category.color,
           child: Icon(
             item.iconCodePoint != null
-                ? IconData(item.iconCodePoint!, fontFamily: item.iconFontFamily)
+                ? IconData(item.iconCodePoint!, fontFamily: item.iconFontFamily, fontPackage: item.iconFontPackage,)
                 : item.category.icon,
             color: theme.colorScheme.surfaceContainerLow
           ),
@@ -86,7 +86,7 @@ class RecurringTransactionCard extends StatelessWidget {
         leading: CircleAvatar(
           backgroundColor: Colors.green[600],
           child: Icon(
-            IconData(item.iconCodePoint, fontFamily: item.iconFontFamily),
+            IconData(item.iconCodePoint, fontFamily: item.iconFontFamily, fontPackage: item.iconFontPackage,),
             color: theme.colorScheme.surfaceContainerLow
           ),
         ),

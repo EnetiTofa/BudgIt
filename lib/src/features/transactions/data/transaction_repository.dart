@@ -73,4 +73,9 @@ abstract class TransactionRepository {
   /// Deletes all transactions and adjustments.
   Future<void> deleteAllData();
 
+  Future<void> saveRecentIcons(List<String> iconNames);
+
+  /// Retrieves the list of most recently used icon names.
+  Future<List<String>> getRecentIcons();
+
 }

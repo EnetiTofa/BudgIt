@@ -113,17 +113,23 @@ class _WalletBarChartState extends ConsumerState<WalletBarChart> with SingleTick
                               reservedSize: 28,
                               interval: interval,
                               getTitlesWidget: (value, meta) {
+                                // --- FIX #1: Use meta: meta ---
                                 if (value == meta.max) {
-                                  return const SizedBox.shrink();
+                                  return SideTitleWidget(meta: meta, child: const Text(''));
                                 }
                                 if (value % interval == 0) {
-                                  return Text(
-                                    '${value.toInt()}',
-                                    style: TextStyle(fontSize: 12, color: theme.colorScheme.secondary.withValues(alpha: 0.9)),
-                                    textAlign: TextAlign.left,
+                                  return SideTitleWidget(
+                                    meta: meta, // Changed from axisSide
+                                    space: 4, 
+                                    child: Text(
+                                      '${value.toInt()}',
+                                      style: TextStyle(fontSize: 12, color: theme.colorScheme.secondary.withValues(alpha: 0.9)),
+                                      textAlign: TextAlign.left,
+                                    ),
                                   );
                                 }
-                                return const SizedBox.shrink();
+                                return SideTitleWidget(meta: meta, child: const Text(''));
+                                // --- END OF FIX #1 ---
                               },
                             ),
                           ),
@@ -131,7 +137,6 @@ class _WalletBarChartState extends ConsumerState<WalletBarChart> with SingleTick
                             sideTitles: SideTitles(
                               showTitles: true,
                               getTitlesWidget: (value, meta) {
-                                // V-- Now handle the async value here
                                 return settingsAsync.when(
                                   data: (settings) {
                                     final checkInDay = settings.getCheckInDay();
@@ -141,8 +146,10 @@ class _WalletBarChartState extends ConsumerState<WalletBarChart> with SingleTick
                                     final date = startOfWeek.add(Duration(days: value.toInt()));
                                     final text = DateFormat.E().format(date); 
                                     final isToday = now.difference(startOfWeek).inDays == value.toInt();
+                                    
+                                    // --- FIX #2: Use meta: meta ---
                                     return SideTitleWidget(
-                                      axisSide: meta.axisSide, 
+                                      meta: meta, // Changed from axisSide
                                       space: 4, 
                                       child: Text(
                                         text, 
@@ -154,8 +161,10 @@ class _WalletBarChartState extends ConsumerState<WalletBarChart> with SingleTick
                                       ),
                                     );
                                   },
-                                  loading: () => const SizedBox.shrink(),
-                                  error: (e, s) => const SizedBox.shrink(),
+                                  // --- FIX #3: Use meta: meta ---
+                                  loading: () => SideTitleWidget(meta: meta, child: const Text('')),
+                                  // --- FIX #4: Use meta: meta ---
+                                  error: (e, s) => SideTitleWidget(meta: meta, child: const Text('')),
                                 );
                               },
                               reservedSize: 24,

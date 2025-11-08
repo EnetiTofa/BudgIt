@@ -373,4 +373,23 @@ class HiveTransactionRepository implements TransactionRepository {
     final transactionMap = {for (var t in generatedTransactions) t.id: t};
     await _transactionBox.putAll(transactionMap);
   }
+
+  @override
+  Future<void> saveRecentIcons(List<String> iconNames) async {
+    // Save the list of icon names to the settings box.
+    await _settingsBox.put('recentIcons', iconNames);
+  }
+
+  @override
+  Future<List<String>> getRecentIcons() async {
+    // Retrieve the list of icon names.
+    // We get it as dynamic and ensure it's a List<String> before returning.
+    final dynamic recents = _settingsBox.get('recentIcons');
+    if (recents is List) {
+      // Use cast() to safely convert List<dynamic> to List<String>.
+      return recents.cast<String>().toList();
+    }
+    // If nothing is found, return an empty list.
+    return [];
+  }
 }

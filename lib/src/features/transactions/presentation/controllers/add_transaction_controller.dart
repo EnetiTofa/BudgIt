@@ -40,6 +40,8 @@ class AddTransactionController extends _$AddTransactionController {
     required bool isWalleted,
     required Category category,
     required String store,
+    // Note: OneOffPayment from the main form doesn't have a custom icon.
+    // If you add one later, you'll need to add icon fields here.
   }) async {
     final payment = OneOffPayment(
       id: DateTime.now().toIso8601String(),
@@ -48,7 +50,7 @@ class AddTransactionController extends _$AddTransactionController {
       amount: amount,
       date: date,
       itemName: itemName,
-      store: store, // We can make this a form field later
+      store: store,
       category: category,
       isWalleted: isWalleted,
     );
@@ -57,17 +59,19 @@ class AddTransactionController extends _$AddTransactionController {
     await repository.addTransaction(payment);
     _invalidateProviders();
   }
+
   Future<void> addRecurringPayment({
     required double amount,
-    required String paymentName, // Changed from payee
-    required String payee,       // Added this parameter
+    required String paymentName,
+    required String payee,
     required DateTime startDate,
-    DateTime? endDate,         // Added optional endDate
+    DateTime? endDate,
     required Category category,
     required RecurrencePeriod recurrence,
     required int recurrenceFrequency,
-    int? iconCodePoint,     // Added
-    String? iconFontFamily, // Added
+    int? iconCodePoint,
+    String? iconFontFamily,
+    String? iconFontPackage,
   }) async {
     final payment = RecurringPayment(
       id: DateTime.now().toIso8601String(),
@@ -81,15 +85,19 @@ class AddTransactionController extends _$AddTransactionController {
       category: category,
       recurrence: recurrence,
       recurrenceFrequency: recurrenceFrequency,
-      iconCodePoint: iconCodePoint,   // Added
-      iconFontFamily: iconFontFamily, // Added
+      iconCodePoint: iconCodePoint,
+      iconFontFamily: iconFontFamily,
+      iconFontPackage: iconFontPackage, // ADD THIS
     );
 
     final repository = ref.read(transactionRepositoryProvider);
     await repository.addTransaction(payment);
     _invalidateProviders();
   }
+
   Future<void> updateTransaction(Transaction transaction) async {
+    // This method is fine, as the transaction object is built
+    // in the form with the fontPackage already included.
     await ref.read(transactionRepositoryProvider).updateTransaction(transaction);
     _invalidateProviders();
   }
@@ -105,8 +113,9 @@ class AddTransactionController extends _$AddTransactionController {
     required String source,
     required DateTime date,
     String? reference,
-    required int iconCodePoint,     // Added
-    String? iconFontFamily, // Added parameter
+    required int iconCodePoint,
+    String? iconFontFamily,
+    String? iconFontPackage, // ADD THIS
   }) async {
     final income = OneOffIncome(
       id: DateTime.now().toIso8601String(), // Temporary unique ID
@@ -116,14 +125,16 @@ class AddTransactionController extends _$AddTransactionController {
       date: date,
       source: source,
       reference: reference,
-      iconCodePoint: iconCodePoint,   // Added
-      iconFontFamily: iconFontFamily, // Added field
+      iconCodePoint: iconCodePoint,
+      iconFontFamily: iconFontFamily,
+      iconFontPackage: iconFontPackage, // ADD THIS
     );
 
     final repository = ref.read(transactionRepositoryProvider);
     await repository.addTransaction(income);
     _invalidateProviders();
   }
+
   Future<void> addRecurringIncome({
     required double amount,
     required String source,
@@ -134,6 +145,7 @@ class AddTransactionController extends _$AddTransactionController {
     String? reference,
     required int iconCodePoint,
     String? iconFontFamily,
+    String? iconFontPackage, // ADD THIS
   }) async {
     final income = RecurringIncome(
       id: DateTime.now().toIso8601String(),
@@ -148,25 +160,27 @@ class AddTransactionController extends _$AddTransactionController {
       reference: reference, 
       iconCodePoint: iconCodePoint,
       iconFontFamily: iconFontFamily,
+      iconFontPackage: iconFontPackage, // ADD THIS
     );
 
     final repository = ref.read(transactionRepositoryProvider);
     await repository.addTransaction(income);
     _invalidateProviders();
   }
+
   Future<void> addCategory({
     required String name,
     required double budgetAmount,
-    required IconData icon,   // Add this
-    required Color color, // Now required
+    required IconData icon,
+    required Color color,
     double? walletAmount, 
     }) async {
     final newCategory = Category(
       id: DateTime.now().toIso8601String(), // Temporary unique ID
       name: name,
-      // For now, we'll hardcode the icon and color
       iconCodePoint: icon.codePoint,
       iconFontFamily: icon.fontFamily,
+      iconFontPackage: icon.fontPackage, // ADD THIS
       colorValue: color.value,
       budgetAmount: budgetAmount,
       walletAmount: walletAmount,
@@ -178,7 +192,7 @@ class AddTransactionController extends _$AddTransactionController {
   }
 
   Future<void> updateCategory({
-    required String id, // We need the original ID to update the correct item
+    required String id,
     required String name,
     required double budgetAmount,
     double? walletAmount,
@@ -190,6 +204,7 @@ class AddTransactionController extends _$AddTransactionController {
       name: name,
       iconCodePoint: icon.codePoint,
       iconFontFamily: icon.fontFamily,
+      iconFontPackage: icon.fontPackage, // ADD THIS
       colorValue: color.value,
       budgetAmount: budgetAmount,
       walletAmount: walletAmount,
@@ -200,6 +215,7 @@ class AddTransactionController extends _$AddTransactionController {
     _invalidateProviders();
   }
 
+  // ... (deleteCategory and all other methods are unchanged) ...
   Future<void> deleteCategory(String categoryId) async {
     final repository = ref.read(transactionRepositoryProvider);
     await repository.deleteCategory(categoryId);
@@ -208,7 +224,7 @@ class AddTransactionController extends _$AddTransactionController {
 
    Future<void> setSavingsGoal(
     double targetAmount, {
-    DateTime? startDate, // Add optional startDate parameter
+    DateTime? startDate,
   }) async {
     final repository = ref.read(transactionRepositoryProvider);
     final clock = ref.read(clockNotifierProvider);
@@ -216,7 +232,6 @@ class AddTransactionController extends _$AddTransactionController {
     final newGoal = SavingsGoal(
       id: 'activeGoal',
       targetAmount: targetAmount,
-      // Use the provided startDate, or default to now
       createdAt: startDate ?? clock.now(),
     );
     
@@ -235,7 +250,6 @@ class AddTransactionController extends _$AddTransactionController {
   Future<void> deleteSavingsGoal() async {
     final repository = ref.read(transactionRepositoryProvider);
     await repository.deleteSavingsGoal();
-    // Invalidate providers to update the UI
     ref.invalidate(savingsGoalProvider);
     ref.invalidate(savingsGaugeDataProvider);
   }

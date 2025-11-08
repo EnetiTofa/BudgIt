@@ -76,7 +76,7 @@ class TransactionLogScreen extends ConsumerWidget {
                             backgroundColor: transaction.category.color,
                             child: Icon(
                               transaction.iconCodePoint != null
-                                  ? IconData(transaction.iconCodePoint!, fontFamily: transaction.iconFontFamily)
+                                  ? IconData(transaction.iconCodePoint!, fontFamily: transaction.iconFontFamily, fontPackage: transaction.iconFontPackage,)
                                   : transaction.category.icon,
                               color: colorScheme.surface,
                             ),
@@ -94,7 +94,7 @@ class TransactionLogScreen extends ConsumerWidget {
                           leading: CircleAvatar(
                             backgroundColor: Colors.green,
                             child: Icon(
-                              IconData(transaction.iconCodePoint, fontFamily: transaction.iconFontFamily),
+                              IconData(transaction.iconCodePoint, fontFamily: transaction.iconFontFamily, fontPackage: transaction.iconFontPackage,),
                               color: colorScheme.surface,
                             ),
                           ),

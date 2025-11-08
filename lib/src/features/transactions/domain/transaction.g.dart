@@ -29,13 +29,14 @@ class OneOffPaymentAdapter extends TypeAdapter<OneOffPayment> {
       parentRecurringId: fields[9] as String?,
       iconCodePoint: fields[10] as int?,
       iconFontFamily: fields[11] as String?,
+      iconFontPackage: fields[12] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, OneOffPayment obj) {
     writer
-      ..writeByte(12)
+      ..writeByte(13)
       ..writeByte(0)
       ..write(obj.date)
       ..writeByte(1)
@@ -52,6 +53,8 @@ class OneOffPaymentAdapter extends TypeAdapter<OneOffPayment> {
       ..write(obj.iconCodePoint)
       ..writeByte(11)
       ..write(obj.iconFontFamily)
+      ..writeByte(12)
+      ..write(obj.iconFontPackage)
       ..writeByte(5)
       ..write(obj.id)
       ..writeByte(6)
@@ -97,13 +100,14 @@ class RecurringPaymentAdapter extends TypeAdapter<RecurringPayment> {
       endDate: fields[5] as DateTime?,
       iconCodePoint: fields[11] as int?,
       iconFontFamily: fields[12] as String?,
+      iconFontPackage: fields[13] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, RecurringPayment obj) {
     writer
-      ..writeByte(13)
+      ..writeByte(14)
       ..writeByte(0)
       ..write(obj.paymentName)
       ..writeByte(1)
@@ -122,6 +126,8 @@ class RecurringPaymentAdapter extends TypeAdapter<RecurringPayment> {
       ..write(obj.iconCodePoint)
       ..writeByte(12)
       ..write(obj.iconFontFamily)
+      ..writeByte(13)
+      ..write(obj.iconFontPackage)
       ..writeByte(6)
       ..write(obj.id)
       ..writeByte(7)
@@ -161,6 +167,7 @@ class OneOffIncomeAdapter extends TypeAdapter<OneOffIncome> {
       date: fields[0] as DateTime,
       source: fields[1] as String,
       iconCodePoint: fields[8] == null ? 57534 : fields[8] as int,
+      iconFontPackage: fields[11] as String?,
       iconFontFamily: fields[9] as String?,
       isAdvanced: fields[2] as bool,
       reference: fields[7] as String?,
@@ -171,7 +178,7 @@ class OneOffIncomeAdapter extends TypeAdapter<OneOffIncome> {
   @override
   void write(BinaryWriter writer, OneOffIncome obj) {
     writer
-      ..writeByte(11)
+      ..writeByte(12)
       ..writeByte(0)
       ..write(obj.date)
       ..writeByte(1)
@@ -186,6 +193,8 @@ class OneOffIncomeAdapter extends TypeAdapter<OneOffIncome> {
       ..write(obj.iconFontFamily)
       ..writeByte(10)
       ..write(obj.parentRecurringId)
+      ..writeByte(11)
+      ..write(obj.iconFontPackage)
       ..writeByte(3)
       ..write(obj.id)
       ..writeByte(4)
@@ -228,6 +237,7 @@ class RecurringIncomeAdapter extends TypeAdapter<RecurringIncome> {
       startDate: fields[2] as DateTime,
       iconCodePoint: fields[10] == null ? 57534 : fields[10] as int,
       iconFontFamily: fields[11] as String?,
+      iconFontPackage: fields[13] as String?,
       endDate: fields[3] as DateTime?,
       isAdvanced: fields[4] as bool,
       reference: fields[9] as String?,
@@ -237,7 +247,7 @@ class RecurringIncomeAdapter extends TypeAdapter<RecurringIncome> {
   @override
   void write(BinaryWriter writer, RecurringIncome obj) {
     writer
-      ..writeByte(13)
+      ..writeByte(14)
       ..writeByte(0)
       ..write(obj.source)
       ..writeByte(1)
@@ -256,6 +266,8 @@ class RecurringIncomeAdapter extends TypeAdapter<RecurringIncome> {
       ..write(obj.iconFontFamily)
       ..writeByte(12)
       ..write(obj.recurrenceFrequency)
+      ..writeByte(13)
+      ..write(obj.iconFontPackage)
       ..writeByte(5)
       ..write(obj.id)
       ..writeByte(6)
@@ -300,13 +312,14 @@ class PaymentOccurrenceAdapter extends TypeAdapter<PaymentOccurrence> {
       isWalleted: fields[4] as bool,
       iconCodePoint: fields[10] as int?,
       iconFontFamily: fields[11] as String?,
+      iconFontPackage: fields[12] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, PaymentOccurrence obj) {
     writer
-      ..writeByte(12)
+      ..writeByte(13)
       ..writeByte(0)
       ..write(obj.date)
       ..writeByte(1)
@@ -323,6 +336,8 @@ class PaymentOccurrenceAdapter extends TypeAdapter<PaymentOccurrence> {
       ..write(obj.iconCodePoint)
       ..writeByte(11)
       ..write(obj.iconFontFamily)
+      ..writeByte(12)
+      ..write(obj.iconFontPackage)
       ..writeByte(5)
       ..write(obj.id)
       ..writeByte(6)
@@ -364,6 +379,7 @@ class IncomeOccurrenceAdapter extends TypeAdapter<IncomeOccurrence> {
       source: fields[1] as String,
       iconCodePoint: fields[8] == null ? 57534 : fields[8] as int,
       iconFontFamily: fields[9] as String?,
+      iconFontPackage: fields[11] as String?,
       isAdvanced: fields[2] as bool,
       reference: fields[7] as String?,
     );
@@ -372,7 +388,7 @@ class IncomeOccurrenceAdapter extends TypeAdapter<IncomeOccurrence> {
   @override
   void write(BinaryWriter writer, IncomeOccurrence obj) {
     writer
-      ..writeByte(11)
+      ..writeByte(12)
       ..writeByte(0)
       ..write(obj.date)
       ..writeByte(1)
@@ -387,6 +403,8 @@ class IncomeOccurrenceAdapter extends TypeAdapter<IncomeOccurrence> {
       ..write(obj.iconFontFamily)
       ..writeByte(10)
       ..write(obj.parentRecurringId)
+      ..writeByte(11)
+      ..write(obj.iconFontPackage)
       ..writeByte(3)
       ..write(obj.id)
       ..writeByte(4)

@@ -72,6 +72,7 @@ class _PaymentFormState extends ConsumerState<PaymentForm> {
           _selectedIcon = IconData(
             transaction.iconCodePoint!,
             fontFamily: transaction.iconFontFamily,
+            fontPackage: transaction.iconFontPackage,
           );
         }
       }
@@ -142,6 +143,7 @@ class _PaymentFormState extends ConsumerState<PaymentForm> {
           category: _selectedCategory!, recurrence: _recurrence, recurrenceFrequency: _recurrenceFrequency,
           startDate: _selectedDate!, endDate: _endDate, iconCodePoint: _selectedIcon?.codePoint,
           iconFontFamily: _selectedIcon?.fontFamily,
+          iconFontPackage: _selectedIcon?.fontPackage,
         );
         await controller.updateTransaction(updatedTx);
       }
@@ -174,7 +176,7 @@ class _PaymentFormState extends ConsumerState<PaymentForm> {
           amount: _amount, paymentName: _paymentNameController.text, payee: _payeeController.text,
           startDate: _selectedDate!, endDate: _endDate, category: _selectedCategory!,
           recurrence: _recurrence, recurrenceFrequency: _recurrenceFrequency,
-          iconCodePoint: _selectedIcon?.codePoint, iconFontFamily: _selectedIcon?.fontFamily,
+          iconCodePoint: _selectedIcon?.codePoint, iconFontFamily: _selectedIcon?.fontFamily, iconFontPackage: _selectedIcon?.fontPackage,
         );
         
         // 4. Update the category's budget

@@ -45,7 +45,7 @@ class _IncomeFormState extends ConsumerState<IncomeForm> {
         _amount = tx.amount;
         _selectedDate = tx.date;
         _referenceController.text = tx.reference ?? '';
-        _selectedIcon = IconData(tx.iconCodePoint, fontFamily: tx.iconFontFamily);
+        _selectedIcon = IconData(tx.iconCodePoint, fontFamily: tx.iconFontFamily, fontPackage: tx.iconFontPackage,);
       } else if (tx is RecurringIncome) {
         _incomeType = IncomeType.recurring;
         _sourceController.text = tx.source;
@@ -55,7 +55,7 @@ class _IncomeFormState extends ConsumerState<IncomeForm> {
         _recurrence = tx.recurrence;
         _recurrenceFrequency = tx.recurrenceFrequency;
         _referenceController.text = tx.reference ?? '';
-        _selectedIcon = IconData(tx.iconCodePoint, fontFamily: tx.iconFontFamily);
+        _selectedIcon = IconData(tx.iconCodePoint, fontFamily: tx.iconFontFamily, fontPackage: tx.iconFontPackage,);
       }
     } else {
       _selectedDate = ref.read(clockNotifierProvider).now();
@@ -91,6 +91,7 @@ class _IncomeFormState extends ConsumerState<IncomeForm> {
           reference: reference.isEmpty ? null : reference,
           iconCodePoint: _selectedIcon!.codePoint,
           iconFontFamily: _selectedIcon!.fontFamily,
+          iconFontPackage: _selectedIcon!.fontPackage,
         );
         controller.updateTransaction(updatedTx);
       } else if (tx is RecurringIncome) {
@@ -108,6 +109,7 @@ class _IncomeFormState extends ConsumerState<IncomeForm> {
           reference: reference.isEmpty ? null : reference,
           iconCodePoint: _selectedIcon!.codePoint,
           iconFontFamily: _selectedIcon!.fontFamily,
+          iconFontPackage: _selectedIcon!.fontPackage,
         );
         controller.updateTransaction(updatedTx);
       }
@@ -120,6 +122,7 @@ class _IncomeFormState extends ConsumerState<IncomeForm> {
           reference: reference.isEmpty ? null : reference,
           iconCodePoint: _selectedIcon!.codePoint,
           iconFontFamily: _selectedIcon!.fontFamily,
+          iconFontPackage: _selectedIcon!.fontPackage,
         );
       } else {
         controller.addRecurringIncome(
@@ -132,6 +135,7 @@ class _IncomeFormState extends ConsumerState<IncomeForm> {
           reference: reference.isEmpty ? null : reference,
           iconCodePoint: _selectedIcon!.codePoint,
           iconFontFamily: _selectedIcon!.fontFamily,
+          iconFontPackage: _selectedIcon!.fontPackage,
         );
       }
     }

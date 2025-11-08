@@ -60,6 +60,7 @@ class _AddRecurringPaymentFormState
         _selectedIcon = IconData(
           p.iconCodePoint!,
           fontFamily: p.iconFontFamily,
+          fontPackage: p.iconFontPackage,
         );
       }
     } else {
@@ -108,6 +109,7 @@ class _AddRecurringPaymentFormState
           endDate: _endDate,
           iconCodePoint: _selectedIcon?.codePoint,
           iconFontFamily: _selectedIcon?.fontFamily,
+          iconFontPackage: _selectedIcon?.fontPackage,
         );
       } else {
         result = RecurringPayment(
@@ -124,6 +126,7 @@ class _AddRecurringPaymentFormState
           endDate: _endDate,
           iconCodePoint: _selectedIcon?.codePoint,
           iconFontFamily: _selectedIcon?.fontFamily,
+          iconFontPackage: _selectedIcon?.fontPackage,
         );
       }
 

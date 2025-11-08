@@ -46,7 +46,7 @@ class AppTheme {
         color: Color(0xFF212529),
       ),
     ),
-    bottomAppBarTheme: const BottomAppBarTheme(
+    bottomAppBarTheme: const BottomAppBarThemeData(
       color: Color(0xFFFAFAFA),
       elevation: 0,
     ),
@@ -113,7 +113,7 @@ class AppTheme {
         color: Colors.white,
       ),
     ),
-    bottomAppBarTheme: const BottomAppBarTheme(
+    bottomAppBarTheme: const BottomAppBarThemeData(
       color: Color.fromARGB(255, 15, 15, 15),
       elevation: 0,
     ),

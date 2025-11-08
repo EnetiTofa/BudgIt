@@ -7,6 +7,7 @@ class GeneralSearchBar extends StatefulWidget {
   final VoidCallback onClear;
   final bool hasOutline;
   final Color? backgroundColor;
+  final bool useLabelText; // New property to control text behavior
 
   const GeneralSearchBar({
     super.key,
@@ -16,6 +17,7 @@ class GeneralSearchBar extends StatefulWidget {
     required this.onClear,
     this.hasOutline = true,
     this.backgroundColor,
+    this.useLabelText = true, // Default to original label behavior
   });
 
   @override
@@ -32,7 +34,6 @@ class _GeneralSearchBarState extends State<GeneralSearchBar> {
     _controller = TextEditingController(text: widget.initialQuery);
     _focusNode = FocusNode();
 
-    // Add listeners to rebuild the widget when focus or text changes
     _focusNode.addListener(() => setState(() {}));
     _controller.addListener(() => setState(() {}));
   }
@@ -47,10 +48,9 @@ class _GeneralSearchBarState extends State<GeneralSearchBar> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    
-    // Determine colors based on focus state
+
     final bool isActive = _focusNode.hasFocus;
-    final Color activeColor = colorScheme.primary; // Active color is now white
+    final Color activeColor = colorScheme.primary;
     final Color inactiveColor = colorScheme.secondary;
     final Color activeElementsColor = isActive ? activeColor : inactiveColor;
 
@@ -60,8 +60,11 @@ class _GeneralSearchBarState extends State<GeneralSearchBar> {
       textAlignVertical: TextAlignVertical.center,
       style: TextStyle(color: activeElementsColor),
       decoration: InputDecoration(
+        // Conditionally use labelText or hintText based on the new property
+        labelText: widget.useLabelText ? widget.hintText : null,
+        hintText: widget.useLabelText ? null : widget.hintText,
         labelStyle: TextStyle(color: activeElementsColor),
-        labelText: widget.hintText,
+        hintStyle: TextStyle(color: inactiveColor.withOpacity(0.6)),
         prefixIcon: Icon(
           Icons.search,
           color: activeElementsColor,
@@ -77,10 +80,15 @@ class _GeneralSearchBarState extends State<GeneralSearchBar> {
                 borderSide: BorderSide(color: activeElementsColor, width: 1),
               )
             : null,
+        focusedBorder: widget.hasOutline
+            ? OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30.0),
+                borderSide: BorderSide(color: activeColor, width: 1.5),
+              )
+            : null,
         filled: widget.backgroundColor != null,
         fillColor: widget.backgroundColor,
         isDense: true,
-        // Conditionally show the clear button
         suffixIcon: _controller.text.isNotEmpty
             ? IconButton(
                 icon: Icon(
@@ -90,11 +98,9 @@ class _GeneralSearchBarState extends State<GeneralSearchBar> {
                 onPressed: () {
                   _controller.clear();
                   widget.onClear();
-                  // Optionally, you can request focus to stay
-                  // _focusNode.requestFocus();
                 },
               )
-            : null, // Render nothing if there is no text
+            : null,
       ),
       onChanged: widget.onChanged,
     );

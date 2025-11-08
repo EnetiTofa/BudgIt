@@ -72,6 +72,7 @@ class AddCategoryController extends _$AddCategoryController {
         name: state.name,
         iconCodePoint: state.icon.codePoint,
         iconFontFamily: state.icon.fontFamily,
+        iconFontPackage: state.icon.fontPackage,
         colorValue: state.color.value,
         budgetAmount: 0.0, // Default to 0
         walletAmount: 0.0, // Default to 0

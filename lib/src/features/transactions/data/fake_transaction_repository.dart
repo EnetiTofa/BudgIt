@@ -17,6 +17,7 @@ class FakeTransactionRepository implements TransactionRepository {
   double _totalSavings = 0.0;
   double _lastWeekWalletSpending = 0.0;
   int _checkInStreak = 0;
+  List<String> _recentIcons = [];
 
   // --- Transaction Methods ---
   @override
@@ -197,6 +198,16 @@ class FakeTransactionRepository implements TransactionRepository {
 
   @override
   Future<void> generateDummyData() async {
+  }
+
+  @override
+  Future<void> saveRecentIcons(List<String> iconNames) async {
+    _recentIcons = iconNames;
+  }
+
+  @override
+  Future<List<String>> getRecentIcons() async {
+    return _recentIcons;
   }
 
 }

@@ -19,7 +19,7 @@ DateTime _getCreatedAtFromTransaction(Transaction t) {
 }
 
 @Riverpod(keepAlive: true)
-Future<bool> isCheckInAvailable(IsCheckInAvailableRef ref) async {
+Future<bool> isCheckInAvailable(Ref ref) async {
   final repository = ref.watch(transactionRepositoryProvider);
   final allTransactions = await repository.getAllTransactions();
   

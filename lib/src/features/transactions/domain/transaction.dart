@@ -42,6 +42,7 @@ class OneOffPayment extends Transaction with HiveObjectMixin {
     this.parentRecurringId,
     this.iconCodePoint,    // ADD THIS
     this.iconFontFamily,   // ADD THIS
+    this.iconFontPackage,
   }) : super(id: id, notes: notes, createdAt: createdAt, amount: amount);
 
   @HiveField(0)
@@ -77,6 +78,9 @@ class OneOffPayment extends Transaction with HiveObjectMixin {
 
   @HiveField(11)
   final String? iconFontFamily;
+
+  @HiveField(12) // ADD THIS
+  final String? iconFontPackage;
 }
 
 @HiveType(typeId: 4)
@@ -95,6 +99,7 @@ class RecurringPayment extends Transaction with HiveObjectMixin {
     this.endDate,
     this.iconCodePoint,
     this.iconFontFamily,
+    this.iconFontPackage,
   }) : super(id: id, notes: notes, createdAt: createdAt, amount: amount);
 
   @HiveField(0)
@@ -124,6 +129,9 @@ class RecurringPayment extends Transaction with HiveObjectMixin {
   @HiveField(12)
   final String? iconFontFamily;
 
+  @HiveField(13) // ADD THIS
+  final String? iconFontPackage;
+
   List<PaymentOccurrence> generateOccurrences({required DateTime upToDate}) {
     final occurrences = <PaymentOccurrence>[];
     DateTime currentDate = startDate;
@@ -147,6 +155,7 @@ class RecurringPayment extends Transaction with HiveObjectMixin {
           // PASS ICON DATA TO THE OCCURRENCE
           iconCodePoint: iconCodePoint,
           iconFontFamily: iconFontFamily,
+          iconFontPackage: iconFontPackage,
         ),
       );
 
@@ -180,6 +189,7 @@ class OneOffIncome extends Transaction with HiveObjectMixin {
     required this.date,
     required this.source,
     required this.iconCodePoint, 
+    this.iconFontPackage,
     this.iconFontFamily,
     this.isAdvanced = false,
     this.reference,
@@ -206,6 +216,8 @@ class OneOffIncome extends Transaction with HiveObjectMixin {
   final String? iconFontFamily;
   @HiveField(10)
   final String? parentRecurringId;
+  @HiveField(11) // ADD THIS
+  final String? iconFontPackage;
 }
 
 @HiveType(typeId: 6)
@@ -221,6 +233,7 @@ class RecurringIncome extends Transaction with HiveObjectMixin {
     required this.startDate,
     required this.iconCodePoint,
     this.iconFontFamily,
+    this.iconFontPackage,
     this.endDate,
     this.isAdvanced = false,
     this.reference,
@@ -250,6 +263,8 @@ class RecurringIncome extends Transaction with HiveObjectMixin {
   final String? iconFontFamily;
   @HiveField(12, defaultValue: 1) 
   final int recurrenceFrequency;
+  @HiveField(13) // ADD THIS
+  final String? iconFontPackage;
 
   List<IncomeOccurrence> generateOccurrences({required DateTime upToDate}) {
     final occurrences = <IncomeOccurrence>[];
@@ -273,6 +288,7 @@ class RecurringIncome extends Transaction with HiveObjectMixin {
           reference: reference,
           iconCodePoint: iconCodePoint,
           iconFontFamily: iconFontFamily,
+          iconFontPackage: iconFontPackage,
         ),
       );
 
@@ -310,7 +326,8 @@ class PaymentOccurrence extends OneOffPayment {
     required super.category,
     super.isWalleted = false,
     super.iconCodePoint,    // ADD THIS
-    super.iconFontFamily,   // ADD THIS
+    super.iconFontFamily,
+    super.iconFontPackage,   // ADD THIS
   });
 }
 
@@ -326,6 +343,7 @@ class IncomeOccurrence extends OneOffIncome {
     required super.source,
     required super.iconCodePoint,
     super.iconFontFamily,
+    super.iconFontPackage,
     super.isAdvanced = false,
     super.reference,
   });

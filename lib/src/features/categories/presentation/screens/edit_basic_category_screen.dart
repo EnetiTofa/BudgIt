@@ -53,6 +53,7 @@ class _EditBasicCategoryScreenState
       name: _nameController.text.trim(),
       iconCodePoint: _selectedIcon.codePoint,
       iconFontFamily: _selectedIcon.fontFamily,
+      iconFontPackage: _selectedIcon.fontPackage,
       colorValue: _selectedColor.value,
       budgetAmount: widget.category.budgetAmount,
       walletAmount: widget.category.walletAmount,
