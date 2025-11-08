@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:budgit/src/features/categories/domain/category.dart';
-import 'package:budgit/src/features/categories/presentation/providers/category_list_provider.dart';
+import 'package:budgit/src/core/domain/models/category.dart';
+import 'package:budgit/src/core/data/providers/category_list_provider.dart';
 
 /// A custom form field for selecting a category.
 ///

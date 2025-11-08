@@ -1,7 +1,7 @@
 // lib/src/common_widgets/amount_slider_card.dart
 import 'package:flutter/material.dart';
 import 'package:budgit/src/common_widgets/currency_input_field.dart';
-import 'package:budgit/src/features/categories/domain/category.dart';
+import 'package:budgit/src/core/domain/models/category.dart';
 import 'package:flutter/services.dart';
 
 class AmountSliderCard extends StatelessWidget {

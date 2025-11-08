@@ -3,10 +3,10 @@
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:uuid/uuid.dart';
-import 'package:budgit/src/constants/app_icons.dart';
-import 'package:budgit/src/features/categories/domain/category.dart';
-import 'package:budgit/src/features/transactions/data/transaction_repository_provider.dart';
-import 'package:budgit/src/features/categories/presentation/providers/category_list_provider.dart';
+import 'package:budgit/src/core/constants/app_icons.dart';
+import 'package:budgit/src/core/domain/models/category.dart';
+import 'package:budgit/src/core/data/providers/transaction_repository_provider.dart';
+import 'package:budgit/src/core/data/providers/category_list_provider.dart';
 
 part 'add_category_controller.g.dart';
 

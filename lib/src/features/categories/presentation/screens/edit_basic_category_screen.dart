@@ -2,9 +2,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:budgit/src/features/categories/domain/category.dart';
-import 'package:budgit/src/features/categories/presentation/providers/category_list_provider.dart';
-import 'package:budgit/src/features/budgets/presentation/providers/category_gauge_data_provider.dart';
+import 'package:budgit/src/core/domain/models/category.dart';
+import 'package:budgit/src/core/data/providers/category_list_provider.dart';
+import 'package:budgit/src/features/budget_hub/budgets/presentation/providers/category_gauge_data_provider.dart';
 import 'package:budgit/src/common_widgets/color_picker_field.dart';
 import 'package:budgit/src/common_widgets/icon_picker_field.dart';
 // Import your new custom text field

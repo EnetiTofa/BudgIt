@@ -1,5 +1,5 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:budgit/src/features/transactions/domain/transaction.dart';
+import 'package:budgit/src/core/domain/models/transaction.dart';
 
 part 'add_category_providers.g.dart';
 

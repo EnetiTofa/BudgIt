@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:budgit/src/app.dart';
-import 'package:budgit/src/features/savings/domain/savings_goal.dart';
-import 'package:budgit/src/features/categories/domain/category.dart';
-import 'package:budgit/src/features/categories/domain/budget_enum.dart';
-import 'package:budgit/src/features/transactions/domain/transaction.dart';
-import 'package:budgit/src/features/wallet/domain/wallet_adjustment.dart';
+import 'package:budgit/src/core/domain/models/savings_goal.dart';
+import 'package:budgit/src/core/domain/models/category.dart';
+import 'package:budgit/src/core/domain/enums/budget_enum.dart';
+import 'package:budgit/src/core/domain/models/transaction.dart';
+import 'package:budgit/src/features/budget_hub/wallet/domain/wallet_adjustment.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

@@ -1,10 +1,10 @@
 // lib/src/features/categories/presentation/widgets/recurring_controls.dart
 
 import 'package:flutter/material.dart';
-import 'package:budgit/src/features/categories/domain/category.dart';
+import 'package:budgit/src/core/domain/models/category.dart';
 import 'package:budgit/src/features/categories/presentation/controllers/manage_category_controller.dart';
 import 'package:budgit/src/features/categories/presentation/widgets/add_recurring_payment_form.dart';
-import 'package:budgit/src/features/transactions/domain/transaction.dart';
+import 'package:budgit/src/core/domain/models/transaction.dart';
 
 class RecurringControls extends StatelessWidget {
   const RecurringControls({

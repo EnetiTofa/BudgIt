@@ -6,10 +6,10 @@ import 'package:uuid/uuid.dart';
 import 'package:budgit/src/common_widgets/currency_input_field.dart';
 import 'package:budgit/src/common_widgets/custom_text_input_field.dart';
 import 'package:budgit/src/common_widgets/icon_picker_field.dart';
-import 'package:budgit/src/features/transactions/domain/transaction.dart';
+import 'package:budgit/src/core/domain/models/transaction.dart';
 import 'package:budgit/src/common_widgets/date_selector_field.dart';
-import 'package:budgit/src/features/transactions/presentation/widgets/period_selector_field.dart';
-import 'package:budgit/src/features/categories/domain/category.dart';
+import 'package:budgit/src/features/transaction_hub/transactions/presentation/widgets/period_selector_field.dart';
+import 'package:budgit/src/core/domain/models/category.dart';
 import 'package:budgit/src/utils/clock_provider.dart';
 
 

@@ -1,8 +1,8 @@
 // lib/src/features/categories/presentation/widgets/income_context_bar.dart
 
 import 'package:flutter/material.dart';
-import 'package:budgit/src/features/budgets/presentation/providers/overall_budget_summary_provider.dart';
-import 'package:budgit/src/features/categories/domain/category.dart';
+import 'package:budgit/src/features/budget_hub/budgets/presentation/providers/overall_budget_summary_provider.dart';
+import 'package:budgit/src/core/domain/models/category.dart';
 import 'dart:math';
 
 class IncomeContextBar extends StatelessWidget {

@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:budgit/src/common_widgets/currency_input_field.dart';
 import 'package:budgit/src/common_widgets/custom_dropdown_field.dart';
-import 'package:budgit/src/features/categories/domain/budget_enum.dart';
+import 'package:budgit/src/core/domain/enums/budget_enum.dart';
 import 'package:budgit/src/features/categories/presentation/controllers/manage_category_controller.dart';
 
 class TotalBudgetControls extends StatelessWidget {

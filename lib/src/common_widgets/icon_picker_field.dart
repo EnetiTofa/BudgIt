@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:budgit/src/constants/app_icons.dart';
+import 'package:budgit/src/core/constants/app_icons.dart';
 import 'package:budgit/src/common_widgets/general_search_bar.dart';
-import 'package:budgit/src/features/transactions/data/transaction_repository_provider.dart';
+import 'package:budgit/src/core/data/providers/transaction_repository_provider.dart';
 
 // 1. Define the StateNotifier for managing recent icons
 class RecentIconsNotifier extends StateNotifier<List<IconDefinition>> {

@@ -2,9 +2,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:budgit/src/features/categories/presentation/providers/category_list_provider.dart';
+import 'package:budgit/src/core/data/providers/category_list_provider.dart';
 // --- NEW IMPORT ---
-import 'package:budgit/src/features/budgets/presentation/screens/category_drilldown_screen.dart';
+import 'package:budgit/src/features/budget_hub/budgets/presentation/screens/category_drilldown_screen.dart';
 
 class ManageCategoriesScreen extends ConsumerWidget {
   const ManageCategoriesScreen({super.key});

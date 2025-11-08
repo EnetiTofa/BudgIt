@@ -1,0 +1,74 @@
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:budgit/src/core/domain/models/transaction.dart';
+import 'package:budgit/src/core/data/providers/category_list_provider.dart';
+import 'package:budgit/src/features/transaction_hub/transactions/presentation/providers/transaction_log_provider.dart';
+import 'package:budgit/src/features/budget_hub/wallet/domain/wallet_category_data.dart';
+import 'package:budgit/src/utils/clock_provider.dart';
+import 'package:budgit/src/core/data/providers/transaction_repository_provider.dart';
+import 'package:budgit/src/features/settings/data/settings_provider.dart';
+
+
+part 'wallet_category_data_provider.g.dart';
+
+@Riverpod(keepAlive: true)
+Future<List<WalletCategoryData>> walletCategoryData(Ref ref) async {
+  final categories = await ref.watch(categoryListProvider.future);
+  // --- This is the corrected line ---
+  final transactionLog = await ref.watch(allTransactionOccurrencesProvider.future);
+  final settingsRepo = await ref.watch(settingsProvider.future);
+  
+  final repository = ref.watch(transactionRepositoryProvider);
+  final now = ref.watch(clockNotifierProvider).now();
+  
+  final checkInDay = settingsRepo.getCheckInDay();
+  
+  final adjustments = await repository.getWalletAdjustmentsForWeek(now);
+  
+  final startOfWeek = DateTime(now.year, now.month, now.day - (now.weekday - checkInDay + 7) % 7);
+  final startOfToday = DateTime(now.year, now.month, now.day);
+
+  final categoriesWithWallets = categories.where((c) => (c.walletAmount ?? 0) > 0).toList();
+  final List<WalletCategoryData> result = [];
+
+  for (final category in categoriesWithWallets) {
+    // --- NEW: Calculate the effective weekly budget including boosts ---
+    final baseAmount = category.walletAmount ?? 0;
+    final incomingBoosts = adjustments.where((a) => a.toCategoryId == category.id).fold(0.0, (sum, a) => sum + a.amount);
+    final outgoingBoosts = adjustments.where((a) => a.fromCategoryId == category.id).fold(0.0, (sum, a) => sum + a.amount);
+    final effectiveWeeklyBudget = baseAmount + incomingBoosts - outgoingBoosts;
+    
+    
+    final categoryWalletTxs = transactionLog
+        .whereType<OneOffPayment>()
+        .where((p) => p.isWalleted && p.category.id == category.id && !p.date.isBefore(startOfWeek));
+        
+    // Calculate spending on completed days vs. today
+    final spentInCompletedDays = categoryWalletTxs
+        .where((p) => p.date.isBefore(startOfToday))
+        .fold(0.0, (sum, p) => sum + p.amount);
+        
+    final spendingToday = categoryWalletTxs
+        .where((p) => !p.date.isBefore(startOfToday))
+        .fold(0.0, (sum, p) => sum + p.amount);
+
+    // --- This is the new, correct calculation logic ---
+    final daysPassedInWeek = now.difference(startOfWeek).inDays;
+    final daysRemaining = 7 - daysPassedInWeek;
+    final budgetRemaining = effectiveWeeklyBudget - spentInCompletedDays;
+    final recommendedDailySpending = daysRemaining > 0 ? budgetRemaining / daysRemaining : 0.0;
+
+    result.add(
+      WalletCategoryData(
+        category: category,
+        spentInCompletedDays: spentInCompletedDays,
+        spendingToday: spendingToday,
+        effectiveWeeklyBudget: effectiveWeeklyBudget, // Pass the new value
+        recommendedDailySpending: recommendedDailySpending,
+        daysRemaining: daysRemaining,
+      ),
+    );
+  }
+  
+  return result;
+}

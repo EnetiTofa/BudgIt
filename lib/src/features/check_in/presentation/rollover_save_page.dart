@@ -4,7 +4,7 @@ import 'package:budgit/src/common_widgets/custom_toggle.dart';
 import 'package:budgit/src/features/check_in/domain/check_in_state.dart';
 import 'package:budgit/src/features/check_in/presentation/check_in_controller.dart';
 import 'package:budgit/src/features/check_in/presentation/rollover_card.dart';
-import 'package:budgit/src/features/categories/presentation/providers/category_list_provider.dart';
+import 'package:budgit/src/core/data/providers/category_list_provider.dart';
 
 class RolloverSavePage extends ConsumerWidget {
   const RolloverSavePage({super.key});

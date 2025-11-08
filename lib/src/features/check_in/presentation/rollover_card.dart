@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:budgit/src/features/check_in/domain/check_in_state.dart';
 import 'package:budgit/src/features/check_in/presentation/check_in_controller.dart';
-import 'package:budgit/src/features/categories/domain/category.dart';
+import 'package:budgit/src/core/domain/models/category.dart';
 // --- MODIFICATION: Import the new reusable card ---
 import 'package:budgit/src/common_widgets/amount_slider_card.dart';
 

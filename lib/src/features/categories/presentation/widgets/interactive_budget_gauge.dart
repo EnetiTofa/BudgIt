@@ -1,7 +1,7 @@
 import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:budgit/src/features/categories/domain/category.dart';
+import 'package:budgit/src/core/domain/models/category.dart';
 import 'package:budgit/src/features/categories/presentation/controllers/manage_category_controller.dart';
 // Add this import
 import 'package:budgit/src/utils/palette_generator.dart';

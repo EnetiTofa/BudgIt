@@ -5,20 +5,20 @@ import 'package:intl/intl.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:budgit/src/features/check_in/presentation/app_bar_info_provider.dart';
 import 'package:budgit/src/app/navigation_provider.dart';
-import 'package:budgit/src/features/budgets/presentation/screens/budget_hub_screen.dart';
+import 'package:budgit/src/features/budget_hub/budget_hub_screen.dart';
 import 'package:budgit/src/features/categories/presentation/screens/add_category_screen.dart';
 import 'package:budgit/src/features/check_in/presentation/check_in_screen.dart';
 import 'package:budgit/src/features/check_in/presentation/is_check_in_available_provider.dart';
 import 'package:budgit/src/common_widgets/pulsing_button.dart';
-import 'package:budgit/src/features/home/presentation/home_screen.dart';
+import 'package:budgit/src/features/dashboard/presentation/dashboard.dart';
 import 'package:budgit/src/features/menu/presentation/menu_screen.dart';
-import 'package:budgit/src/features/transactions/presentation/screens/add_income_screen.dart';
-import 'package:budgit/src/features/transactions/presentation/screens/add_payment_screen.dart';
-import 'package:budgit/src/features/transactions/presentation/screens/transaction_hub_screen.dart';
+import 'package:budgit/src/features/transaction_hub/transactions/presentation/screens/add_income_screen.dart';
+import 'package:budgit/src/features/transaction_hub/transactions/presentation/screens/add_payment_screen.dart';
+import 'package:budgit/src/features/transaction_hub/transaction_hub_screen.dart';
 import 'package:budgit/src/theme/app_theme.dart';
 import 'package:budgit/src/features/settings/presentation/theme_controller.dart';
-import 'package:budgit/src/features/transactions/presentation/providers/transaction_log_provider.dart';
-import 'package:budgit/src/features/categories/presentation/providers/category_list_provider.dart';
+import 'package:budgit/src/features/transaction_hub/transactions/presentation/providers/transaction_log_provider.dart';
+import 'package:budgit/src/core/data/providers/category_list_provider.dart';
 
 class MyApp extends ConsumerWidget {
   const MyApp({super.key});

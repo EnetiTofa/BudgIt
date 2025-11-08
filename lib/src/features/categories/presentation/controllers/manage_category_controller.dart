@@ -4,12 +4,12 @@ import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import 'package:budgit/src/features/categories/domain/budget_enum.dart';
-import 'package:budgit/src/features/categories/domain/category.dart';
-import 'package:budgit/src/features/transactions/data/transaction_repository_provider.dart';
-import 'package:budgit/src/features/transactions/domain/transaction.dart';
-import 'package:budgit/src/features/transactions/presentation/providers/transaction_log_provider.dart';
-import 'package:budgit/src/features/categories/presentation/providers/category_list_provider.dart';
+import 'package:budgit/src/core/domain/enums/budget_enum.dart';
+import 'package:budgit/src/core/domain/models/category.dart';
+import 'package:budgit/src/core/data/providers/transaction_repository_provider.dart';
+import 'package:budgit/src/core/domain/models/transaction.dart';
+import 'package:budgit/src/features/transaction_hub/transactions/presentation/providers/transaction_log_provider.dart';
+import 'package:budgit/src/core/data/providers/category_list_provider.dart';
 
 part 'manage_category_controller.g.dart';
 

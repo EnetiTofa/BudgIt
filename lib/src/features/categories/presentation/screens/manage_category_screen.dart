@@ -2,11 +2,11 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:budgit/src/features/categories/domain/category.dart';
-import 'package:budgit/src/features/budgets/presentation/providers/overall_budget_summary_provider.dart';
+import 'package:budgit/src/core/domain/models/category.dart';
+import 'package:budgit/src/features/budget_hub/budgets/presentation/providers/overall_budget_summary_provider.dart';
 import 'package:budgit/src/features/categories/presentation/controllers/manage_category_controller.dart';
 import 'package:budgit/src/features/categories/presentation/widgets/interactive_budget_gauge.dart';
-import 'package:budgit/src/features/categories/presentation/providers/category_list_provider.dart';
+import 'package:budgit/src/core/data/providers/category_list_provider.dart';
 import 'package:budgit/src/features/categories/presentation/widgets/income_context_bar.dart';
 import 'package:budgit/src/features/categories/presentation/widgets/total_budget_controls.dart';
 import 'package:budgit/src/features/categories/presentation/widgets/wallet_controls.dart';

@@ -2,7 +2,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:budgit/src/features/check_in/presentation/app_bar_info_provider.dart';
 import 'package:budgit/src/features/check_in/presentation/is_check_in_available_provider.dart';
-import 'package:budgit/src/features/wallet/presentation/providers/wallet_category_data_provider.dart';
+import 'package:budgit/src/features/budget_hub/wallet/presentation/providers/wallet_category_data_provider.dart';
 import 'package:budgit/src/utils/clock.dart';
 
 part 'clock_provider.g.dart';
