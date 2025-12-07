@@ -6,7 +6,7 @@ part of 'category_gauge_data_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$categoryGaugeDataHash() => r'e18b56e55e03e289374b9a55dd4f1fb540109f89';
+String _$categoryGaugeDataHash() => r'e5c9b35e65af61b05b3da00c7dfc1e4c8701f41b';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -34,7 +34,7 @@ class _SystemHash {
 const categoryGaugeDataProvider = CategoryGaugeDataFamily();
 
 /// See also [categoryGaugeData].
-class CategoryGaugeDataFamily extends Family<AsyncValue<CategoryGaugeData>> {
+class CategoryGaugeDataFamily extends Family<CategoryGaugeData> {
   /// See also [categoryGaugeData].
   const CategoryGaugeDataFamily();
 
@@ -75,8 +75,7 @@ class CategoryGaugeDataFamily extends Family<AsyncValue<CategoryGaugeData>> {
 }
 
 /// See also [categoryGaugeData].
-class CategoryGaugeDataProvider
-    extends AutoDisposeFutureProvider<CategoryGaugeData> {
+class CategoryGaugeDataProvider extends AutoDisposeProvider<CategoryGaugeData> {
   /// See also [categoryGaugeData].
   CategoryGaugeDataProvider({
     required Category category,
@@ -116,7 +115,7 @@ class CategoryGaugeDataProvider
 
   @override
   Override overrideWith(
-    FutureOr<CategoryGaugeData> Function(CategoryGaugeDataRef provider) create,
+    CategoryGaugeData Function(CategoryGaugeDataRef provider) create,
   ) {
     return ProviderOverride(
       origin: this,
@@ -134,7 +133,7 @@ class CategoryGaugeDataProvider
   }
 
   @override
-  AutoDisposeFutureProviderElement<CategoryGaugeData> createElement() {
+  AutoDisposeProviderElement<CategoryGaugeData> createElement() {
     return _CategoryGaugeDataProviderElement(this);
   }
 
@@ -155,7 +154,7 @@ class CategoryGaugeDataProvider
   }
 }
 
-mixin CategoryGaugeDataRef on AutoDisposeFutureProviderRef<CategoryGaugeData> {
+mixin CategoryGaugeDataRef on AutoDisposeProviderRef<CategoryGaugeData> {
   /// The parameter `category` of this provider.
   Category get category;
 
@@ -164,7 +163,7 @@ mixin CategoryGaugeDataRef on AutoDisposeFutureProviderRef<CategoryGaugeData> {
 }
 
 class _CategoryGaugeDataProviderElement
-    extends AutoDisposeFutureProviderElement<CategoryGaugeData>
+    extends AutoDisposeProviderElement<CategoryGaugeData>
     with CategoryGaugeDataRef {
   _CategoryGaugeDataProviderElement(super.provider);
 

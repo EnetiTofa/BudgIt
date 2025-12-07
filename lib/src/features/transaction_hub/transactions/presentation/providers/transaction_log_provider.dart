@@ -1,3 +1,5 @@
+// lib/src/features/transaction_hub/transactions/presentation/providers/transaction_log_provider.dart
+
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:budgit/src/core/data/providers/transaction_repository_provider.dart';
@@ -9,6 +11,12 @@ import 'package:budgit/src/utils/clock_provider.dart';
 
 part 'transaction_log_provider.g.dart';
 
+// --- NEW: Single Source of Truth for Raw Data ---
+@Riverpod(keepAlive: true)
+Future<List<Transaction>> rawTransactions(RawTransactionsRef ref) {
+  return ref.watch(transactionRepositoryProvider).getAllTransactions();
+}
+
 // 1. CONVERTED TO A CLASS (AsyncNotifier)
 @Riverpod(keepAlive: true)
 class AllTransactionOccurrences extends _$AllTransactionOccurrences {
@@ -16,8 +24,10 @@ class AllTransactionOccurrences extends _$AllTransactionOccurrences {
   @override
   Future<List<Transaction>> build() async {
     final clock = ref.watch(clockNotifierProvider);
-    final repository = ref.watch(transactionRepositoryProvider);
-    final rawTransactions = await repository.getAllTransactions();
+    
+    // --- CHANGE: Watch the raw provider instead of repo directly ---
+    // This allows other providers to share the same data source without re-fetching.
+    final rawTransactions = await ref.watch(rawTransactionsProvider.future);
 
     final List<Transaction> occurrences = [];
     for (final transaction in rawTransactions) {
@@ -31,15 +41,12 @@ class AllTransactionOccurrences extends _$AllTransactionOccurrences {
     }
 
     occurrences.removeWhere((t) {
-      // Safely get the date from either type
       final DateTime date;
       if (t is OneOffPayment) {
         date = t.date;
       } else if (t is OneOffIncome) {
         date = t.date;
       } else {
-        // If the transaction type doesn't have a date, don't remove it.
-        // Or handle as an error, depending on your logic.
         return false;
       }
       return date.isAfter(clock.now());
@@ -48,7 +55,6 @@ class AllTransactionOccurrences extends _$AllTransactionOccurrences {
     return occurrences;
   }
 
-  /// 2. ADDED THIS METHOD
   /// This method synchronously removes a transaction from the UI
   /// and then deletes it from the database in the background.
   Future<void> removeTransaction(String transactionId) async {
@@ -62,12 +68,13 @@ class AllTransactionOccurrences extends _$AllTransactionOccurrences {
     // Perform the database deletion in the background
     await ref.read(addTransactionControllerProvider.notifier)
                .deleteTransaction(transactionId);
+    
+    // Note: The controller will likely trigger a refresh of rawTransactionsProvider,
+    // which will eventually trigger a rebuild of this provider too, ensuring consistency.
   }
 }
 
-
 // 3. YOUR FILTERING PROVIDER REMAINS THE SAME
-// This provider watches the class-based provider above and applies filters/sorting.
 @riverpod
 AsyncValue<List<Transaction>> transactionLog(Ref ref) {
   final occurrencesAsync = ref.watch(allTransactionOccurrencesProvider);
@@ -79,7 +86,6 @@ AsyncValue<List<Transaction>> transactionLog(Ref ref) {
 
   final occurrences = occurrencesAsync.value!;
   
-  // First, we filter the list by transaction type.
   final List<Transaction> typeFilteredList;
   switch (filter.transactionTypeFilter) {
     case TransactionTypeFilter.payment:
@@ -109,15 +115,12 @@ AsyncValue<List<Transaction>> transactionLog(Ref ref) {
       if (tx is OneOffPayment) {
         matchesCategory = filter.selectedCategoryIds.contains(tx.category.id);
       } else {
-        // Income transactions don't have categories, so they can't match.
         matchesCategory = false;
       }
     }
     return matchesQuery && matchesCategory;
   }).toList();
 
-  // --- THE FIX IS HERE ---
-  // Sorting logic now correctly compares DateTime objects.
   filteredList.sort((a, b) {
     switch (filter.sortBy) {
       case SortBy.category:
@@ -133,26 +136,22 @@ AsyncValue<List<Transaction>> transactionLog(Ref ref) {
         DateTime? dateA;
         DateTime? dateB;
 
-        // More robust way to get the date from transaction 'a'
         if (a is OneOffPayment) {
           dateA = a.date;
         } else if (a is OneOffIncome) {
           dateA = a.date;
         }
 
-        // More robust way to get the date from transaction 'b'
         if (b is OneOffPayment) {
           dateB = b.date;
         } else if (b is OneOffIncome) {
           dateB = b.date;
         }
 
-        // Failsafe in case one of the dates is null
         if (dateA == null || dateB == null) {
-          return 0; // Don't change order if a date is missing
+          return 0;
         }
 
-        // The actual comparison
         return dateB.compareTo(dateA);
     }
   });

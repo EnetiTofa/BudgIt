@@ -6,6 +6,21 @@ part of 'transaction_log_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
+String _$rawTransactionsHash() => r'463b3f89c9492934e2e414781fcc2b2d20115f49';
+
+/// See also [rawTransactions].
+@ProviderFor(rawTransactions)
+final rawTransactionsProvider = FutureProvider<List<Transaction>>.internal(
+  rawTransactions,
+  name: r'rawTransactionsProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$rawTransactionsHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef RawTransactionsRef = FutureProviderRef<List<Transaction>>;
 String _$transactionLogHash() => r'cbac92fcf65027e8aaff3ec04e15bc0cc59d0351';
 
 /// See also [transactionLog].
@@ -24,7 +39,7 @@ final transactionLogProvider =
 typedef TransactionLogRef
     = AutoDisposeProviderRef<AsyncValue<List<Transaction>>>;
 String _$allTransactionOccurrencesHash() =>
-    r'7a7ba5191199cc833710dd03fba8cbef8506b68f';
+    r'22a9d2d490d0912f685d6d943641981e8c1474f5';
 
 /// See also [AllTransactionOccurrences].
 @ProviderFor(AllTransactionOccurrences)

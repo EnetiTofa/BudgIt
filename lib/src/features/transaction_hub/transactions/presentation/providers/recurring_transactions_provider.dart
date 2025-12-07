@@ -1,12 +1,14 @@
 // lib/src/features/transactions/presentation/providers/recurring_transactions_provider.dart
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:budgit/src/core/data/providers/transaction_repository_provider.dart';
+// Removed unused repository import (since we get data from the provider now)
+// import 'package:budgit/src/core/data/providers/transaction_repository_provider.dart';
 import 'package:budgit/src/features/transaction_hub/transactions/domain/log_filter_state.dart';
 import 'package:budgit/src/core/domain/models/transaction.dart';
 import 'package:budgit/src/features/transaction_hub/transactions/presentation/controllers/log_filter_controller.dart';
 import 'package:budgit/src/features/transaction_hub/transactions/presentation/controllers/add_transaction_controller.dart';
-
+// --- ADDED IMPORT ---
+import 'package:budgit/src/features/transaction_hub/transactions/presentation/providers/transaction_log_provider.dart';
 
 part 'recurring_transactions_provider.g.dart';
 
@@ -15,8 +17,9 @@ class RecurringTransactions extends _$RecurringTransactions {
   @override
   Future<List<Transaction>> build() async {
     final filter = ref.watch(logFilterProvider);
-    final repository = ref.watch(transactionRepositoryProvider);
-    final allTransactions = await repository.getAllTransactions();
+    
+    // --- CHANGE: Watch the shared raw provider instead of fetching from DB ---
+    final allTransactions = await ref.watch(rawTransactionsProvider.future);
 
     List<Transaction> recurringItems = allTransactions
         .where((t) => t is RecurringPayment || t is RecurringIncome)
@@ -35,8 +38,7 @@ class RecurringTransactions extends _$RecurringTransactions {
         break;
     }
 
-    // --- THE FIX IS HERE ---
-    // 2. Now, apply the category filter if one is selected.
+    // 2. Apply the category filter if one is selected.
     if (filter.selectedCategoryIds.isNotEmpty) {
       recurringItems = recurringItems.where((transaction) {
         if (transaction is RecurringPayment) {
@@ -47,7 +49,6 @@ class RecurringTransactions extends _$RecurringTransactions {
         return false;
       }).toList();
     }
-    // --- END OF FIX ---
 
     return recurringItems;
   }

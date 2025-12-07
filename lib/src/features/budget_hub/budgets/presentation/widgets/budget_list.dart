@@ -1,3 +1,5 @@
+// lib/src/features/budget_hub/budgets/presentation/widgets/budget_list.dart
+
 import 'package:flutter/material.dart';
 import 'package:budgit/src/features/budget_hub/budgets/domain/budget_progress.dart';
 import 'package:budgit/src/core/domain/models/category.dart';
@@ -7,48 +9,53 @@ class BudgetList extends StatelessWidget {
   const BudgetList({
     super.key,
     required this.progressList,
-    required this.onCategoryTap, // Added callback
+    required this.onCategoryTap,
+    required this.selectedCategory,
   });
 
   final List<BudgetProgress> progressList;
-  final ValueChanged<Category> onCategoryTap; // Added callback
+  final ValueChanged<Category?> onCategoryTap; // Null implies "General"
+  final Category? selectedCategory;
 
   @override
   Widget build(BuildContext context) {
+    // Calculate total items: Categories + 1 (General button)
+    final totalItems = progressList.length + 1;
+
     return SizedBox(
-      height: 100,
+      height: 120, // Increased height to allow for top padding
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: progressList.length,
+        // Added 'top: 16' to give headspace above the cards themselves
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+        itemCount: totalItems,
         itemBuilder: (context, index) {
-          final progress = progressList[index];
+          // Case 1: The General Button (First Item)
+          if (index == 0) {
+            final isGeneralSelected = selectedCategory == null;
+            return Padding(
+              padding: const EdgeInsets.only(right: 16.0),
+              child: BudgetCard.general(
+                context: context,
+                isSelected: isGeneralSelected,
+                onTap: () => onCategoryTap(null),
+              ),
+            );
+          }
+
+          // Case 2: Category Buttons
+          final progress = progressList[index - 1];
+          final isSelected = selectedCategory?.id == progress.category.id;
+
           return Padding(
             padding: const EdgeInsets.only(right: 16.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                BudgetCard(
-                  progress: progress,
-                  // Pass the tap event up with the selected category
-                  onTap: () => onCategoryTap(progress.category),
-                ),
-                const SizedBox(height: 8),
-                SizedBox(
-                  width: 72,
-                  child: Text(
-                    progress.category.name,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 14,
-                    ),
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
+            child: BudgetCard(
+              label: progress.category.name,
+              icon: progress.category.icon,
+              color: progress.category.color,
+              contentColor: progress.category.contentColor,
+              isSelected: isSelected,
+              onTap: () => onCategoryTap(progress.category),
             ),
           );
         },

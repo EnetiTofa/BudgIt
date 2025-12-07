@@ -3,18 +3,33 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:collection/collection.dart';
 import 'package:budgit/src/core/domain/models/transaction.dart';
 import 'package:budgit/src/features/transaction_hub/transactions/presentation/providers/transaction_log_provider.dart';
-import 'package:budgit/src/features/budget_hub/budgets/presentation/widgets/historical_category_chart.dart';
 import 'package:budgit/src/utils/clock_provider.dart';
 
 part 'historical_category_spending_provider.g.dart';
 
+class MonthlySpendingBreakdown {
+  final DateTime date;
+  final double recurring;
+  final double wallet;
+  final double oneOff;
+  
+  double get total => recurring + wallet + oneOff;
+  
+  MonthlySpendingBreakdown(this.date, this.recurring, this.wallet, this.oneOff);
+}
+
+// --- CHANGED: Now Synchronous ---
 @riverpod
-Future<List<MonthlySpendingBreakdown>> historicalCategorySpending(
+List<MonthlySpendingBreakdown> historicalCategorySpending(
   HistoricalCategorySpendingRef ref, {
   required String categoryId,
-}) async {
-  final allOccurrences =
-      await ref.watch(allTransactionOccurrencesProvider.future);
+}) {
+  // Synchronously read the already-processed occurrences
+  final allOccurrencesAsync = ref.watch(allTransactionOccurrencesProvider);
+  
+  if (!allOccurrencesAsync.hasValue) return [];
+
+  final allOccurrences = allOccurrencesAsync.value!;
   final now = ref.watch(clockNotifierProvider).now();
 
   // Filter for payments of the specified category
@@ -48,12 +63,10 @@ Future<List<MonthlySpendingBreakdown>> historicalCategorySpending(
     currentMonth = DateTime(currentMonth.year, currentMonth.month + 1, 1);
   }
 
-  // Calculate totals for each month in the range
   final List<MonthlySpendingBreakdown> result = [];
   for (final month in allMonthsInRange) {
     final paymentsForMonth = groupedByMonth[month] ?? [];
 
-    // --- UPDATED LOGIC ---
     final recurring = paymentsForMonth
         .where((p) => p.parentRecurringId != null)
         .fold(0.0, (sum, p) => sum + p.amount);
@@ -65,7 +78,6 @@ Future<List<MonthlySpendingBreakdown>> historicalCategorySpending(
     final oneOff = paymentsForMonth
         .where((p) => p.parentRecurringId == null && !p.isWalleted)
         .fold(0.0, (sum, p) => sum + p.amount);
-    // ---------------------
 
     result.add(MonthlySpendingBreakdown(month, recurring, wallet, oneOff));
   }

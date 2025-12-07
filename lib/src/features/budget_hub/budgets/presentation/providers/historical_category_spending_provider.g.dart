@@ -7,7 +7,7 @@ part of 'historical_category_spending_provider.dart';
 // **************************************************************************
 
 String _$historicalCategorySpendingHash() =>
-    r'80bee6d0c04031f3918ecbe16f60c7b997e01508';
+    r'3087a384637a31308488832276b1401e707de2ec';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -36,7 +36,7 @@ const historicalCategorySpendingProvider = HistoricalCategorySpendingFamily();
 
 /// See also [historicalCategorySpending].
 class HistoricalCategorySpendingFamily
-    extends Family<AsyncValue<List<MonthlySpendingBreakdown>>> {
+    extends Family<List<MonthlySpendingBreakdown>> {
   /// See also [historicalCategorySpending].
   const HistoricalCategorySpendingFamily();
 
@@ -75,7 +75,7 @@ class HistoricalCategorySpendingFamily
 
 /// See also [historicalCategorySpending].
 class HistoricalCategorySpendingProvider
-    extends AutoDisposeFutureProvider<List<MonthlySpendingBreakdown>> {
+    extends AutoDisposeProvider<List<MonthlySpendingBreakdown>> {
   /// See also [historicalCategorySpending].
   HistoricalCategorySpendingProvider({
     required String categoryId,
@@ -110,7 +110,7 @@ class HistoricalCategorySpendingProvider
 
   @override
   Override overrideWith(
-    FutureOr<List<MonthlySpendingBreakdown>> Function(
+    List<MonthlySpendingBreakdown> Function(
             HistoricalCategorySpendingRef provider)
         create,
   ) {
@@ -129,8 +129,7 @@ class HistoricalCategorySpendingProvider
   }
 
   @override
-  AutoDisposeFutureProviderElement<List<MonthlySpendingBreakdown>>
-      createElement() {
+  AutoDisposeProviderElement<List<MonthlySpendingBreakdown>> createElement() {
     return _HistoricalCategorySpendingProviderElement(this);
   }
 
@@ -150,13 +149,13 @@ class HistoricalCategorySpendingProvider
 }
 
 mixin HistoricalCategorySpendingRef
-    on AutoDisposeFutureProviderRef<List<MonthlySpendingBreakdown>> {
+    on AutoDisposeProviderRef<List<MonthlySpendingBreakdown>> {
   /// The parameter `categoryId` of this provider.
   String get categoryId;
 }
 
 class _HistoricalCategorySpendingProviderElement
-    extends AutoDisposeFutureProviderElement<List<MonthlySpendingBreakdown>>
+    extends AutoDisposeProviderElement<List<MonthlySpendingBreakdown>>
     with HistoricalCategorySpendingRef {
   _HistoricalCategorySpendingProviderElement(super.provider);
 

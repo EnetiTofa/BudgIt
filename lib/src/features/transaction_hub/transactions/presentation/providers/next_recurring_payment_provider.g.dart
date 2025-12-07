@@ -7,7 +7,7 @@ part of 'next_recurring_payment_provider.dart';
 // **************************************************************************
 
 String _$nextRecurringPaymentHash() =>
-    r'7f400a5e1e71cb62365d9dd6536ea770d6bb4ca7';
+    r'b4121dd66d7bb73009b1fffe60ad5156a141ac05';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -35,8 +35,7 @@ class _SystemHash {
 const nextRecurringPaymentProvider = NextRecurringPaymentFamily();
 
 /// See also [nextRecurringPayment].
-class NextRecurringPaymentFamily
-    extends Family<AsyncValue<PaymentOccurrence?>> {
+class NextRecurringPaymentFamily extends Family<PaymentOccurrence?> {
   /// See also [nextRecurringPayment].
   const NextRecurringPaymentFamily();
 
@@ -75,7 +74,7 @@ class NextRecurringPaymentFamily
 
 /// See also [nextRecurringPayment].
 class NextRecurringPaymentProvider
-    extends AutoDisposeFutureProvider<PaymentOccurrence?> {
+    extends AutoDisposeProvider<PaymentOccurrence?> {
   /// See also [nextRecurringPayment].
   NextRecurringPaymentProvider({
     required String categoryId,
@@ -110,8 +109,7 @@ class NextRecurringPaymentProvider
 
   @override
   Override overrideWith(
-    FutureOr<PaymentOccurrence?> Function(NextRecurringPaymentRef provider)
-        create,
+    PaymentOccurrence? Function(NextRecurringPaymentRef provider) create,
   ) {
     return ProviderOverride(
       origin: this,
@@ -128,7 +126,7 @@ class NextRecurringPaymentProvider
   }
 
   @override
-  AutoDisposeFutureProviderElement<PaymentOccurrence?> createElement() {
+  AutoDisposeProviderElement<PaymentOccurrence?> createElement() {
     return _NextRecurringPaymentProviderElement(this);
   }
 
@@ -147,14 +145,13 @@ class NextRecurringPaymentProvider
   }
 }
 
-mixin NextRecurringPaymentRef
-    on AutoDisposeFutureProviderRef<PaymentOccurrence?> {
+mixin NextRecurringPaymentRef on AutoDisposeProviderRef<PaymentOccurrence?> {
   /// The parameter `categoryId` of this provider.
   String get categoryId;
 }
 
 class _NextRecurringPaymentProviderElement
-    extends AutoDisposeFutureProviderElement<PaymentOccurrence?>
+    extends AutoDisposeProviderElement<PaymentOccurrence?>
     with NextRecurringPaymentRef {
   _NextRecurringPaymentProviderElement(super.provider);
 

@@ -1,22 +1,32 @@
 // lib/src/features/transactions/presentation/providers/next_recurring_payment_provider.dart
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:budgit/src/core/domain/models/transaction.dart';
-import 'package:budgit/src/core/data/providers/transaction_repository_provider.dart';
 import 'package:budgit/src/utils/clock_provider.dart';
+// Import the new raw transactions provider
+import 'package:budgit/src/features/transaction_hub/transactions/presentation/providers/transaction_log_provider.dart';
 
 part 'next_recurring_payment_provider.g.dart';
 
+// --- CHANGED: Now a synchronous Provider (AutoDispose) ---
 @riverpod
-Future<PaymentOccurrence?> nextRecurringPayment(
+PaymentOccurrence? nextRecurringPayment(
   NextRecurringPaymentRef ref, {
   required String categoryId,
-}) async {
-  final repository = ref.watch(transactionRepositoryProvider);
-  final allTransactions = await repository.getAllTransactions();
+}) {
+  // 1. Synchronously watch the raw data
+  final rawTransactionsAsync = ref.watch(rawTransactionsProvider);
+  
+  // If data isn't loaded yet, return null (the UI will handle "No data" or wait)
+  // But practically, in the dashboard, this is already loaded.
+  if (!rawTransactionsAsync.hasValue) {
+    return null; 
+  }
+
+  final allTransactions = rawTransactionsAsync.value!;
   final now = ref.watch(clockNotifierProvider).now();
   final today = DateTime(now.year, now.month, now.day);
 
-  // 1. Get all recurring payment rules for this category
+  // 2. Filter synchronously
   final categoryRecurringPayments = allTransactions
       .whereType<RecurringPayment>()
       .where((p) => p.category.id == categoryId)
@@ -28,10 +38,10 @@ Future<PaymentOccurrence?> nextRecurringPayment(
 
   final List<PaymentOccurrence> nextOccurrences = [];
 
-  // 2. For each rule, find its first occurrence on or after today
+  // 3. Calculation Logic (Unchanged)
   for (final rule in categoryRecurringPayments) {
     if (rule.endDate != null && rule.endDate!.isBefore(today)) {
-      continue; // This rule has already ended
+      continue;
     }
 
     DateTime nextDate = rule.startDate;
@@ -52,7 +62,6 @@ Future<PaymentOccurrence?> nextRecurringPayment(
       }
     }
     
-    // Now `nextDate` is the upcoming occurrence. Add it if it's valid.
     if (rule.endDate == null || !nextDate.isAfter(rule.endDate!)) {
         nextOccurrences.add(PaymentOccurrence(
           id: '${rule.id}_${nextDate.toIso8601String()}',
@@ -74,7 +83,6 @@ Future<PaymentOccurrence?> nextRecurringPayment(
     return null;
   }
 
-  // 3. Sort all potential next occurrences to find the one that is soonest
   nextOccurrences.sort((a, b) => a.date.compareTo(b.date));
   
   return nextOccurrences.first;

@@ -3,8 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:budgit/src/core/data/providers/category_list_provider.dart';
-// --- NEW IMPORT ---
-import 'package:budgit/src/features/budget_hub/budgets/presentation/screens/category_drilldown_screen.dart';
+import 'package:budgit/src/features/categories/presentation/screens/edit_basic_category_screen.dart';
 
 class ManageCategoriesScreen extends ConsumerWidget {
   const ManageCategoriesScreen({super.key});
@@ -37,22 +36,19 @@ class ManageCategoriesScreen extends ConsumerWidget {
               final category = value[index];
               return ListTile(
                 key: ValueKey(category.id),
-                // --- MODIFIED ---
-                // Replaced the CircleAvatar with a colored Icon.
                 leading: Icon(category.icon, color: category.color),
                 title: Text(category.name),
                 trailing: ReorderableDragStartListener(
                   index: index,
                   child: const Icon(Icons.drag_handle),
                 ),
-                // --- MODIFIED ---
-                // Implemented onTap to navigate to the drilldown screen.
+                // --- CHANGED ---
+                // Navigate directly to EditBasicCategoryScreen
                 onTap: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (context) => CategoryDrilldownScreen(
-                        categories: value,
-                        initialIndex: index,
+                      builder: (context) => EditBasicCategoryScreen(
+                        category: category,
                       ),
                     ),
                   );
