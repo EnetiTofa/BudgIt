@@ -28,7 +28,7 @@ class CategoryRingPainter extends CustomPainter {
       ..color = categoryColor
       ..strokeWidth = strokeWidth
       ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
+      ..strokeCap = StrokeCap.butt;
       
     // Draw the background ring
     canvas.drawCircle(center, radius, backgroundPaint);
@@ -49,7 +49,7 @@ class CategoryRingPainter extends CustomPainter {
         ..color = Colors.redAccent
         ..strokeWidth = strokeWidth
         ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round;
+        ..strokeCap = StrokeCap.butt;
       
       // The outer ring should not overlap the inner one
       final outerRadius = radius + strokeWidth; 

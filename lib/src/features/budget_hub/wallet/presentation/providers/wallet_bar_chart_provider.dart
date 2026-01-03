@@ -1,3 +1,4 @@
+// lib/src/features/budget_hub/wallet/presentation/providers/wallet_bar_chart_provider.dart
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:budgit/src/core/domain/models/transaction.dart';
@@ -29,40 +30,76 @@ class WalletBarChartData extends Equatable {
 }
 
 @riverpod
-Future<WalletBarChartData> walletBarChartData(Ref ref) async {
-  // --- The entire structure is simplified here ---
-
-  // 1. Await all futures at the top. Riverpod handles loading/error states.
+Future<WalletBarChartData> walletBarChartData(
+  Ref ref, {
+  required DateTime selectedDate,
+}) async {
   final log = await ref.watch(allTransactionOccurrencesProvider.future);
   final categories = await ref.watch(categoryListProvider.future);
   final settingsNotifier = ref.read(settingsProvider.notifier);
 
-  // 2. Perform the rest of the logic directly. No .when() is needed.
   final checkInDay = await settingsNotifier.getCheckInDay();
   final now = ref.watch(clockNotifierProvider).now();
   
-  final startOfWeek = DateTime(now.year, now.month, now.day - (now.weekday - checkInDay + 7) % 7);
-  final startOfToday = DateTime(now.year, now.month, now.day);
+  // Calculate start of the week for the selected date
+  final startOfSelectedWeek = DateTime(
+    selectedDate.year, 
+    selectedDate.month, 
+    selectedDate.day - (selectedDate.weekday - checkInDay + 7) % 7
+  );
   
+  // End of the selected week (exclusive for logic usually, but here just +7 days)
+  final endOfSelectedWeek = startOfSelectedWeek.add(const Duration(days: 7));
+
+  // Determine if we are looking at the current active week
+  final startOfCurrentWeek = DateTime(
+    now.year, 
+    now.month, 
+    now.day - (now.weekday - checkInDay + 7) % 7
+  );
+  
+  final isCurrentWeek = startOfSelectedWeek.year == startOfCurrentWeek.year &&
+                        startOfSelectedWeek.month == startOfCurrentWeek.month &&
+                        startOfSelectedWeek.day == startOfCurrentWeek.day;
+
+  // Filter transactions for the selected week
   final walletTxsThisWeek = log
       .whereType<OneOffPayment>()
-      .where((p) => p.isWalleted && !p.date.isBefore(startOfWeek))
+      .where((p) => p.isWalleted && 
+                    !p.date.isBefore(startOfSelectedWeek) &&
+                    p.date.isBefore(endOfSelectedWeek))
       .toList();
 
   final dailyTotals = <int, Map<String, double>>{};
   for (var tx in walletTxsThisWeek) {
     final txLocalDate = tx.date.toLocal();
-    final dayIndex = txLocalDate.difference(startOfWeek).inDays;
+    final dayIndex = txLocalDate.difference(startOfSelectedWeek).inDays;
     if (dayIndex >= 0 && dayIndex < 7) {
       dailyTotals.putIfAbsent(dayIndex, () => {});
       dailyTotals[dayIndex]![tx.category.id] = (dailyTotals[dayIndex]![tx.category.id] ?? 0) + tx.amount;
     }
   }
 
-  final completedDays = startOfToday.difference(startOfWeek).inDays;
-  final totalSpentOnCompletedDays = walletTxsThisWeek
-      .where((tx) => tx.date.isBefore(startOfToday))
-      .fold(0.0, (sum, tx) => sum + tx.amount);
+  // Calculate completed days
+  int completedDays;
+  double totalSpentOnCompletedDays;
+
+  if (isCurrentWeek) {
+    // If it's the current week, calculate up to "today"
+    final startOfToday = DateTime(now.year, now.month, now.day);
+    completedDays = startOfToday.difference(startOfSelectedWeek).inDays;
+    // Ensure we don't divide by zero or go out of bounds if it's day 0
+    if (completedDays < 0) completedDays = 0;
+    
+    totalSpentOnCompletedDays = walletTxsThisWeek
+        .where((tx) => tx.date.isBefore(startOfToday))
+        .fold(0.0, (sum, tx) => sum + tx.amount);
+  } else {
+    // If it's a past week, all 7 days are "completed"
+    completedDays = 7;
+    totalSpentOnCompletedDays = walletTxsThisWeek
+        .fold(0.0, (sum, tx) => sum + tx.amount);
+  }
   
   final averageDailySpend = (completedDays > 0 && totalSpentOnCompletedDays > 0) 
       ? totalSpentOnCompletedDays / completedDays 

@@ -2,7 +2,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import 'package:budgit/src/common_widgets/pulsing_button.dart';
 import 'package:budgit/src/features/categories/presentation/screens/add_category_screen.dart';
 import 'package:budgit/src/features/budget_hub/budgets/presentation/providers/budget_screen_data_provider.dart';
@@ -49,7 +48,7 @@ class BudgetsScreen extends ConsumerWidget {
             body: SingleChildScrollView(
               child: Column(
                 children: [
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 8),
                   
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -59,15 +58,12 @@ class BudgetsScreen extends ConsumerWidget {
                         MonthSelector(
                           selectedDate: selectedMonth,
                           onMonthChanged: (newMonth) {
-                            // --- MODIFICATION START: Limit to current month ---
                             final now = DateTime.now();
                             final currentMonth = DateTime(now.year, now.month);
                             
-                            // Prevent navigating to future months
                             if (newMonth.isAfter(currentMonth)) return;
                             
                             ref.read(selectedMonthProvider.notifier).state = newMonth;
-                            // --- MODIFICATION END ---
                           },
                         ),
                         if (selectedCategory != null)
@@ -93,7 +89,7 @@ class BudgetsScreen extends ConsumerWidget {
                       ],
                     ),
                   ),
-
+                  const SizedBox(height: 16),
                   SizedBox(
                     height: 300, 
                     child: AnimatedSwitcher(
@@ -196,13 +192,6 @@ class BudgetsScreen extends ConsumerWidget {
         .fold(0.0, (sum, item) => sum + item.amountSpent);
     final totalBudget = screenData.budgetProgress
         .fold(0.0, (sum, item) => sum + item.projectedBudget);
-        
-    final now = DateTime.now();
-    final bool isThisMonth =
-        selectedDate.year == now.year && selectedDate.month == now.month;
-    final String monthLabel = isThisMonth
-        ? "Spent this Month"
-        : "Spent ${DateFormat.MMM().format(selectedDate)}";
 
     final segments = screenData.budgetProgress.map((p) => GaugeSegment(
       label: p.category.name,
@@ -217,8 +206,8 @@ class BudgetsScreen extends ConsumerWidget {
         segments: segments,
         totalBudget: totalBudget,
         totalSpent: totalSpent,
-        labelSuffix: monthLabel,
-        showLegend: false, 
+        labelSuffix: "of \$${totalBudget.toStringAsFixed(0)} Budget",
+        showLegend: false, // Disabling Legend as requested
       ),
     );
   }
@@ -229,12 +218,6 @@ class BudgetsScreen extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: SummaryStatCard(
         stats: [
-          SummaryStat(
-            value: '\$${summary.totalSpending.toStringAsFixed(2)}',
-            unit: 'NZD',
-            title: 'Total Spending',
-            description: 'The total amount spent in the selected month.',
-          ),
           SummaryStat(
             value: '\$${summary.dailyAverage.toStringAsFixed(2)}',
             unit: 'NZD / day',

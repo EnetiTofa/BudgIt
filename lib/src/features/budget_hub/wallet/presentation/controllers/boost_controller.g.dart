@@ -6,7 +6,7 @@ part of 'boost_controller.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$boostStateHash() => r'f10695b26e4383eadaf0ebb284f2173c9459c78a';
+String _$boostStateHash() => r'7c5b96511939280cf0fa3bb7e91b582d9db59a91';
 
 /// Copied from Dart SDK
 class _SystemHash {

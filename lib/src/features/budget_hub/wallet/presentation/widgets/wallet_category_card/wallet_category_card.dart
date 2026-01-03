@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:budgit/src/features/budget_hub/wallet/domain/wallet_category_data.dart';
-import 'package:budgit/src/features/budget_hub/wallet/presentation/widgets/wallet_speedometer.dart';
+import 'package:budgit/src/features/budget_hub/wallet/presentation/widgets/wallet_category_card/wallet_speedometer.dart';
 import 'package:budgit/src/features/budget_hub/wallet/presentation/screens/wallet_category_detail_screen.dart';
 
 class WalletCategoryCard extends ConsumerStatefulWidget {
@@ -65,7 +65,7 @@ class _WalletCategoryCardState extends ConsumerState<WalletCategoryCard> with Si
       child: InkWell(
         onTap: () {
           Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) => WalletCategoryDetailScreen(category: data.category),
+            builder: (_) => WalletCategoryDetailScreen(data: data),
           ));
         },
         child: Padding(
@@ -137,7 +137,7 @@ class _WalletCategoryCardState extends ConsumerState<WalletCategoryCard> with Si
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   WalletSpeedometer(
-                    targetAverage: data.targetDailyAverage,
+                    targetAverage: data.recommendedDailySpending,
                     currentAverage: data.averageDailySpending,
                     color: contentColor,
                   ),

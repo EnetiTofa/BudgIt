@@ -225,105 +225,108 @@ class _StreakScreenState extends State<StreakScreen>
       return Row(mainAxisSize: MainAxisSize.min, children: digitWidgets);
     }
     return Scaffold(
-      body: AnimatedBuilder(
-        animation: Listenable.merge([_revealController, _bulgeController]),
-        builder: (context, child) {
-          double flameScale;
-          if (_revealController.isAnimating || _revealController.isCompleted) {
-            flameScale = _flameShrinkAnimation.value;
-          } else if (_isHeated) {
-            flameScale = _flameBulgeAnimation.value;
-          } else {
-            flameScale = 1.0;
-          }
-          return Stack(
-            children: [
-              Align(
-                alignment: const Alignment(0, -0.7),
-                child: FadeTransition(
-                  opacity: _textFadeAnimation,
-                  child: Text('Streak Increased!',
-                      style: theme.textTheme.headlineSmall
-                          ?.copyWith(fontWeight: FontWeight.bold)),
+      body: Padding(
+        padding: const EdgeInsets.only(top: 40.0),
+        child: AnimatedBuilder(
+          animation: Listenable.merge([_revealController, _bulgeController]),
+          builder: (context, child) {
+            double flameScale;
+            if (_revealController.isAnimating || _revealController.isCompleted) {
+              flameScale = _flameShrinkAnimation.value;
+            } else if (_isHeated) {
+              flameScale = _flameBulgeAnimation.value;
+            } else {
+              flameScale = 1.0;
+            }
+            return Stack(
+              children: [
+                Align(
+                  alignment: const Alignment(0, -0.7),
+                  child: FadeTransition(
+                    opacity: _textFadeAnimation,
+                    child: Text('Streak Increased!',
+                        style: theme.textTheme.headlineSmall
+                            ?.copyWith(fontWeight: FontWeight.bold)),
+                  ),
                 ),
-              ),
-              Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(
-                      width: 225,
-                      height: 225,
-                      child: Transform.scale(
-                        scale: flameScale,
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            Icon(
-                                Icons.circle,
-                                color: _isHeated
-                                    ? Colors.yellow.shade600
-                                    : theme.colorScheme.surfaceContainerLow,
-                                size: 140),
-                            FaIcon(FontAwesomeIcons.fire,
-                                size: 180,
-                                color: _isHeated
-                                    ? Colors.orange.shade700
-                                    : theme.colorScheme
-                                        .surfaceContainerHighest),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    SizedBox(
-                      height: 132, // (110.0 base height * 1.2 max scale)
-                      child: ScaleTransition(
-                        scale: _scaleAnimation,
-                        child: ScaleTransition(
-                          scale: _numberBulgeAnimation,
+                Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: 225,
+                        height: 225,
+                        child: Transform.scale(
+                          scale: flameScale,
                           child: Stack(
                             alignment: Alignment.center,
                             children: [
-                              AnimatedBuilder(
-                                animation: _revealCurve,
-                                builder: (context, child) {
-                                  return Transform.translate(
-                                      offset: Offset(numberTranslationX *
-                                          _revealCurve.value, 0),
-                                      child: child);
-                                },
-                                child: numberAnimationWidget(),
-                              ),
-                              AnimatedBuilder(
-                                animation: _revealCurve,
-                                builder: (context, child) {
-                                  return Transform.translate(
-                                      offset: Offset(periodTextTranslationX *
-                                          _revealCurve.value, 0),
-                                      child: child);
-                                },
-                                child: FadeTransition(
-                                  opacity: _textFadeAnimation,
-                                  child: Padding(
-                                    padding:
-                                        const EdgeInsets.only(left: 8.0),
-                                    child: Text(periodText,
-                                        style: periodTextStyle),
-                                  ),
-                                ),
-                              ),
+                              Icon(
+                                  Icons.circle,
+                                  color: _isHeated
+                                      ? Colors.yellow.shade600
+                                      : theme.colorScheme.surfaceContainerLow,
+                                  size: 140),
+                              FaIcon(FontAwesomeIcons.fire,
+                                  size: 180,
+                                  color: _isHeated
+                                      ? Colors.orange.shade700
+                                      : theme.colorScheme
+                                          .surfaceContainerHighest),
                             ],
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        height: 132, // (110.0 base height * 1.2 max scale)
+                        child: ScaleTransition(
+                          scale: _scaleAnimation,
+                          child: ScaleTransition(
+                            scale: _numberBulgeAnimation,
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                AnimatedBuilder(
+                                  animation: _revealCurve,
+                                  builder: (context, child) {
+                                    return Transform.translate(
+                                        offset: Offset(numberTranslationX *
+                                            _revealCurve.value, 0),
+                                        child: child);
+                                  },
+                                  child: numberAnimationWidget(),
+                                ),
+                                AnimatedBuilder(
+                                  animation: _revealCurve,
+                                  builder: (context, child) {
+                                    return Transform.translate(
+                                        offset: Offset(periodTextTranslationX *
+                                            _revealCurve.value, 0),
+                                        child: child);
+                                  },
+                                  child: FadeTransition(
+                                    opacity: _textFadeAnimation,
+                                    child: Padding(
+                                      padding:
+                                          const EdgeInsets.only(left: 8.0),
+                                      child: Text(periodText,
+                                          style: periodTextStyle),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          );
-        },
+              ],
+            );
+          },
+        ),
       ),
     );
   }

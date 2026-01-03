@@ -1,1 +1,0 @@
-enum ExpandedMode { none, boost, days, stats }

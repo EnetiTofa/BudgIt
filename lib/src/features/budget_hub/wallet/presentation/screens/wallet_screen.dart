@@ -3,11 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:budgit/src/common_widgets/pulsing_button.dart';
 import 'package:budgit/src/features/categories/presentation/screens/add_category_screen.dart';
-import 'package:budgit/src/common_widgets/swipable_page_view.dart';
-import 'package:budgit/src/features/budget_hub/wallet/presentation/widgets/average_spending_speedometers.dart';
-import 'package:budgit/src/features/budget_hub/wallet/presentation/widgets/daily_spending_gauges.dart';
 import 'package:budgit/src/features/budget_hub/wallet/presentation/widgets/wallet_bar_chart.dart';
-import 'package:budgit/src/features/budget_hub/wallet/presentation/widgets/wallet_category_card.dart';
+import 'package:budgit/src/features/budget_hub/wallet/presentation/widgets/wallet_category_card/wallet_category_card.dart';
 import 'package:budgit/src/features/budget_hub/wallet/presentation/providers/wallet_category_data_provider.dart';
 
 class WalletScreen extends ConsumerWidget {
@@ -15,15 +12,13 @@ class WalletScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final walletCategoryDataAsync = ref.watch(walletCategoryDataProvider);
-    final screenWidth = MediaQuery.of(context).size.width;
-
-    // --- MODIFICATION: The entire screen's content is now conditional ---
+    final selectedDate = ref.watch(walletDateProvider);
+    final walletCategoryDataAsync = ref.watch(walletCategoryDataProvider(selectedDate: selectedDate));
+    
     return walletCategoryDataAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (err, stack) => Center(child: Text('Error: $err')),
       data: (data) {
-        // If there is no data, show only the button
         if (data.isEmpty) {
           return Center(
             child: PulsingButton(
@@ -37,22 +32,18 @@ class WalletScreen extends ConsumerWidget {
           );
         }
 
-        // If data exists, build the full screen with charts and cards
         return ListView(
-          padding: const EdgeInsets.all(16.0),
+          // --- MODIFICATION: Reduced top padding to 0 ---
+          padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 16.0),
           children: [
-            SwipablePageView(
-              height: screenWidth,
-              initialPage: 1,
-              pages: const [
-                DailySpendingGauges(),
-                WalletBarChart(),
-                AverageSpendingSpeedometers(),
-              ],
-            ),
-            // We already know data is not empty here, so we just build the list
+            const WalletBarChart(),
+            const SizedBox(height: 4),
             Column(
-              children: data.map((d) => WalletCategoryCard(data: d)).toList(),
+              children: data.map((d) => Padding(
+                // --- MODIFICATION: Added bottom padding to increase gap between cards ---
+                padding: const EdgeInsets.only(bottom: 4.0),
+                child: WalletCategoryCard(data: d),
+              )).toList(),
             ),
           ],
         );

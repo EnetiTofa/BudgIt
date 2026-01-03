@@ -12,11 +12,13 @@ class FakeTransactionRepository implements TransactionRepository {
   final List<Transaction> _transactions = [];
   final List<Category> _categories = [];
   final List<WalletAdjustment> _adjustments = [];
+  
   List<String>? _categoryOrder;
   SavingsGoal? _savingsGoal;
   double _totalSavings = 0.0;
   double _lastWeekWalletSpending = 0.0;
   int _checkInStreak = 0;
+  DateTime? _lastCheckInDate;
   List<String> _recentIcons = [];
 
   // --- Transaction Methods ---
@@ -29,6 +31,19 @@ class FakeTransactionRepository implements TransactionRepository {
   Future<List<Transaction>> getAllTransactions() async {
     return List.unmodifiable(_transactions);
   }
+  
+  @override
+  Future<void> updateTransaction(Transaction transaction) async {
+    final index = _transactions.indexWhere((t) => t.id == transaction.id);
+    if (index != -1) {
+      _transactions[index] = transaction;
+    }
+  }
+
+  @override
+  Future<void> deleteTransaction(String transactionId) async {
+    _transactions.removeWhere((t) => t.id == transactionId);
+  }
 
   @override
   Future<Transaction?> getTransactionById(String id) async {
@@ -37,17 +52,6 @@ class FakeTransactionRepository implements TransactionRepository {
     } catch (e) {
       return null;
     }
-  }
-
-  @override
-  Future<void> updateTransaction(Transaction transaction) async {
-    final index = _transactions.indexWhere((t) => t.id == transaction.id);
-    if (index != -1) _transactions[index] = transaction;
-  }
-
-  @override
-  Future<void> deleteTransaction(String transactionId) async {
-    _transactions.removeWhere((t) => t.id == transactionId);
   }
 
   // --- Category Methods ---
@@ -61,40 +65,16 @@ class FakeTransactionRepository implements TransactionRepository {
     return List.unmodifiable(_categories);
   }
 
-  // --- NEW METHOD ---
-  @override
-  Future<Category?> getCategory(String categoryId) async {
-    try {
-      return _categories.firstWhere((c) => c.id == categoryId);
-    } catch (e) {
-      return null;
-    }
-  }
-
-  // --- NEW METHOD ---
-  @override
-  Future<List<RecurringPayment>> getRecurringTransactionsForCategory(
-      String categoryId) async {
-    return _transactions
-        .whereType<RecurringPayment>()
-        .where((p) => p.category.id == categoryId)
-        .toList();
-  }
-
-
   @override
   Future<void> updateCategory(Category category) async {
     final index = _categories.indexWhere((c) => c.id == category.id);
-    if (index != -1) _categories[index] = category;
+    if (index != -1) {
+      _categories[index] = category;
+    }
   }
 
   @override
   Future<void> deleteCategory(String categoryId) async {
-    _transactions.removeWhere((t) {
-      if (t is OneOffPayment) return t.category.id == categoryId;
-      if (t is RecurringPayment) return t.category.id == categoryId;
-      return false;
-    });
     _categories.removeWhere((c) => c.id == categoryId);
   }
 
@@ -108,20 +88,46 @@ class FakeTransactionRepository implements TransactionRepository {
     _categoryOrder = categoryIds;
   }
 
-  // --- Wallet Methods ---
+  @override
+  Future<Category?> getCategory(String categoryId) async {
+    try {
+      return _categories.firstWhere((c) => c.id == categoryId);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // --- Recurring Methods ---
+  @override
+  Future<List<RecurringPayment>> getRecurringTransactionsForCategory(String categoryId) async {
+    return _transactions
+        .whereType<RecurringPayment>()
+        .where((t) => t.category.id == categoryId)
+        .toList();
+  }
+
+  // --- Wallet Adjustment Methods ---
   @override
   Future<void> addWalletAdjustment(WalletAdjustment adjustment) async {
     _adjustments.add(adjustment);
   }
 
   @override
-  Future<void> deleteWalletAdjustments(String toCategoryId, DateTime dateInWeek) async {
-    _adjustments.removeWhere((adj) => adj.toCategoryId == toCategoryId);
+  Future<List<WalletAdjustment>> getWalletAdjustmentsForWeek(DateTime dateInWeek) async {
+    // For fake repo, we might just return all to simplify testing
+    // or implement simple logic if needed.
+    return _adjustments;
   }
 
   @override
-  Future<List<WalletAdjustment>> getWalletAdjustmentsForWeek(DateTime dateInWeek) async {
-    return _adjustments;
+  Future<List<WalletAdjustment>> getWalletAdjustments(String toCategoryId, DateTime dateInWeek) async {
+    // Return adjustments for the target category.
+    return _adjustments.where((a) => a.toCategoryId == toCategoryId).toList();
+  }
+
+  @override
+  Future<void> deleteWalletAdjustments(String toCategoryId, DateTime dateInWeek) async {
+    _adjustments.removeWhere((a) => a.toCategoryId == toCategoryId);
   }
 
   // --- Savings Methods ---
@@ -150,24 +156,24 @@ class FakeTransactionRepository implements TransactionRepository {
     _savingsGoal = null;
   }
 
-  // --- Check-in & Snapshot Methods ---
-  @override
-  Future<double> getLastWeekWalletSpending() async {
-    return _lastWeekWalletSpending;
-  }
-
+  // --- Check In Methods ---
   @override
   Future<void> saveCheckInSummary({required double lastWeekWalletSpending}) async {
     _lastWeekWalletSpending = lastWeekWalletSpending;
   }
 
   @override
-  Future<DateTime?> getLastCheckInDate() async {
-    return null; // Can be enhanced for testing if needed
+  Future<double> getLastWeekWalletSpending() async {
+    return _lastWeekWalletSpending;
   }
 
   @override
-  Future<void> setLastCheckInDate(DateTime date) async {}
+  Future<void> debugResetCheckInData() async {
+    _totalSavings = 0.0;
+    _lastWeekWalletSpending = 0.0;
+    _checkInStreak = 0;
+    _adjustments.clear();
+  }
 
   @override
   Future<int> getCheckInStreak() async {
@@ -178,26 +184,33 @@ class FakeTransactionRepository implements TransactionRepository {
   Future<void> incrementCheckInStreak() async {
     _checkInStreak++;
   }
-  
+
   @override
   Future<void> resetCheckInStreak() async {
     _checkInStreak = 0;
   }
 
-  // --- Debug Methods ---
   @override
-  Future<void> debugResetCheckInData() async {
-    _totalSavings = 0.0;
-    _lastWeekWalletSpending = 0.0;
-    _adjustments.clear();
+  Future<void> setLastCheckInDate(DateTime date) async {
+    _lastCheckInDate = date;
+  }
+
+  @override
+  Future<DateTime?> getLastCheckInDate() async {
+    return _lastCheckInDate;
+  }
+
+  // --- Other Methods ---
+  @override
+  Future<void> generateDummyData() async {
+    // No-op for fake repo
   }
 
   @override
   Future<void> deleteAllData() async {
-  }
-
-  @override
-  Future<void> generateDummyData() async {
+    _transactions.clear();
+    _categories.clear();
+    _adjustments.clear();
   }
 
   @override
@@ -209,5 +222,4 @@ class FakeTransactionRepository implements TransactionRepository {
   Future<List<String>> getRecentIcons() async {
     return _recentIcons;
   }
-
 }

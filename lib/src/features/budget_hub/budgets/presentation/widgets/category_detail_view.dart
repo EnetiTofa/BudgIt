@@ -6,13 +6,13 @@ import 'package:intl/intl.dart';
 import 'dart:ui' as ui;
 import 'package:budgit/src/core/domain/models/category.dart';
 import 'package:budgit/src/core/data/providers/category_list_provider.dart';
+// This import now includes our new provider
 import 'package:budgit/src/features/budget_hub/budgets/presentation/providers/historical_category_spending_provider.dart';
 import 'package:budgit/src/utils/palette_generator.dart';
 import 'package:budgit/src/features/budget_hub/budgets/presentation/screens/budgets_screen.dart';
 import 'package:budgit/src/features/transaction_hub/transactions/presentation/providers/next_recurring_payment_provider.dart';
-import 'package:budgit/src/features/transaction_hub/transactions/presentation/controllers/log_filter_controller.dart';
-import 'package:budgit/src/features/transaction_hub/transactions/domain/log_filter_state.dart';
-import 'package:budgit/src/app/navigation_provider.dart';
+// Add this import for the UI card
+import 'package:budgit/src/common_widgets/summary_stat_card.dart';
 
 class CategoryDetailView extends ConsumerStatefulWidget {
   const CategoryDetailView({
@@ -75,11 +75,18 @@ class _CategoryDetailViewState extends ConsumerState<CategoryDetailView> {
           return const SizedBox.shrink(); 
         }
 
-        // --- FETCH DATA SYNCHRONOUSLY ---
+        // --- FETCH DATA ---
+        // 1. Full history for the chart
         final historicalData = ref.watch(historicalCategorySpendingProvider(
           categoryId: category.id,
         ));
         
+        // 2. Specific breakdown for the summary card (Using our NEW provider)
+        final breakdown = ref.watch(categoryMonthlyBreakdownProvider(
+          categoryId: category.id,
+          month: widget.selectedMonth,
+        ));
+
         final nextPayment = ref.watch(nextRecurringPaymentProvider(categoryId: category.id));
         // ---------------------------------
 
@@ -88,7 +95,7 @@ class _CategoryDetailViewState extends ConsumerState<CategoryDetailView> {
         final textTheme = Theme.of(context).textTheme;
 
         return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          padding: const EdgeInsets.symmetric(horizontal: 20.0),
           child: Column(
             children: [
               const SizedBox(height: 8),
@@ -96,17 +103,9 @@ class _CategoryDetailViewState extends ConsumerState<CategoryDetailView> {
               // 1. Upcoming Transactions Card
               _DetailCard(
                 child: InkWell(
-                  onTap: () {
-                    Navigator.of(context).pop(); 
-                    final filterNotifier = ref.read(logFilterProvider.notifier);
-                    filterNotifier.setTransactionType(TransactionTypeFilter.payment);
-                    filterNotifier.setSelectedCategoryIds({category.id});
-                    ref.read(transactionHubTabIndexProvider.notifier).setIndex(1);
-                    ref.read(mainPageIndexProvider.notifier).setIndex(1); 
-                  },
                   borderRadius: BorderRadius.circular(16.0),
                   child: Padding(
-                    padding: const EdgeInsets.all(20.0),
+                    padding: const EdgeInsets.all(16.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -133,11 +132,10 @@ class _CategoryDetailViewState extends ConsumerState<CategoryDetailView> {
                             }
                             return Row(
                               children: [
-                                // --- MODIFIED: Null check for iconCodePoint ---
                                 if (nextPayment.iconCodePoint != null)
                                   Icon(
                                     IconData(
-                                      nextPayment.iconCodePoint!, // Safe force unwrap
+                                      nextPayment.iconCodePoint!,
                                       fontFamily: nextPayment.iconFontFamily,
                                       fontPackage: 'material_design_icons_flutter',
                                     ), 
@@ -150,7 +148,6 @@ class _CategoryDetailViewState extends ConsumerState<CategoryDetailView> {
                                     size: 32, 
                                     color: colorScheme.secondary
                                   ),
-                                // ---------------------------------------------
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Column(
@@ -185,12 +182,12 @@ class _CategoryDetailViewState extends ConsumerState<CategoryDetailView> {
                 ),
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
 
-              // 2. History Card
+              // 3. History Card
               _DetailCard(
                 child: Padding(
-                  padding: const EdgeInsets.all(20.0),
+                  padding: const EdgeInsets.all(16.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -202,7 +199,7 @@ class _CategoryDetailViewState extends ConsumerState<CategoryDetailView> {
                       ),
                       const SizedBox(height: 16),
                       SizedBox(
-                        height: 200, 
+                        height: 140, 
                         child: Builder(
                           builder: (context) {
                             if (historicalData.isEmpty) {
@@ -263,6 +260,38 @@ class _CategoryDetailViewState extends ConsumerState<CategoryDetailView> {
                   ),
                 ),
               ),
+              const SizedBox(height: 16),
+              // 2. New Summary Card
+              SummaryStatCard(
+                stats: [
+                  SummaryStat(
+                    value: '\$${breakdown.recurring.toStringAsFixed(2)}',
+                    unit: 'Recurring',
+                    title: 'Recurring',
+                    description: 'Spent on fixed subscriptions.',
+                  ),
+                  SummaryStat(
+                    value: '\$${breakdown.oneOff.toStringAsFixed(2)}',
+                    unit: 'One-off',
+                    title: 'One-Off',
+                    description: 'Spent on single purchases.',
+                  ),
+                  SummaryStat(
+                    value: '\$${breakdown.wallet.toStringAsFixed(2)}',
+                    unit: 'Wallet',
+                    title: 'Wallet',
+                    description: 'Spent using physical wallet/cash.',
+                  ),
+                  // --- NEW STATS ---
+                  SummaryStat(
+                    value: '\$${breakdown.dailyAverage.toStringAsFixed(2)}',
+                    unit: '/ day',
+                    title: 'Daily Average',
+                    description: 'Average spending per day this month.',
+                  ),
+                ],
+              ),
+
               const SizedBox(height: 40),
             ],
           ),

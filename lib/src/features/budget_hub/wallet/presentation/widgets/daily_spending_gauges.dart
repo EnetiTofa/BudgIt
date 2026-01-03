@@ -1,3 +1,4 @@
+// lib/src/features/budget_hub/wallet/presentation/widgets/daily_spending_gauges.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -10,7 +11,9 @@ class DailySpendingGauges extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final walletCategoryDataAsync = ref.watch(walletCategoryDataProvider);
+    // UPDATED: Watch shared date
+    final selectedDate = ref.watch(walletDateProvider);
+    final walletCategoryDataAsync = ref.watch(walletCategoryDataProvider(selectedDate: selectedDate));
     final theme = Theme.of(context);
 
     return walletCategoryDataAsync.when(
@@ -77,14 +80,12 @@ class _SpendingGaugeState extends ConsumerState<_SpendingGauge> with SingleTicke
   void didUpdateWidget(covariant _SpendingGauge oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.data != oldWidget.data) {
-      // It's important to update the animation tween itself with the new end value
       _animation = Tween<double>(begin: _animation.value, end: _calculateProgress())
           .animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
       _controller.forward(from: 0.0);
     }
   }
 
-  // Helper method to calculate progress
   double _calculateProgress() {
     final recommendedSpend = widget.data.recommendedDailySpending;
     return recommendedSpend > 0 ? widget.data.spendingToday / recommendedSpend : 0.0;
@@ -106,7 +107,6 @@ class _SpendingGaugeState extends ConsumerState<_SpendingGauge> with SingleTicke
     final theme = Theme.of(context);
     final currencyFormat = NumberFormat.compactCurrency(locale: 'en_US', symbol: '\$');
     final recommendedSpend = widget.data.recommendedDailySpending;
-
     
     return Column(
       children: [

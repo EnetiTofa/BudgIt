@@ -23,13 +23,15 @@ class UnifiedBudgetGauge extends StatefulWidget {
     required this.totalBudget,
     required this.totalSpent,
     this.labelSuffix = "Spent",
-    this.showLegend = false, // Toggle to show keys underneath
+    this.subLabel, 
+    this.showLegend = false, 
   });
 
   final List<GaugeSegment> segments;
   final double totalBudget;
   final double totalSpent;
   final String labelSuffix;
+  final String? subLabel;
   final bool showLegend;
 
   @override
@@ -58,7 +60,6 @@ class _UnifiedBudgetGaugeState extends State<UnifiedBudgetGauge>
   @override
   void didUpdateWidget(covariant UnifiedBudgetGauge oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // If the data structure changes significantly, re-animate
     if (oldWidget.totalSpent != widget.totalSpent || 
         oldWidget.totalBudget != widget.totalBudget) {
       _controller.forward(from: 0.0);
@@ -80,7 +81,7 @@ class _UnifiedBudgetGaugeState extends State<UnifiedBudgetGauge>
       children: [
         // 1. The Gauge
         SizedBox(
-          height: 250, // Fixed height for the gauge area
+          height: 250,
           child: AspectRatio(
             aspectRatio: 1.0,
             child: Stack(
@@ -108,7 +109,7 @@ class _UnifiedBudgetGaugeState extends State<UnifiedBudgetGauge>
                     Text(
                       '\$${widget.totalSpent.toStringAsFixed(2)}',
                       style: TextStyle(
-                        fontSize: 32, // Increased slightly for impact
+                        fontSize: 32,
                         fontWeight: FontWeight.w900,
                         color: isOverBudget
                             ? Theme.of(context).colorScheme.error
@@ -118,6 +119,7 @@ class _UnifiedBudgetGaugeState extends State<UnifiedBudgetGauge>
                     const SizedBox(height: 4),
                     Text(
                       widget.labelSuffix,
+                      textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 14,
                         color: Theme.of(context).colorScheme.secondary,
@@ -131,7 +133,21 @@ class _UnifiedBudgetGaugeState extends State<UnifiedBudgetGauge>
           ),
         ),
         
-        // 2. The Legend (Optional)
+        // 2. The SubLabel (Moved outside, effectively swapping position with legend if used)
+        if (widget.subLabel != null) ...[
+          const SizedBox(height: 12),
+          Text(
+            widget.subLabel!,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 14,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+
+        // 3. The Legend
         if (widget.showLegend && widget.segments.isNotEmpty) ...[
           const SizedBox(height: 24),
           Wrap(
@@ -188,7 +204,7 @@ class _GaugePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    const strokeWidth = 30.0; // Original thickness maintained
+    const strokeWidth = 34.0;
     const startAngle = -pi / 2;
     final center = Offset(size.width / 2, size.height / 2);
     final radius = (size.width / 2) - (strokeWidth / 2);
@@ -204,7 +220,6 @@ class _GaugePainter extends CustomPainter {
     // Draw Segments
     double currentAngle = 0.0;
     
-    // Determine the denominator (Total Budget, or Total Spent if over budget)
     final denominator = isOverBudget ? totalSpent : totalBudget;
     if (denominator == 0) return;
 
@@ -217,7 +232,7 @@ class _GaugePainter extends CustomPainter {
         ..color = segment.color
         ..style = PaintingStyle.stroke
         ..strokeWidth = strokeWidth
-        ..strokeCap = StrokeCap.butt; // Butt cap for clean segment joins
+        ..strokeCap = StrokeCap.butt;
 
       canvas.drawArc(rect, startAngle + currentAngle, sweepAngle, false, segmentPaint);
       currentAngle += sweepAngle;

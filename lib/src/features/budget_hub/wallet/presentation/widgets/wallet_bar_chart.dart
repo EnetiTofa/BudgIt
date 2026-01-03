@@ -1,8 +1,11 @@
+// lib/src/features/budget_hub/wallet/presentation/widgets/wallet_bar_chart.dart
+
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:budgit/src/core/data/providers/category_list_provider.dart';
 import 'package:budgit/src/features/budget_hub/wallet/presentation/providers/wallet_bar_chart_provider.dart';
+import 'package:budgit/src/features/budget_hub/wallet/presentation/providers/wallet_category_data_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:budgit/src/features/settings/data/settings_provider.dart';
 import 'package:budgit/src/utils/clock_provider.dart';
@@ -23,8 +26,9 @@ class _WalletBarChartState extends ConsumerState<WalletBarChart> with SingleTick
     super.initState();
     _controller = AnimationController(duration: const Duration(milliseconds: 700), vsync: this);
     _animation = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
-    // When the data is first loaded, start the animation.
-    ref.read(walletBarChartDataProvider.future).then((_) {
+    
+    final now = ref.read(clockNotifierProvider).now();
+    ref.read(walletBarChartDataProvider(selectedDate: now).future).then((_) {
       if (mounted) _controller.forward();
     });
   }
@@ -37,29 +41,33 @@ class _WalletBarChartState extends ConsumerState<WalletBarChart> with SingleTick
 
   @override
   Widget build(BuildContext context) {
-    final chartDataAsync = ref.watch(walletBarChartDataProvider);
+    final selectedDate = ref.watch(walletDateProvider);
+    final chartDataAsync = ref.watch(walletBarChartDataProvider(selectedDate: selectedDate));
     final categoriesAsync = ref.watch(categoryListProvider);
     final settingsAsync = ref.watch(settingsProvider);
     final theme = Theme.of(context);
 
-    // Refresh animation if the data changes
-    ref.listen(walletBarChartDataProvider, (_, __) {
+    ref.listen(walletBarChartDataProvider(selectedDate: selectedDate), (_, __) {
       _controller.forward(from: 0.0);
     });
 
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      // --- MODIFICATION: Removed top padding (was 16.0) ---
+      padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 16.0),
       child: Column(
         children: [
-          Text(
-            'Weekly Spending Chart',
-            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+          _WeekSelector(
+            selectedDate: selectedDate,
+            onDateChanged: (newDate) {
+              ref.read(walletDateProvider.notifier).state = newDate;
+            },
           ),
           const SizedBox(height: 24),
-          Expanded(
+          SizedBox(
+            height: 250,
             child: chartDataAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e,s) => const Center(child: Text('Error')),
+              error: (e,s) => Center(child: Text('Error: $e')),
               data: (chartData) {
                 const double interval = 5.0;
                 final roundedMaxY = chartData.maxY > 0 
@@ -77,7 +85,7 @@ class _WalletBarChartState extends ConsumerState<WalletBarChart> with SingleTick
                         gridData: FlGridData(
                           show: true,
                           drawVerticalLine: false,
-                          horizontalInterval: interval, // Use the fixed interval for grid lines
+                          horizontalInterval: interval,
                           getDrawingHorizontalLine: (value) {
                             return FlLine(
                               color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
@@ -88,14 +96,12 @@ class _WalletBarChartState extends ConsumerState<WalletBarChart> with SingleTick
                         ),
                         extraLinesData: ExtraLinesData(
                           horizontalLines: [
-                            // This is the target spending line
                             HorizontalLine(
                               y: chartData.dailyWalletTarget * _animation.value,
                               color: Colors.redAccent.withOpacity(0.8),
                               strokeWidth: 1,
                               dashArray: [5, 5],
                             ),
-                            // This is the average spending line
                             HorizontalLine(
                               y: chartData.averageDailySpend * _animation.value,
                               color: theme.colorScheme.primary.withOpacity(0.8),
@@ -113,13 +119,12 @@ class _WalletBarChartState extends ConsumerState<WalletBarChart> with SingleTick
                               reservedSize: 28,
                               interval: interval,
                               getTitlesWidget: (value, meta) {
-                                // --- FIX #1: Use meta: meta ---
                                 if (value == meta.max) {
                                   return SideTitleWidget(meta: meta, child: const Text(''));
                                 }
                                 if (value % interval == 0) {
                                   return SideTitleWidget(
-                                    meta: meta, // Changed from axisSide
+                                    meta: meta,
                                     space: 4, 
                                     child: Text(
                                       '${value.toInt()}',
@@ -129,7 +134,6 @@ class _WalletBarChartState extends ConsumerState<WalletBarChart> with SingleTick
                                   );
                                 }
                                 return SideTitleWidget(meta: meta, child: const Text(''));
-                                // --- END OF FIX #1 ---
                               },
                             ),
                           ),
@@ -140,16 +144,22 @@ class _WalletBarChartState extends ConsumerState<WalletBarChart> with SingleTick
                                 return settingsAsync.when(
                                   data: (settings) {
                                     final checkInDay = settings.getCheckInDay();
+                                    final startOfWeek = DateTime(
+                                      selectedDate.year, 
+                                      selectedDate.month, 
+                                      selectedDate.day - (selectedDate.weekday - checkInDay + 7) % 7
+                                    );
                                     
-                                    final now = ref.read(clockNotifierProvider).now();
-                                    final startOfWeek = DateTime(now.year, now.month, now.day - (now.weekday - checkInDay + 7) % 7);
                                     final date = startOfWeek.add(Duration(days: value.toInt()));
                                     final text = DateFormat.E().format(date); 
-                                    final isToday = now.difference(startOfWeek).inDays == value.toInt();
                                     
-                                    // --- FIX #2: Use meta: meta ---
+                                    final now = ref.read(clockNotifierProvider).now();
+                                    final isToday = date.year == now.year && 
+                                                    date.month == now.month && 
+                                                    date.day == now.day;
+                                    
                                     return SideTitleWidget(
-                                      meta: meta, // Changed from axisSide
+                                      meta: meta,
                                       space: 4, 
                                       child: Text(
                                         text, 
@@ -161,9 +171,7 @@ class _WalletBarChartState extends ConsumerState<WalletBarChart> with SingleTick
                                       ),
                                     );
                                   },
-                                  // --- FIX #3: Use meta: meta ---
                                   loading: () => SideTitleWidget(meta: meta, child: const Text('')),
-                                  // --- FIX #4: Use meta: meta ---
                                   error: (e, s) => SideTitleWidget(meta: meta, child: const Text('')),
                                 );
                               },
@@ -209,18 +217,13 @@ class _WalletBarChartState extends ConsumerState<WalletBarChart> with SingleTick
               },
             ),
           ),
+          const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _ChartLegend(
-                color: Colors.redAccent,
-                text: 'Daily Target',
-              ),
-              const SizedBox(width: 24), // Add space between the items
-              _ChartLegend(
-                color: theme.colorScheme.primary,
-                text: 'Daily Average',
-              ),
+              _ChartLegend(color: Colors.redAccent, text: 'Daily Target'),
+              const SizedBox(width: 24),
+              _ChartLegend(color: theme.colorScheme.primary, text: 'Daily Average'),
             ],
           ),
         ],
@@ -239,20 +242,70 @@ class _ChartLegend extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Container(
-          width: 16,
-          height: 4,
-          color: color,
-        ),
+        Container(width: 16, height: 4, color: color),
         const SizedBox(width: 8),
         Text(
           text,
-          // V-- Apply the secondary color from your theme
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
             color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
           ),
         ),
       ],
+    );
+  }
+}
+
+class _WeekSelector extends ConsumerWidget {
+  final DateTime selectedDate;
+  final ValueChanged<DateTime> onDateChanged;
+
+  const _WeekSelector({required this.selectedDate, required this.onDateChanged});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settingsAsync = ref.watch(settingsProvider);
+    
+    return settingsAsync.when(
+      loading: () => const SizedBox(height: 48),
+      error: (_, __) => const SizedBox(height: 48),
+      data: (settings) {
+        final checkInDay = settings.getCheckInDay();
+        final now = ref.read(clockNotifierProvider).now();
+        
+        final startOfSelectedWeek = DateTime(
+          selectedDate.year, 
+          selectedDate.month, 
+          selectedDate.day - (selectedDate.weekday - checkInDay + 7) % 7
+        );
+        final endOfSelectedWeek = startOfSelectedWeek.add(const Duration(days: 6));
+        final startOfCurrentWeek = DateTime(
+          now.year, 
+          now.month, 
+          now.day - (now.weekday - checkInDay + 7) % 7
+        );
+        
+        final canGoNext = startOfSelectedWeek.isBefore(startOfCurrentWeek);
+
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.chevron_left_rounded),
+              onPressed: () => onDateChanged(startOfSelectedWeek.subtract(const Duration(days: 7))),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              '${DateFormat('d MMM').format(startOfSelectedWeek)} - ${DateFormat('d MMM y').format(endOfSelectedWeek)}',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(width: 8),
+            IconButton(
+              icon: Icon(Icons.chevron_right_rounded, color: canGoNext ? null : Theme.of(context).disabledColor.withOpacity(0.3)),
+              onPressed: canGoNext ? () => onDateChanged(startOfSelectedWeek.add(const Duration(days: 7))) : null,
+            ),
+          ],
+        );
+      },
     );
   }
 }

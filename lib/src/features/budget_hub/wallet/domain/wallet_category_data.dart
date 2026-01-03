@@ -8,7 +8,9 @@ class WalletCategoryData extends Equatable {
     required this.spendingToday,
     required this.effectiveWeeklyBudget,
     required this.recommendedDailySpending,
-    required this.daysRemaining, // <-- New required property
+    required this.daysRemaining,
+    required this.currentWeekPattern,
+    required this.averageWeekPattern,
   });
 
   final Category category;
@@ -16,23 +18,51 @@ class WalletCategoryData extends Equatable {
   final double spendingToday;
   final double effectiveWeeklyBudget;
   final double recommendedDailySpending;
-  final int daysRemaining; // <-- New property
-
-  // --- Getters ---
-  double get targetDailyAverage => (category.walletAmount ?? 0.0) / 7;
   
+  final int daysRemaining;
+  final List<double> currentWeekPattern;
+  final List<double> averageWeekPattern;
+
+  // --- Core Getters ---
+
+  /// Average spending per day for the completed days of this week (excluding today).
   double get averageDailySpending {
-    final completedDays = DateTime.now().weekday - 1; // This is a simplified average
-    return completedDays > 0 ? spentInCompletedDays / completedDays : 0.0;
+    final int daysPassed = 7 - daysRemaining;
+    return daysPassed > 0 ? spentInCompletedDays / daysPassed : 0.0;
   }
   
   double get totalSpentThisWeek => spentInCompletedDays + spendingToday;
   double get amountRemainingThisWeek => effectiveWeeklyBudget - totalSpentThisWeek;
 
-  // The faulty getter is now removed.
+  // --- Speedometer Aliases ---
   
-  double get weeklyProgress => (effectiveWeeklyBudget > 0) ? (totalSpentThisWeek / effectiveWeeklyBudget).clamp(0.0, 1.0) : 0.0;
+  /// The "Needle" (Past Performance)
+  double get currentSpeed => averageDailySpending;
+
+  /// The "Target" (Future Recommendation)
+  double get recommendedSpeed => recommendedDailySpending;
+
+  // --- RESTORED: Compatibility Getters ---
+
+  /// Used by: WalletCategoryCard (Main Screen)
+  /// Progress bar value from 0.0 to 1.0
+  double get weeklyProgress => (effectiveWeeklyBudget > 0) 
+      ? (totalSpentThisWeek / effectiveWeeklyBudget).clamp(0.0, 1.0) 
+      : 0.0;
+
+  /// Used by: WalletCategoryCard (Main Screen)
+  /// Static average based on the fixed wallet amount (e.g. $70 / 7 = $10)
+  double get targetDailyAverage => (category.walletAmount ?? 0.0) / 7;
   
   @override
-  List<Object?> get props => [category, spentInCompletedDays, spendingToday, effectiveWeeklyBudget, recommendedDailySpending];
+  List<Object?> get props => [
+    category, 
+    spentInCompletedDays, 
+    spendingToday, 
+    effectiveWeeklyBudget, 
+    recommendedDailySpending,
+    daysRemaining,
+    currentWeekPattern,
+    averageWeekPattern
+  ];
 }
