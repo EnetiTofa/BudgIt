@@ -7,7 +7,7 @@ part of 'wallet_category_data_provider.dart';
 // **************************************************************************
 
 String _$walletCategoryDataHash() =>
-    r'd67b122e4b3ab2cfce2ebf8b59e11b702c46a31f';
+    r'fdccaa1140818352c97c70c6a1bf94d5292fe65e';
 
 /// Copied from Dart SDK
 class _SystemHash {

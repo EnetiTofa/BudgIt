@@ -162,19 +162,7 @@ class _BoostFormState extends ConsumerState<BoostForm> {
                       currentBoostAmount: displayAmount,
                       currentBoostColor: sourceColor,
                     ),
-                    const SizedBox(height: 32),
-
-                    // 2. AMOUNT INPUT
-                    Text("Boost Amount", style: theme.textTheme.labelLarge),
-                    const SizedBox(height: 12),
-                    AmountSliderField(
-                      value: displayAmount,
-                      maxAvailable: sliderMax,
-                      activeColor: sourceColor,
-                      onChanged: (val) => setState(() => _amount = val),
-                    ),
-                    const SizedBox(height: 32),
-
+                    const SizedBox(height: 18),
                     // 3. SOURCE CATEGORY
                     FilteredCategorySelector(
                       labelText: "Take funds from",
@@ -189,6 +177,17 @@ class _BoostFormState extends ConsumerState<BoostForm> {
                             _amount = 0.0; 
                           });
                       },
+                    ),
+                    const SizedBox(height: 18),
+                    Column(
+                      children: [
+                        AmountSliderField(
+                          value: displayAmount,
+                          maxAvailable: sliderMax,
+                          activeColor: sourceColor,
+                          onChanged: (val) => setState(() => _amount = val),
+                        ),
+                      ],
                     ),
                   ],
                 ),

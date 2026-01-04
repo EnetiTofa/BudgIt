@@ -7,7 +7,7 @@ part of 'add_transaction_controller.dart';
 // **************************************************************************
 
 String _$addTransactionControllerHash() =>
-    r'fd56f6f9e9f29325ed358f009bd723d74d3bec56';
+    r'cfed2871b795ad18b7d9238736747eb7c6fd7098';
 
 /// See also [AddTransactionController].
 @ProviderFor(AddTransactionController)

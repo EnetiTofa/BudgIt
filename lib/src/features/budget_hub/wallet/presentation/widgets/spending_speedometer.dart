@@ -5,12 +5,14 @@ import 'package:budgit/src/common_widgets/custom_toggle.dart';
 class SpendingSpeedometer extends StatefulWidget {
   final double currentSpeed;      // Average Daily Spending (Past)
   final double recommendedSpeed;  // Recommended Daily Spending (Future)
+  final int daysRemaining;        // Days remaining in the period
   final Color color;              // This is the CATEGORY color
 
   const SpendingSpeedometer({
     super.key,
     required this.currentSpeed,
     required this.recommendedSpeed,
+    required this.daysRemaining,
     required this.color,
   });
 
@@ -19,7 +21,8 @@ class SpendingSpeedometer extends StatefulWidget {
 }
 
 class _SpendingSpeedometerState extends State<SpendingSpeedometer> with SingleTickerProviderStateMixin {
-  String _selectedMode = "Average";
+  // 1. Set default mode to Recommended
+  String _selectedMode = "Recommended";
   
   late AnimationController _controller;
   late Animation<double> _animation;
@@ -31,7 +34,11 @@ class _SpendingSpeedometerState extends State<SpendingSpeedometer> with SingleTi
   @override
   void initState() {
     super.initState();
-    _endValue = widget.currentSpeed;
+    
+    // 2. FIX: Initialize _endValue based on the default mode
+    // Previously it was hardcoded to widget.currentSpeed
+    _endValue = _selectedMode == "Average" ? widget.currentSpeed : widget.recommendedSpeed;
+    
     _beginValue = 0.0; 
 
     _controller = AnimationController(
@@ -110,19 +117,56 @@ class _SpendingSpeedometerState extends State<SpendingSpeedometer> with SingleTi
         ),
         
         // Spacing between Needle Pivot and Text
-        const SizedBox(height: 28),
+        const SizedBox(height: 24), // Reduced slightly to keep it tight
 
-        // 2. The Value Text (Now outside the paint area to avoid overlap)
+        // 2. The Value Text & Subtitle
         AnimatedBuilder(
           animation: _animation,
           builder: (context, child) {
-            return Text(
-              "\$${_animation.value.toStringAsFixed(2)}",
-              style: theme.textTheme.headlineLarge?.copyWith(
-                fontWeight: FontWeight.w900,
-                color: theme.colorScheme.primary, // Requested: Theme Primary Color
-                fontSize: 40 * sizeScale, 
-              ),
+            // Determine Subtitle based on mode
+            String subtitle;
+            if (_selectedMode == "Average") {
+               subtitle = "Current average"; 
+            } else {
+               subtitle = "for next ${widget.daysRemaining} days";
+            }
+
+            return Column(
+              children: [
+                // Main Value Row: "$12.00 / day"
+                RichText(
+                  text: TextSpan(
+                    style: theme.textTheme.headlineLarge?.copyWith(
+                      fontWeight: FontWeight.w900,
+                      color: theme.colorScheme.primary,
+                      fontSize: 32 * sizeScale, 
+                    ),
+                    children: [
+                      TextSpan(
+                        text: "\$${_animation.value.toStringAsFixed(2)}"
+                      ),
+                      TextSpan(
+                        text: " / day",
+                        style: TextStyle(
+                          fontSize: 20 * sizeScale,
+                          fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.primary.withOpacity(0.8),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                // Subtitle
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             );
           },
         ),

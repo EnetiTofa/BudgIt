@@ -39,7 +39,6 @@ class BoostState extends _$BoostState {
     final clock = ref.watch(clockNotifierProvider);
 
     // Fetch existing adjustments from DB
-    // Assuming getWalletAdjustments returns List<WalletAdjustment>
     final adjustments = await repository.getWalletAdjustments(toCategory.id, clock.now());
     
     // Map them: FromCategoryId -> Amount
@@ -71,14 +70,17 @@ class BoostState extends _$BoostState {
     final repository = ref.read(transactionRepositoryProvider);
     final clock = ref.read(clockNotifierProvider);
     final currentMap = state.value!.currentBoosts;
+    
+    // 1. Capture the date context BEFORE entering loading state
+    final currentDate = ref.read(walletDateProvider);
 
     state = const AsyncValue.loading();
 
     try {
-      // 1. Clear old adjustments for this target
+      // 2. Clear old adjustments for this target
       await repository.deleteWalletAdjustments(toCategory.id, clock.now());
 
-      // 2. Save new adjustments
+      // 3. Save new adjustments
       for (var entry in currentMap.entries) {
         final adjustment = WalletAdjustment(
           id: '${entry.key}_${toCategory.id}_${clock.now().millisecondsSinceEpoch}',
@@ -90,17 +92,16 @@ class BoostState extends _$BoostState {
         await repository.addWalletAdjustment(adjustment);
       }
 
-      // 3. UPDATE LOCAL STATE (Crucial for UI update)
-      // The "Draft" (current) becomes the "Initial" (saved)
+      // 4. UPDATE LOCAL STATE
       state = AsyncValue.data(BoostControllerState(
         initialBoosts: currentMap,
         currentBoosts: currentMap,
       ));
 
-      // 4. INVALIDATE DATA PROVIDERS
-      // This forces the "Speedometer" and "Gauge" to recalculate with the new budget
-      // Note: We use the family provider, so we must invalidate the specific instance
-      ref.invalidate(walletCategoryDataProvider);
+      // 5. INVALIDATE DATA PROVIDER
+      // We must invalidate the specific family instance using the current date
+      // so the UI listeners actually trigger a refresh.
+      ref.invalidate(walletCategoryDataProvider(selectedDate: currentDate));
       
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);

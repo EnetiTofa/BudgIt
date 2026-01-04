@@ -31,6 +31,7 @@ class AmountSliderField extends StatelessWidget {
              final clamped = val.clamp(0.0, maxAvailable);
              onChanged(clamped);
           },
+          height: 50,
           // Optional: You can pass a label or style here
           style: CurrencyInputFieldStyle.outlined, 
           // Assuming your CurrencyInputField supports a controller or key updates,

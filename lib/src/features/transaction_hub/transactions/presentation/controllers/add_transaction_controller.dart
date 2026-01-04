@@ -22,6 +22,11 @@ class AddTransactionController extends _$AddTransactionController {
 
   /// Helper method to invalidate all data providers and trigger a UI refresh.
   void _invalidateProviders() {
+    // 1. INVALIDATE THE SOURCE OF TRUTH (Crucial Fix)
+    // This forces the app to re-fetch the raw list from Hive.
+    ref.invalidate(rawTransactionsProvider);
+
+    // 2. Invalidate derived providers
     ref.invalidate(transactionLogProvider);
     ref.invalidate(categoryListProvider);
     ref.invalidate(recurringTransactionsProvider);

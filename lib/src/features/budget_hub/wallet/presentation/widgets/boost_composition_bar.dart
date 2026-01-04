@@ -40,7 +40,7 @@ class BoostCompositionBar extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainer,
+        color: theme.colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -48,10 +48,15 @@ class BoostCompositionBar extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("Total Capacity", style: theme.textTheme.labelMedium),
+              Text("Total Capacity", 
+              style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                  ),
+              ),
               Text(
-                "\$${totalCapacity.toStringAsFixed(0)}",
-                style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                "\$${totalCapacity.toStringAsFixed(2)}",
+                style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, fontSize: 16),
               ),
             ],
           ),
@@ -69,8 +74,8 @@ class BoostCompositionBar extends StatelessWidget {
                         flex: (basePct * 1000).toInt(),
                         child: Container(
                           decoration: BoxDecoration(
-                            color: Color(targetCategory.colorValue).withOpacity(0.4),
-                            borderRadius: BorderRadius.horizontal(left: const Radius.circular(8)),
+                            color: Color(targetCategory.colorValue),
+                            borderRadius: BorderRadius.horizontal(left: const Radius.circular(4)),
                           ),
                         ),
                       ),
@@ -87,7 +92,7 @@ class BoostCompositionBar extends StatelessWidget {
                         child: Container(
                           decoration: BoxDecoration(
                             color: currentBoostColor ?? theme.colorScheme.primary,
-                            borderRadius: BorderRadius.horizontal(right: const Radius.circular(8)),
+                            borderRadius: BorderRadius.horizontal(right: const Radius.circular(4)),
                           ),
                         ),
                       ),
@@ -117,7 +122,7 @@ class BoostCompositionBar extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _LegendItem(color: Color(targetCategory.colorValue).withOpacity(0.4), label: "Base"),
+              _LegendItem(color: Color(targetCategory.colorValue), label: "Base"),
               const SizedBox(width: 12),
               if (otherBoostsTotal > 0) ...[
                 _LegendItem(color: Colors.grey.withOpacity(0.3), label: "Others"),
