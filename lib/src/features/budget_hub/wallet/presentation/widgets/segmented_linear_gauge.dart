@@ -24,23 +24,18 @@ class SegmentedLinearGauge extends StatelessWidget {
     
     // Logic: Warning colors if overspent
     final isOverspent = spent > totalBudget;
+    final valueColor = isOverspent ? Colors.redAccent : foregroundColor;
     
-    // Text Color: Yellow if overspent, else Foreground
-    final valueColor = isOverspent ? Colors.yellow.shade200 : foregroundColor;
-    
-    // Gauge Colors (Matching WalletCategoryCard)
-    // Track: Surface with 0.7 opacity
+    // Gauge Colors
     final trackColor = theme.colorScheme.surface.withOpacity(0.7);
-    
-    // Fill: Category Color (backgroundColor) with 0.7 opacity OR Yellow if overspent
     final gaugeFillColor = isOverspent 
-        ? Colors.yellow.shade200 
+        ? Colors.redAccent
         : backgroundColor.withOpacity(0.7);
 
     return Card(
       elevation: 0,
       clipBehavior: Clip.antiAlias,
-      color: backgroundColor, // Card is Category Color
+      color: backgroundColor,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       margin: EdgeInsets.zero, 
       child: Padding(
@@ -49,7 +44,7 @@ class SegmentedLinearGauge extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header Row: Title & RichText Amount
+            // Header Row
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -89,64 +84,89 @@ class SegmentedLinearGauge extends StatelessWidget {
             
             // The Gauge Bar
             SizedBox(
-              height: 16, 
+              height: 16,
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   final maxWidth = constraints.maxWidth;
                   final safeBudget = totalBudget > 0 ? totalBudget : 1.0;
-                  
-                  // Build Segments
+
+                  // Find the last index that actually has spending
+                  final int lastActiveIndex = dailySpending.lastIndexWhere((amount) => amount > 0);
+
                   List<Widget> segmentWidgets = [];
                   double currentX = 0.0;
-                  const double gap = 2.0;
+                  const double gapSize = 2.0;
 
-                  for (final dayAmount in dailySpending) {
+                  for (int i = 0; i < dailySpending.length; i++) {
+                    final dayAmount = dailySpending[i];
                     if (dayAmount <= 0) continue;
-                    
-                    final double rawWidth = (dayAmount / safeBudget) * maxWidth;
+
+                    // 1. Check if visually last
+                    final bool isVisuallyLast = (i == lastActiveIndex);
+
+                    // 2. Calculate Width
+                    final double rawTotalWidth = (dayAmount / safeBudget) * maxWidth;
+
+                    // 3. Gap Logic: 0.0 if it's the last visible bar
+                    final double actualGap = isVisuallyLast ? 0.0 : gapSize;
+
+                    // 4. Color Bar Width
+                    double colorBarWidth = rawTotalWidth - actualGap;
+                    if (colorBarWidth < 0) colorBarWidth = 0;
+
                     if (currentX >= maxWidth) break;
                     
-                    double drawWidth = rawWidth;
-                    if (currentX + drawWidth > maxWidth) {
-                      drawWidth = maxWidth - currentX;
+                    if (currentX + colorBarWidth > maxWidth) {
+                      colorBarWidth = maxWidth - currentX;
                     }
-                    
-                    final double visibleWidth = (drawWidth - gap).clamp(0.0, maxWidth);
-                    
-                    if (visibleWidth > 0) {
-                      segmentWidgets.add(
-                        Positioned(
-                          left: currentX,
-                          width: visibleWidth,
-                          top: 0, 
-                          bottom: 0,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: gaugeFillColor, // The requested fill color
-                              // Only round the very first segment's left side
-                              borderRadius: BorderRadius.horizontal(
-                                left: (currentX == 0) ? const Radius.circular(10) : Radius.zero,
-                              ),
-                            ),
+
+                    // 5. Draw Segment
+                    segmentWidgets.add(Positioned(
+                      left: currentX,
+                      width: colorBarWidth,
+                      top: 0,
+                      bottom: 0,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: gaugeFillColor,
+                          borderRadius: BorderRadius.horizontal(
+                            // Left is rounded only at start of gauge
+                            left: (currentX == 0) ? const Radius.circular(10) : Radius.zero,
+                            // Right is ALWAYS flat (Radius.zero)
+                            right: Radius.zero,
                           ),
-                        )
-                      );
+                        ),
+                      ),
+                    ));
+
+                    // 6. Draw Separator (Only if NOT visually last)
+                    if (!isVisuallyLast && (currentX + colorBarWidth + actualGap <= maxWidth)) {
+                      segmentWidgets.add(Positioned(
+                        left: currentX + colorBarWidth,
+                        width: actualGap,
+                        top: 0,
+                        bottom: 0,
+                        child: Container(
+                          color: backgroundColor, 
+                        ),
+                      ));
                     }
-                    currentX += drawWidth;
+
+                    currentX += (colorBarWidth + actualGap);
                   }
 
+                  // ClipRRect ensures that if the bar hits 100%, the outer edges are still rounded
                   return ClipRRect(
                     borderRadius: BorderRadius.circular(10),
                     child: Stack(
                       children: [
-                        // 1. Unfilled Track (Requested: Surface with 0.7 opacity)
+                        // Track
                         Container(
-                          color: trackColor, 
+                          color: trackColor,
                           width: double.infinity,
                           height: double.infinity,
                         ),
-                        
-                        // 2. Spending Segments
+                        // Segments
                         ...segmentWidgets,
                       ],
                     ),

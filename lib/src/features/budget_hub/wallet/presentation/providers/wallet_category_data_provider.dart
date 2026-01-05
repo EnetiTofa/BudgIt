@@ -108,46 +108,48 @@ Future<List<WalletCategoryData>> walletCategoryData(
     final double baseBudget = category.walletAmount!;
     final double effectiveWeeklyBudget = baseBudget + incoming; 
 
-    // D. Physics
+    // D. Physics (UPDATED)
     int daysRemaining;
     if (isCurrentWeek) {
       final daysPassedInWeek = now.difference(startOfCurrentWeek).inDays;
+      // daysRemaining includes today (e.g. if 0 days passed, 7 remain)
       daysRemaining = (7 - daysPassedInWeek).clamp(1, 7);
     } else {
       daysRemaining = 0;
     }
 
-    final double budgetRemaining = effectiveWeeklyBudget - (spentInCompletedDays + spendingToday);
+    // -- TWEAK START --
+    // We only subtract 'spentInCompletedDays'. 
+    // This gives us the budget available at 00:00 this morning.
+    // Spending 'today' will not lower the recommendation until tomorrow.
+    final double budgetAvailableAtStartOfDay = effectiveWeeklyBudget - spentInCompletedDays;
     
     final double recommendedDailySpending = daysRemaining > 0 
-        ? (budgetRemaining / daysRemaining).clamp(0.0, double.infinity) 
+        ? (budgetAvailableAtStartOfDay / daysRemaining).clamp(0.0, double.infinity) 
         : 0.0;
+    // -- TWEAK END --
 
-    // E. Average Pattern Calculation (NEW)
+    // E. Average Pattern Calculation
     final List<double> averageWeekPattern = List.filled(7, 0.0);
     
-    // 1. Filter history: All past walleted transactions for this category
     final historyTxs = transactionLog
         .whereType<OneOffPayment>()
         .where((p) => p.isWalleted && 
                       p.category.id == category.id && 
-                      p.date.isBefore(startOfSelectedWeek)); // Only strictly past weeks
+                      p.date.isBefore(startOfSelectedWeek));
                       
     if (historyTxs.isNotEmpty) {
-      // 2. Find range (First transaction date -> Start of this week)
       DateTime minDate = historyTxs.first.date;
       for (final tx in historyTxs) {
          if (tx.date.isBefore(minDate)) minDate = tx.date;
       }
       
-      // Align minDate to the start of its wallet week
       final startOfMinWeek = DateTime(
          minDate.year, 
          minDate.month, 
          minDate.day - (minDate.weekday - checkInDay + 7) % 7
       );
 
-      // 3. Count weeks
       final diffDays = startOfSelectedWeek.difference(startOfMinWeek).inDays;
       final numberOfWeeks = (diffDays / 7).ceil();
 
@@ -155,7 +157,6 @@ Future<List<WalletCategoryData>> walletCategoryData(
         final List<double> totals = List.filled(7, 0.0);
         
         for (final tx in historyTxs) {
-           // Index 0-6 based on CheckInDay
            final dayIndex = (tx.date.weekday - checkInDay + 7) % 7;
            totals[dayIndex] += tx.amount;
         }

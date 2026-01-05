@@ -131,6 +131,7 @@ class _AddBoostButton extends StatelessWidget {
       icon: const Icon(Icons.add_circle_outline),
       label: const Text("Add Boost"),
       style: OutlinedButton.styleFrom(
+        backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest, // Added background color
         minimumSize: const Size(double.infinity, 55),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),

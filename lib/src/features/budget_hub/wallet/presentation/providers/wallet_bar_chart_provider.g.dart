@@ -7,7 +7,7 @@ part of 'wallet_bar_chart_provider.dart';
 // **************************************************************************
 
 String _$walletBarChartDataHash() =>
-    r'9ffcc964ad547fc0da3f8d093c75bdea0356076c';
+    r'3a8c0183f0af4ae476485db3ddce669a6d316b7a';
 
 /// Copied from Dart SDK
 class _SystemHash {

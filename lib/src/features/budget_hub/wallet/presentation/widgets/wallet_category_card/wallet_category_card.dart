@@ -98,7 +98,7 @@ class _WalletCategoryCardState extends ConsumerState<WalletCategoryCard> with Si
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
-                            color: isOverspent ? Colors.yellow.shade200 : contentColor,
+                            color: isOverspent ? Colors.redAccent : contentColor,
                           ),
                         ),
                         TextSpan(
@@ -125,7 +125,7 @@ class _WalletCategoryCardState extends ConsumerState<WalletCategoryCard> with Si
                         value: _animation.value,
                         backgroundColor: theme.colorScheme.surface.withOpacity(0.7),
                         valueColor: AlwaysStoppedAnimation<Color>(
-                          isOverspent ? Colors.yellow.shade200 : data.category.color.withOpacity(0.7)
+                          isOverspent ? Colors.redAccent : data.category.color.withOpacity(0.7)
                         ),
                       ),
                     );

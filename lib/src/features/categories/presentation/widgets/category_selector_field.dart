@@ -142,18 +142,25 @@ class _CategorySelectorFieldState extends ConsumerState<CategorySelectorField>
     final textTheme = theme.textTheme;
 
     final hasCategory = widget.selectedCategory != null;
-    final backgroundColor =
-        hasCategory ? widget.selectedCategory!.color : colorScheme.surfaceVariant;
+    
+    // --- UPDATED BACKGROUND & BORDER LOGIC ---
+    // If selected: Use category color, no border.
+    // If not selected: surfaceContainerLowest, outline border.
+    final backgroundColor = hasCategory 
+        ? widget.selectedCategory!.color 
+        : colorScheme.surfaceContainerLowest; // Changed from Transparent
+        
+    final border = hasCategory 
+        ? null 
+        : Border.all(color: colorScheme.outline);
 
-    // --- NEW LOGIC FOR CONTENT COLOR ---
+    // --- CONTENT COLOR LOGIC ---
     final Color contentColor;
     if (hasCategory) {
-      final brightness = ThemeData.estimateBrightnessForColor(widget.selectedCategory!.color);
-      contentColor = brightness == Brightness.dark ? Colors.white : const Color(0xFF121212);
+      contentColor = widget.selectedCategory!.contentColor;
     } else {
-      contentColor = colorScheme.onSurfaceVariant;
+      contentColor = colorScheme.onSurface;
     }
-    // --- END NEW LOGIC ---
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -178,6 +185,7 @@ class _CategorySelectorFieldState extends ConsumerState<CategorySelectorField>
             decoration: BoxDecoration(
               color: backgroundColor,
               borderRadius: BorderRadius.circular(12.0),
+              border: border, // Outline applied when empty
             ),
             clipBehavior: Clip.antiAlias,
             child: Material(
@@ -253,12 +261,7 @@ class _CategorySelectionMenu extends ConsumerWidget {
           ),
         ),
         trailing: isSelected
-            ? Radio<String>(
-                value: category.id,
-                groupValue: selectedCategory?.id,
-                onChanged: (_) {},
-                activeColor: colorScheme.primary,
-              )
+            ? Icon(Icons.check_rounded, color: colorScheme.primary)
             : null,
         onTap: () => onCategorySelected(category),
         dense: true,

@@ -40,10 +40,15 @@ class _FilteredCategorySelectorState extends State<FilteredCategorySelector>
 
   @override
   void dispose() {
-    _animationController.dispose();
-    _removeOverlay();
-    super.dispose();
+  // If the overlay is open, remove it immediately without animating
+  if (_overlayEntry != null) {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
   }
+  
+  _animationController.dispose();
+  super.dispose();
+}
 
   void _toggleDropdown() {
     if (_isDropdownOpen) {

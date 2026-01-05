@@ -19,7 +19,6 @@ class WeeklyPatternChart extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     
-    // 1. Prepare the TextStyle here
     final labelStyle = theme.textTheme.titleMedium?.copyWith(
       color: theme.colorScheme.onSurfaceVariant,
       fontSize: 12,
@@ -31,7 +30,8 @@ class WeeklyPatternChart extends StatelessWidget {
     );
 
     return Container(
-      padding: const EdgeInsets.all(16.0),
+      // 1. Reduced vertical padding (16 -> 12) to tighten the top/bottom
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(16),
@@ -39,13 +39,51 @@ class WeeklyPatternChart extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            "Weekly Pattern", 
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "Weekly Pattern", 
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              IconButton(
+                icon: Icon(Icons.info_outline, size: 20, color: theme.colorScheme.onSurfaceVariant),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(), // Keeps the button footprint minimal
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text("Weekly Pattern"),
+                      content: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text("This chart compares your spending this week against your historical habits."),
+                          const SizedBox(height: 16),
+                          _buildLegendItem(context, "Historical Average", theme.colorScheme.surfaceContainerHighest),
+                          const SizedBox(height: 8),
+                          _buildLegendItem(context, "This Week", color),
+                        ],
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text("Got it"),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
+          
+          // 2. Reduced spacing between Header and Chart (16 -> 10)
+          const SizedBox(height: 10),
+          
           SizedBox(
             height: 140,
             width: double.infinity,
@@ -62,6 +100,23 @@ class WeeklyPatternChart extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildLegendItem(BuildContext context, String label, Color color) {
+    return Row(
+      children: [
+        Container(
+          width: 16,
+          height: 16,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(4),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Text(label, style: Theme.of(context).textTheme.bodyMedium),
+      ],
     );
   }
 }
@@ -85,7 +140,6 @@ class _PatternPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // 1. Increase gap: Reserve 30px at bottom for labels (was 20)
     final double chartHeight = size.height - 30;
     final double labelY = size.height - 10; 
 
@@ -102,7 +156,7 @@ class _PatternPainter extends CustomPainter {
     for (int i = 0; i < 7; i++) {
       final x = slotWidth * i + slotWidth / 2;
       
-      // 2. Draw Ghost Bars (Top Corners Rounded Only)
+      // Draw Ghost Bars
       final hAvg = (average[i] / maxVal) * chartHeight;
       if (hAvg > 0) {
         canvas.drawRRect(
@@ -115,7 +169,7 @@ class _PatternPainter extends CustomPainter {
         );
       }
 
-      // 3. Draw Current Bars (Top Corners Rounded Only)
+      // Draw Current Bars
       final hCur = (current[i] / maxVal) * chartHeight;
       if (hCur > 0) {
         canvas.drawRRect(
