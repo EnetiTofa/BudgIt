@@ -20,7 +20,6 @@ class FakeTransactionRepository implements TransactionRepository {
   int _checkInStreak = 0;
   DateTime? _lastCheckInDate;
   List<String> _recentIcons = [];
-  int _streakCount = 0;
   final List<DateTime> _checkInHistory = [];
 
   // --- Transaction Methods ---
@@ -182,13 +181,11 @@ class FakeTransactionRepository implements TransactionRepository {
       _lastCheckInDate = date;
 
       if (isSuccess) {
-        _streakCount++;
         // Add to history if it's not already there (simple check)
         if (!_checkInHistory.contains(date)) {
           _checkInHistory.add(date);
         }
       } else {
-        _streakCount = 0;
       }
     }
 
