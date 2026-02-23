@@ -285,4 +285,61 @@ class CheckInController extends _$CheckInController {
 
     return isSuccess;
   }
+
+  // --- NEW: Surgical Undo Logic ---
+  Future<bool> undoLastCheckIn() async {
+    final repository = ref.read(transactionRepositoryProvider);
+    
+    // 1. Get the snapshot
+    final undoState = await repository.getUndoCheckInState();
+    if (undoState == null) return false; // Nothing to undo
+
+    final date = undoState['date'] as DateTime;
+    final savedAmount = undoState['savedAmount'] as double;
+    final previousStreak = undoState['previousStreak'] as int;
+    final wasSuccess = undoState['wasSuccess'] as bool;
+
+    // 2. Reverse Savings
+    if (savedAmount > 0) {
+      // Add a negative amount to subtract from total savings
+      await repository.addToSavings(-savedAmount); 
+    }
+
+    // 3. Reverse Rollovers & Debt
+    // Deletes ONLY the rollovers created at that exact millisecond
+    await repository.deleteRolloverAdjustments(date);
+
+    // 4. Reverse Streak
+    await repository.setCheckInStreak(previousStreak);
+
+    // 5. Reverse Check-In History
+    if (wasSuccess) {
+      final history = await repository.getSuccessfulCheckInDates();
+      history.removeWhere((d) => d.isAtSameMomentAs(date));
+      await repository.setCheckInHistory(history);
+    }
+
+    // 6. Reset Last Check-In Date 
+    // We need to look at the history to find the previous date, 
+    // or just clear it so the app knows they haven't checked in this week.
+    await repository.clearLastCheckInDate();
+    final history = await repository.getSuccessfulCheckInDates();
+    if (history.isNotEmpty) {
+      // Sort to find the most recent past check-in
+      history.sort((a, b) => b.compareTo(a)); 
+      await repository.setLastCheckInDate(history.first);
+    }
+
+    // 7. Clear the snapshot so they can't spam the undo button
+    await repository.clearUndoCheckInState();
+
+    // 8. Refresh the app
+    ref.invalidate(checkInStreakProvider);
+    ref.invalidate(isCheckInAvailableProvider);
+    ref.invalidate(appBarInfoProvider);
+    ref.invalidate(totalSavingsProvider);
+    ref.invalidate(walletCategoryDataProvider);
+
+    return true;
+  }
 }

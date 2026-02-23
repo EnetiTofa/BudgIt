@@ -246,4 +246,47 @@ class FakeTransactionRepository implements TransactionRepository {
   Future<List<String>> getRecentIcons() async {
     return _recentIcons;
   }
+  
+  Map<String, dynamic>? _undoState;
+
+  @override
+  Future<void> saveUndoCheckInState({required DateTime date, required double savedAmount, required int previousStreak, required bool wasSuccess}) async {
+    _undoState = {
+      'date': date,
+      'savedAmount': savedAmount,
+      'previousStreak': previousStreak,
+      'wasSuccess': wasSuccess,
+    };
+  }
+
+  @override
+  Future<Map<String, dynamic>?> getUndoCheckInState() async {
+    return _undoState;
+  }
+
+  @override
+  Future<void> clearUndoCheckInState() async {
+    _undoState = null;
+  }
+
+  @override
+  Future<void> deleteRolloverAdjustments(DateTime date) async {
+    _adjustments.removeWhere((a) => a.fromCategoryId == 'rollover' && a.date.isAtSameMomentAs(date));
+  }
+
+  @override
+  Future<void> setCheckInStreak(int streak) async {
+    _checkInStreak = streak;
+  }
+
+  @override
+  Future<void> setCheckInHistory(List<DateTime> history) async {
+    _checkInHistory.clear();
+    _checkInHistory.addAll(history);
+  }
+
+  @override
+  Future<void> clearLastCheckInDate() async {
+    _lastCheckInDate = null;
+  }
 }

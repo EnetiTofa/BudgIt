@@ -75,4 +75,16 @@ abstract class TransactionRepository {
 
   Future<void> saveRecentIcons(List<String> iconNames);
   Future<List<String>> getRecentIcons();
+
+  // ... Keep all existing methods ...
+
+  // --- UNDO CHECK-IN METHODS ---
+  Future<void> saveUndoCheckInState({required DateTime date, required double savedAmount, required int previousStreak, required bool wasSuccess});
+  Future<Map<String, dynamic>?> getUndoCheckInState();
+  Future<void> clearUndoCheckInState();
+  
+  Future<void> deleteRolloverAdjustments(DateTime date);
+  Future<void> setCheckInStreak(int streak);
+  Future<void> setCheckInHistory(List<DateTime> history);
+  Future<void> clearLastCheckInDate();
 }

@@ -34,10 +34,10 @@ class WalletScreen extends ConsumerWidget {
 
         return ListView(
           // --- MODIFICATION: Reduced top padding to 0 ---
-          padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 16.0),
+          padding: const EdgeInsets.fromLTRB(16.0, 24.0, 16.0, 16.0),
           children: [
             const WalletBarChart(),
-            const SizedBox(height: 4),
+            const SizedBox(height: 12),
             Column(
               children: data.map((d) => Padding(
                 // --- MODIFICATION: Added bottom padding to increase gap between cards ---

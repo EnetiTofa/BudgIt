@@ -11,8 +11,8 @@ import 'package:budgit/src/features/transaction_hub/transactions/presentation/co
 import 'package:budgit/src/features/check_in/presentation/providers/streak_provider.dart';
 import 'package:budgit/src/features/check_in/presentation/providers/app_bar_info_provider.dart';
 import 'package:budgit/src/features/debug/presentation/time_machine_screen.dart';
-
-
+// Note: Ensure this path matches your project structure for CheckInController
+import 'package:budgit/src/features/check_in/presentation/controllers/check_in_controller.dart'; 
 
 class MenuScreen extends ConsumerWidget {
   const MenuScreen({super.key});
@@ -34,17 +34,78 @@ class MenuScreen extends ConsumerWidget {
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Confirm'),
             style: FilledButton.styleFrom(
               backgroundColor: title.toLowerCase().contains('delete')
                   ? Theme.of(context).colorScheme.error
                   : null,
             ),
+            child: const Text('Confirm'),
           ),
         ],
       ),
     );
     return confirmed ?? false;
+  }
+
+  // --- NEW: Inline Undo Logic ---
+  Future<void> _handleUndoCheckIn(BuildContext context, WidgetRef ref) async {
+    final theme = Theme.of(context);
+    
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.orange),
+            SizedBox(width: 8),
+            Text('Undo Check-In?'),
+          ],
+        ),
+        content: const Text(
+          'This will safely reverse your most recent check-in, reverting your savings, rollovers, and streak to exactly how they were before you confirmed it.\n\nAre you sure?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text('Cancel', style: TextStyle(color: theme.colorScheme.secondary)),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: FilledButton.styleFrom(backgroundColor: Colors.orange.shade700),
+            child: const Text('Yes, Undo'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Reversing check-in...')),
+      );
+    }
+
+    final success = await ref.read(checkInControllerProvider.notifier).undoLastCheckIn();
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Check-in successfully undone!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('No recent check-in found to undo.'),
+            backgroundColor: theme.colorScheme.error,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -74,6 +135,14 @@ class MenuScreen extends ConsumerWidget {
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, s) => const SizedBox.shrink(),
         ),
+        
+        // --- MODIFICATION: Standardized Undo Tile ---
+        ListTile(
+          leading: const Icon(Icons.undo_rounded),
+          title: const Text('Undo Last Check-in'),
+          onTap: () => _handleUndoCheckIn(context, ref),
+        ),
+
         ListTile(
           leading: const Icon(Icons.calendar_month_outlined),
           title: const Text('Set Check-in Day'),
@@ -162,11 +231,8 @@ class MenuScreen extends ConsumerWidget {
           ListTile(
             leading: const Icon(Icons.bug_report, color: Colors.orange),
             title: const Text('DEBUG: Reset Check-in'),
-            // 1. Make the function async
             onTap: () async { 
-              // 2. Await the controller so Hive finishes deleting
               await ref.read(addTransactionControllerProvider.notifier).debugResetCheckInData();
-              // 3. Now it is safe to invalidate the UI
               ref.invalidate(isCheckInAvailableProvider);
             },
           ),

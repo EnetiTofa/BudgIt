@@ -1,9 +1,12 @@
-// lib/src/features/budgets/presentation/screens/budget_hub_screen.dart
+// lib/src/features/budget_hub/presentation/screens/budget_hub_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:budgit/src/features/budget_hub/budgets/presentation/screens/budgets_screen.dart';
-import 'package:budgit/src/features/budget_hub/savings/presentation/savings_screen.dart';
 import 'package:budgit/src/features/budget_hub/wallet/presentation/screens/wallet_screen.dart';
+import 'package:budgit/src/core/data/providers/category_list_provider.dart';
+
+// Note: SavingsScreen import is temporarily commented out while locked
+// import 'package:budgit/src/features/budget_hub/savings/presentation/savings_screen.dart';
 
 class BudgetHubScreen extends ConsumerStatefulWidget {
   final int initialTabIndex;
@@ -30,10 +33,15 @@ class _BudgetHubScreenState extends ConsumerState<BudgetHubScreen> with SingleTi
 
   @override
   Widget build(BuildContext context) {
-    // --- MODIFICATION: Removed Scaffold and AppBar ---
+    // 1. Check if the user has any categories
+    final categoriesAsync = ref.watch(categoryListProvider);
+    final isLocked = categoriesAsync.maybeWhen(
+      data: (categories) => categories.isEmpty,
+      orElse: () => false, // Default to unlocked while loading to prevent UI flashing
+    );
+
     return Column(
       children: [
-        // --- MODIFICATION: The TabBar now lives here ---
         Container(
           color: Theme.of(context).appBarTheme.backgroundColor,
           child: TabBar(
@@ -48,26 +56,97 @@ class _BudgetHubScreenState extends ConsumerState<BudgetHubScreen> with SingleTi
               ),
               borderRadius: const BorderRadius.all(Radius.circular(2)),
             ),
-            tabs: const [
-              Tab(text: 'Wallet', icon: Icon(Icons.wallet_outlined)),
-              Tab(text: 'Budgets', icon: Icon(Icons.track_changes_outlined)),
-              Tab(text: 'Savings', icon: Icon(Icons.savings_outlined)),
+            tabs: [
+              // 2. Change icons dynamically based on lock status
+              Tab(text: 'Wallet', icon: Icon(isLocked ? Icons.lock_outline : Icons.wallet_outlined)),
+              Tab(text: 'Budgets', icon: Icon(isLocked ? Icons.lock_outline : Icons.track_changes_outlined)),
+              const Tab(text: 'Savings', icon: Icon(Icons.lock_outline)), 
             ],
           ),
         ),
-        // The TabBarView needs to be wrapped in an Expanded widget
-        // so it fills the remaining space in the Column.
         Expanded(
           child: TabBarView(
             controller: _tabController,
-            children: const [
-              WalletScreen(),
-              BudgetsScreen(),
-              SavingsScreen(),
+            children: [
+              // 3. Render the lock screen or the actual screens
+              isLocked ? const _NoCategoriesView() : const WalletScreen(),
+              isLocked ? const _NoCategoriesView() : const BudgetsScreen(),
+              isLocked ? const _NoCategoriesView() : const _LockedSavingsView(), 
             ],
           ),
         ),
       ],
+    );
+  }
+}
+
+// --- NEW: View for when NO categories exist in the app ---
+class _NoCategoriesView extends StatelessWidget {
+  const _NoCategoriesView();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
+    return Padding(
+      padding: const EdgeInsets.all(32.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.lock_outline, 
+            size: 80, 
+            color: theme.colorScheme.secondary.withOpacity(0.5)
+          ),
+          const SizedBox(height: 24),
+          Text(
+            "Hub Locked",
+            style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            "Create your first category to unlock the Wallet and Budgets features!",
+            style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.secondary),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 32),
+        ],
+      ),
+    );
+  }
+}
+
+// --- View for the specific Savings tab lock ---
+class _LockedSavingsView extends StatelessWidget {
+  const _LockedSavingsView();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
+    return Padding(
+      padding: const EdgeInsets.all(32.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.lock_outline, 
+            size: 80, 
+            color: theme.colorScheme.secondary.withOpacity(0.5)
+          ),
+          const SizedBox(height: 24),
+          Text(
+            "Savings Locked",
+            style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            "The savings feature is currently locked. Check back later to start tracking your goals!",
+            style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.secondary),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
     );
   }
 }

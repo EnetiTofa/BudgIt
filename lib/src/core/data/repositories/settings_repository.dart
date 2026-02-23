@@ -15,4 +15,5 @@ class SettingsRepository {
   Future<void> setCheckInDay(int day) async {
     await _settingsBox.put('checkInDay', day);
   }
+
 }

@@ -340,4 +340,59 @@ class HiveTransactionRepository implements TransactionRepository {
     }
     return [];
   }
+
+
+  // --- UNDO CHECK-IN METHODS ---
+  @override
+  Future<void> saveUndoCheckInState({required DateTime date, required double savedAmount, required int previousStreak, required bool wasSuccess}) async {
+    await _settingsBox.put('undo_date', date);
+    await _settingsBox.put('undo_savedAmount', savedAmount);
+    await _settingsBox.put('undo_previousStreak', previousStreak);
+    await _settingsBox.put('undo_wasSuccess', wasSuccess);
+  }
+
+  @override
+  Future<Map<String, dynamic>?> getUndoCheckInState() async {
+    final date = _settingsBox.get('undo_date');
+    if (date == null) return null;
+    return {
+      'date': date,
+      'savedAmount': _settingsBox.get('undo_savedAmount', defaultValue: 0.0),
+      'previousStreak': _settingsBox.get('undo_previousStreak', defaultValue: 0),
+      'wasSuccess': _settingsBox.get('undo_wasSuccess', defaultValue: false),
+    };
+  }
+
+  @override
+  Future<void> clearUndoCheckInState() async {
+    await _settingsBox.delete('undo_date');
+    await _settingsBox.delete('undo_savedAmount');
+    await _settingsBox.delete('undo_previousStreak');
+    await _settingsBox.delete('undo_wasSuccess');
+  }
+
+  @override
+  Future<void> deleteRolloverAdjustments(DateTime date) async {
+    // Only delete the automatic system rollovers from that exact check-in second
+    final keysToDelete = _walletAdjustmentBox.values
+        .where((a) => a.fromCategoryId == 'rollover' && a.date.isAtSameMomentAs(date))
+        .map((a) => a.id)
+        .toList();
+    await _walletAdjustmentBox.deleteAll(keysToDelete);
+  }
+
+  @override
+  Future<void> setCheckInStreak(int streak) async {
+    await _settingsBox.put('streak', streak);
+  }
+
+  @override
+  Future<void> setCheckInHistory(List<DateTime> history) async {
+    await _settingsBox.put('checkInHistory', history);
+  }
+
+  @override
+  Future<void> clearLastCheckInDate() async {
+    await _settingsBox.delete('lastCheckIn');
+  }
 }

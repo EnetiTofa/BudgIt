@@ -224,8 +224,6 @@ class _TransactionReviewPageState extends ConsumerState<TransactionReviewPage> {
           ),
         ),
 
-        const Divider(height: 1),
-
         // --- TRANSACTION LIST ---
         Expanded(
           child: displayedTransactions.isEmpty
@@ -237,7 +235,7 @@ class _TransactionReviewPageState extends ConsumerState<TransactionReviewPage> {
                 )
               : ListView.separated(
                   itemCount: displayedTransactions.length,
-                  separatorBuilder: (context, index) => const Divider(height: 1),
+                  separatorBuilder: (context, index) => const Divider(color:Colors.transparent, height: 1),
                   itemBuilder: (context, index) {
                     final transaction = displayedTransactions[index];
                     if (transaction is! OneOffPayment) return const SizedBox.shrink();
