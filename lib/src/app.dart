@@ -3,14 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:budgit/src/features/check_in/presentation/app_bar_info_provider.dart';
+import 'package:budgit/src/features/check_in/presentation/providers/app_bar_info_provider.dart';
 import 'package:budgit/src/app/navigation_provider.dart';
 import 'package:budgit/src/features/budget_hub/budget_hub_screen.dart';
 import 'package:budgit/src/features/categories/presentation/screens/add_category_screen.dart';
-import 'package:budgit/src/features/check_in/presentation/check_in_screen.dart';
-import 'package:budgit/src/features/check_in/presentation/is_check_in_available_provider.dart';
-import 'package:budgit/src/common_widgets/pulsing_button.dart';
-import 'package:budgit/src/features/dashboard/presentation/dashboard.dart';
+import 'package:budgit/src/features/check_in/presentation/screens/check_in_screen.dart';
+import 'package:budgit/src/features/check_in/presentation/providers/is_check_in_available_provider.dart';
+import 'package:budgit/src/features/dashboard/presentation/screens/dashboard.dart';
 import 'package:budgit/src/features/menu/presentation/menu_screen.dart';
 import 'package:budgit/src/features/transaction_hub/transactions/presentation/screens/add_income_screen.dart';
 import 'package:budgit/src/features/transaction_hub/transactions/presentation/screens/add_payment_screen.dart';
@@ -70,8 +69,8 @@ class _AppShellState extends ConsumerState<AppShell> {
     final selectedIndex = ref.watch(mainPageIndexProvider);
     final theme = Theme.of(context);
     final formattedDate = DateFormat('d MMMM').format(DateTime.now());
-    final isCheckInAvailableAsync = ref.watch(isCheckInAvailableProvider);
-    const checkInEligibleScreenIndices = {0, 1, 2};
+    // Note: We removed the isCheckInAvailableProvider watch here because
+    // we no longer lock the whole screen.
 
     return Scaffold(
       appBar: AppBar(
@@ -88,7 +87,6 @@ class _AppShellState extends ConsumerState<AppShell> {
               child: Consumer(
                 builder: (context, ref, child) {
                   final appBarInfoAsync = ref.watch(appBarInfoProvider);
-                  // --- MODIFICATION: Added `skipLoadingOnReload` to prevent flicker ---
                   return appBarInfoAsync.when(
                     skipLoadingOnReload: true,
                     loading: () => Container(
@@ -125,7 +123,7 @@ class _AppShellState extends ConsumerState<AppShell> {
                                   Icon(
                                     Icons.circle,
                                     color: Colors.yellow.shade600,
-                                    size: 16,
+                                    size: 17,
                                   ),
                                 FaIcon(
                                   FontAwesomeIcons.fire,
@@ -180,22 +178,8 @@ class _AppShellState extends ConsumerState<AppShell> {
           ],
         ),
       ),
-      body: isCheckInAvailableAsync.when(
-        data: (isAvailable) {
-          if (isAvailable && checkInEligibleScreenIndices.contains(selectedIndex)) {
-            return PulsingButton(
-              label: 'Check In',
-              onPressed: () {
-                Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CheckInScreen()));
-              },
-            );
-          } else {
-            return _screens[selectedIndex];
-          }
-        },
-        loading: () => _screens[selectedIndex],
-        error: (e, s) => _screens[selectedIndex],
-      ),
+      // UPDATED: Simply render the selected screen. No locking logic here anymore.
+      body: _screens[selectedIndex],
       bottomNavigationBar: BottomAppBar(
         shape: const CircularNotchedRectangle(),
         notchMargin: 8.0,
@@ -244,60 +228,125 @@ class _AppShellState extends ConsumerState<AppShell> {
   void _showAddMenu(BuildContext context) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true, // Allows sheet to size itself
       builder: (ctx) {
         return Consumer(
           builder: (context, ref, child) {
+            final theme = Theme.of(context);
+            
+            // 1. Check Availability
+            final isCheckInAvailable = ref.watch(isCheckInAvailableProvider).valueOrNull ?? false;
+            
             final categoriesAsync = ref.watch(categoryListProvider);
             final bool hasCategories = categoriesAsync.maybeWhen(
               data: (categories) => categories.isNotEmpty,
               orElse: () => false,
             );
-            final theme = Theme.of(context);
+
+            // 2. Define Lock State
+            // If check-in is available, the standard buttons are locked.
+            final bool areButtonsLocked = isCheckInAvailable;
 
             return Padding(
-              padding: const EdgeInsets.fromLTRB(24.0, 24.0, 24.0, 32.0),
-              child: Row(
+              padding: const EdgeInsets.fromLTRB(24.0, 24.0, 24.0, 48.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  _buildMenuButton(
-                    context: ctx,
-                    icon: Icons.remove_circle,
-                    label: 'Payment',
-                    color: hasCategories ? Colors.red.shade400 : theme.colorScheme.surfaceContainer,
-                    contentColor: hasCategories ? Colors.white : theme.colorScheme.secondary,
-                    onTap: () {
-                      Navigator.pop(ctx);
-                      if (hasCategories) {
-                        Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AddPaymentScreen()));
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Add a category first.')),
-                        );
-                      }
-                    },
-                  ),
-                  const SizedBox(width: 24),
-                  _buildMenuButton(
-                    context: ctx,
-                    icon: Icons.add_circle,
-                    label: 'Income',
-                    color: Colors.green.shade400,
-                    contentColor: Colors.white,
-                    onTap: () {
-                      Navigator.pop(ctx);
-                      Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AddIncomeScreen()));
-                    },
-                  ),
-                  const SizedBox(width: 24),
-                  _buildMenuButton(
-                    context: ctx,
-                    icon: Icons.create_new_folder,
-                    label: 'Category',
-                    color: Colors.amber.shade400,
-                    contentColor: Colors.white,
-                    onTap: () {
-                      Navigator.pop(ctx);
-                      Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AddCategoryScreen()));
-                    },
+                  // 3. Rectangular Check-In Button (Only if available)
+                  if (isCheckInAvailable) ...[
+                    SizedBox(
+                      width: double.infinity,
+                      height: 64,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.pop(ctx);
+                          Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CheckInScreen()));
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: theme.colorScheme.primary,
+                          foregroundColor: theme.colorScheme.onPrimary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          elevation: 0,
+                        ),
+                        icon: const Icon(Icons.check_circle_outline),
+                        label: const Text(
+                          'Complete Weekly Check-in',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      "Please check in to unlock these actions",
+                      style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.error),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+
+                  // 4. Standard Action Buttons (Locked if check-in pending)
+                  Row(
+                    children: [
+                      // PAYMENT
+                      _buildMenuButton(
+                        context: ctx,
+                        icon: Icons.remove_circle,
+                        label: 'Payment',
+                        color: areButtonsLocked 
+                            ? theme.colorScheme.surfaceContainerHighest // Locked Color
+                            : (hasCategories ? Colors.red.shade400 : theme.colorScheme.surfaceContainer),
+                        contentColor: areButtonsLocked
+                            ? theme.colorScheme.outline // Locked Icon Color
+                            : (hasCategories ? Colors.white : theme.colorScheme.secondary),
+                        onTap: areButtonsLocked ? null : () { // Disable tap
+                          Navigator.pop(ctx);
+                          if (hasCategories) {
+                            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AddPaymentScreen()));
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Add a category first.')),
+                            );
+                          }
+                        },
+                      ),
+                      const SizedBox(width: 24),
+                      
+                      // INCOME
+                      _buildMenuButton(
+                        context: ctx,
+                        icon: Icons.add_circle,
+                        label: 'Income',
+                        color: areButtonsLocked 
+                            ? theme.colorScheme.surfaceContainerHighest 
+                            : Colors.green.shade400,
+                        contentColor: areButtonsLocked 
+                            ? theme.colorScheme.outline
+                            : Colors.white,
+                        onTap: areButtonsLocked ? null : () {
+                          Navigator.pop(ctx);
+                          Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AddIncomeScreen()));
+                        },
+                      ),
+                      const SizedBox(width: 24),
+                      
+                      // CATEGORY
+                      _buildMenuButton(
+                        context: ctx,
+                        icon: Icons.create_new_folder,
+                        label: 'Category',
+                        color: areButtonsLocked 
+                            ? theme.colorScheme.surfaceContainerHighest 
+                            : Colors.amber.shade400,
+                        contentColor: areButtonsLocked 
+                            ? theme.colorScheme.outline 
+                            : Colors.white,
+                        onTap: areButtonsLocked ? null : () {
+                          Navigator.pop(ctx);
+                          Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AddCategoryScreen()));
+                        },
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -312,7 +361,7 @@ class _AppShellState extends ConsumerState<AppShell> {
     required BuildContext context,
     required IconData icon,
     required String label,
-    required VoidCallback onTap,
+    required VoidCallback? onTap, // Nullable for disabled state
     required Color color,
     required Color contentColor,
   }) {

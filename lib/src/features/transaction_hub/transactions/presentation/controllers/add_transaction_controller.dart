@@ -10,8 +10,8 @@ import 'package:budgit/src/features/transaction_hub/transactions/presentation/pr
 import 'package:budgit/src/utils/clock_provider.dart';
 import 'package:budgit/src/core/domain/models/savings_goal.dart';
 import 'package:budgit/src/features/budget_hub/savings/presentation/savings_providers.dart';
-import 'package:budgit/src/features/check_in/presentation/streak_provider.dart';
-import 'package:budgit/src/features/check_in/presentation/is_check_in_available_provider.dart';
+import 'package:budgit/src/features/check_in/presentation/providers/streak_provider.dart';
+import 'package:budgit/src/features/check_in/presentation/providers/is_check_in_available_provider.dart';
 
 part 'add_transaction_controller.g.dart';
 
@@ -279,5 +279,13 @@ class AddTransactionController extends _$AddTransactionController {
   Future<void> debugResetStreak() async {
     await ref.read(transactionRepositoryProvider).resetCheckInStreak();
     ref.invalidate(checkInStreakProvider);
+  }
+
+  Future<void> debugClearCheckInHistory() async {
+    await ref.read(transactionRepositoryProvider).clearCheckInHistory();
+    // Invalidate providers to ensure the UI updates immediately
+    ref.invalidate(isCheckInAvailableProvider);
+    ref.invalidate(checkInStreakProvider);
+    _invalidateProviders();
   }
 }

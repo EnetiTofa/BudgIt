@@ -203,11 +203,56 @@ class HiveTransactionRepository implements TransactionRepository {
     return _settingsBox.get('lastWeekWalletSpending', defaultValue: 0.0);
   }
 
-  @override
+ @override
   Future<void> debugResetCheckInData() async {
+    await _settingsBox.delete('lastCheckIn'); 
     await _settingsBox.delete('lastWeekWalletSpending');
     await _settingsBox.delete('totalSavings');
     await _walletAdjustmentBox.clear();
+  }
+
+  @override
+  Future<void> recordCheckInAttempt({required DateTime date, required bool isSuccess}) async {
+    // 1. Update Last Check-in Date
+    await setLastCheckInDate(date);
+
+    if (isSuccess) {
+      // 2a. Increment Streak
+      await incrementCheckInStreak();
+
+      // 2b. Add to History
+      // We explicitly fetch, modify, and save to ensure list integrity.
+      final currentHistory = await getSuccessfulCheckInDates();
+      
+      // Prevent duplicate entries for the exact same timestamp (just in case)
+      if (!currentHistory.any((d) => d.isAtSameMomentAs(date))) {
+        currentHistory.add(date);
+        await _settingsBox.put('checkInHistory', currentHistory);
+      }
+    } else {
+      // 3. Reset Streak on Failure
+      await resetCheckInStreak();
+      // Note: We do NOT clear the history. Past successes are still valid historical data.
+    }
+  }
+
+  @override
+  Future<List<DateTime>> getSuccessfulCheckInDates() async {
+    final dynamic data = _settingsBox.get('checkInHistory');
+    
+    if (data == null) return [];
+
+    if (data is List) {
+      // Safely cast the dynamic list from Hive to List<DateTime>
+      return data.cast<DateTime>().toList();
+    }
+    
+    return [];
+  }
+
+  @override
+  Future<void> clearCheckInHistory() async {
+    await _settingsBox.delete('checkInHistory');
   }
 
   @override

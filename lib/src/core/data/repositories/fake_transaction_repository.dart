@@ -20,6 +20,8 @@ class FakeTransactionRepository implements TransactionRepository {
   int _checkInStreak = 0;
   DateTime? _lastCheckInDate;
   List<String> _recentIcons = [];
+  int _streakCount = 0;
+  final List<DateTime> _checkInHistory = [];
 
   // --- Transaction Methods ---
   @override
@@ -174,6 +176,31 @@ class FakeTransactionRepository implements TransactionRepository {
     _checkInStreak = 0;
     _adjustments.clear();
   }
+
+  @override
+    Future<void> recordCheckInAttempt({required DateTime date, required bool isSuccess}) async {
+      _lastCheckInDate = date;
+
+      if (isSuccess) {
+        _streakCount++;
+        // Add to history if it's not already there (simple check)
+        if (!_checkInHistory.contains(date)) {
+          _checkInHistory.add(date);
+        }
+      } else {
+        _streakCount = 0;
+      }
+    }
+
+  @override
+  Future<List<DateTime>> getSuccessfulCheckInDates() async {
+    return Future.value(_checkInHistory);
+  }
+
+  @override
+    Future<void> clearCheckInHistory() async {
+      _checkInHistory.clear();
+    }
 
   @override
   Future<int> getCheckInStreak() async {

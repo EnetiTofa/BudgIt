@@ -1,26 +1,28 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'is_check_in_available_provider.dart';
+part of 'streak_calendar_state_provider.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$isCheckInAvailableHash() =>
-    r'281044d97f37704007273beb6eb32037140cc5f9';
+String _$streakCalendarStateHash() =>
+    r'd61a6a859a884de122adbec1a07b16a4e54cfc02';
 
-/// See also [isCheckInAvailable].
-@ProviderFor(isCheckInAvailable)
-final isCheckInAvailableProvider = FutureProvider<bool>.internal(
-  isCheckInAvailable,
-  name: r'isCheckInAvailableProvider',
+/// See also [streakCalendarState].
+@ProviderFor(streakCalendarState)
+final streakCalendarStateProvider =
+    AutoDisposeFutureProvider<StreakCalendarState>.internal(
+  streakCalendarState,
+  name: r'streakCalendarStateProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
       ? null
-      : _$isCheckInAvailableHash,
+      : _$streakCalendarStateHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
-typedef IsCheckInAvailableRef = FutureProviderRef<bool>;
+typedef StreakCalendarStateRef
+    = AutoDisposeFutureProviderRef<StreakCalendarState>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

@@ -1,11 +1,11 @@
+// lib/src/features/budget_hub/wallet/presentation/widgets/active_boosts_section.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:budgit/src/core/domain/models/category.dart';
 import 'package:budgit/src/features/budget_hub/wallet/presentation/controllers/boost_controller.dart';
 import 'package:budgit/src/features/budget_hub/wallet/domain/wallet_adjustment.dart';
-import 'package:budgit/src/features/budget_hub/wallet/presentation/screens/add_boost_screen.dart';
-import 'package:budgit/src/features/budget_hub/wallet/presentation/screens/edit_boost_screen.dart';
 import 'package:budgit/src/core/data/providers/category_list_provider.dart';
+import 'package:budgit/src/features/budget_hub/wallet/presentation/widgets/boost_form.dart'; // NEW IMPORT
 
 class ActiveBoostsSection extends ConsumerWidget {
   final Category category;
@@ -20,14 +20,12 @@ class ActiveBoostsSection extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // 1. Title is always visible
         Text(
           "Active Boosts", 
           style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)
         ),
         const SizedBox(height: 8),
 
-        // 2. List or Loading or Nothing
         boostState.when(
           loading: () => const SizedBox(
             height: 60, 
@@ -36,11 +34,7 @@ class ActiveBoostsSection extends ConsumerWidget {
           error: (_, __) => const SizedBox.shrink(),
           data: (state) {
             final boostsMap = state.initialBoosts;
-            
-            // If empty, we just show nothing here and fall through to the button
-            if (boostsMap.isEmpty) {
-              return const SizedBox.shrink();
-            }
+            if (boostsMap.isEmpty) return const SizedBox.shrink();
 
             return Column(
               children: boostsMap.entries.map((entry) {
@@ -88,16 +82,24 @@ class ActiveBoostsSection extends ConsumerWidget {
                       amount: amount,
                       targetCategory: category,
                       onTap: () {
-                        Navigator.push(context, MaterialPageRoute(builder: (_) => EditBoostScreen(
-                          targetCategory: category,
-                          boost: WalletAdjustment(
-                            id: 'temp_edit', 
-                            fromCategoryId: fromCategoryId,
-                            toCategoryId: category.id,
-                            amount: amount,
-                            date: DateTime.now(),
+                        // CHANGED TO BOTTOM SHEET
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                           ),
-                        )));
+                          builder: (_) => BoostForm(
+                            targetCategory: category,
+                            initialBoost: WalletAdjustment(
+                              id: 'temp_edit', 
+                              fromCategoryId: fromCategoryId,
+                              toCategoryId: category.id,
+                              amount: amount,
+                              date: DateTime.now(),
+                            ),
+                          ),
+                        );
                       },
                     ),
                   ),
@@ -108,8 +110,6 @@ class ActiveBoostsSection extends ConsumerWidget {
         ),
         
         const SizedBox(height: 4),
-
-        // 3. Add Button always at the bottom
         _AddBoostButton(category: category),
       ],
     );
@@ -124,14 +124,20 @@ class _AddBoostButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return OutlinedButton.icon(
       onPressed: () {
-        Navigator.push(context, MaterialPageRoute(builder: (_) => AddBoostScreen(
-          targetCategory: category
-        )));
+        // CHANGED TO BOTTOM SHEET
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          builder: (_) => BoostForm(targetCategory: category),
+        );
       },
       icon: const Icon(Icons.add_circle_outline),
       label: const Text("Add Boost"),
       style: OutlinedButton.styleFrom(
-        backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest, // Added background color
+        backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest, 
         minimumSize: const Size(double.infinity, 55),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
@@ -139,6 +145,7 @@ class _AddBoostButton extends StatelessWidget {
   }
 }
 
+// ... (_ExistingBoostCard remains the same)
 class _ExistingBoostCard extends ConsumerWidget {
   final String fromCategoryId;
   final double amount;
@@ -155,16 +162,11 @@ class _ExistingBoostCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final categories = ref.watch(categoryListProvider).valueOrNull ?? [];
-    
-    // Find source category or fallback
     final source = categories.firstWhere(
       (c) => c.id == fromCategoryId, 
       orElse: () => Category(
-        id: 'unknown', 
-        name: 'Unknown', 
-        iconCodePoint: Icons.help_outline.codePoint, 
-        colorValue: Colors.grey.value, 
-        budgetAmount: 0
+        id: 'unknown', name: 'Unknown', iconCodePoint: Icons.help_outline.codePoint, 
+        colorValue: Colors.grey.value, budgetAmount: 0
       )
     );
     

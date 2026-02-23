@@ -3,13 +3,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:budgit/src/features/categories/presentation/screens/manage_categories_screen.dart';
-import 'package:budgit/src/features/check_in/presentation/check_in_screen.dart';
-import 'package:budgit/src/features/check_in/presentation/is_check_in_available_provider.dart';
+import 'package:budgit/src/features/check_in/presentation/screens/check_in_screen.dart';
+import 'package:budgit/src/features/check_in/presentation/providers/is_check_in_available_provider.dart';
 import 'package:budgit/src/features/settings/data/settings_provider.dart';
 import 'package:budgit/src/features/settings/presentation/theme_selector_screen.dart';
 import 'package:budgit/src/features/transaction_hub/transactions/presentation/controllers/add_transaction_controller.dart';
-import 'package:budgit/src/features/check_in/presentation/streak_provider.dart';
-import 'package:budgit/src/features/check_in/presentation/app_bar_info_provider.dart';
+import 'package:budgit/src/features/check_in/presentation/providers/streak_provider.dart';
+import 'package:budgit/src/features/check_in/presentation/providers/app_bar_info_provider.dart';
 import 'package:budgit/src/features/debug/presentation/time_machine_screen.dart';
 
 
@@ -115,6 +115,16 @@ class MenuScreen extends ConsumerWidget {
             },
           ),
           ListTile(
+            leading: const Icon(Icons.history_toggle_off, color: Colors.orange),
+            title: const Text('DEBUG: Reset Check-in History'),
+            onTap: () {
+              ref.read(addTransactionControllerProvider.notifier).debugClearCheckInHistory();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Check-in history cleared.')),
+              );
+            },
+          ),
+          ListTile(
             leading: const Icon(Icons.auto_awesome, color: Colors.orange),
             title: const Text('DEBUG: Generate Dummy Data'),
             onTap: () async {
@@ -152,8 +162,11 @@ class MenuScreen extends ConsumerWidget {
           ListTile(
             leading: const Icon(Icons.bug_report, color: Colors.orange),
             title: const Text('DEBUG: Reset Check-in'),
-            onTap: () {
-              ref.read(addTransactionControllerProvider.notifier).debugResetCheckInData();
+            // 1. Make the function async
+            onTap: () async { 
+              // 2. Await the controller so Hive finishes deleting
+              await ref.read(addTransactionControllerProvider.notifier).debugResetCheckInData();
+              // 3. Now it is safe to invalidate the UI
               ref.invalidate(isCheckInAvailableProvider);
             },
           ),

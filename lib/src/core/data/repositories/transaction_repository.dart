@@ -60,6 +60,16 @@ abstract class TransactionRepository {
   Future<void> setLastCheckInDate(DateTime date);
   Future<DateTime?> getLastCheckInDate();
 
+  // --- ADD THESE NEW METHODS ---
+  /// Records the result of a check-in.
+  /// If [isSuccess] is true, adds [date] to history and increments streak.
+  /// If [isSuccess] is false, resets streak to 0.
+  Future<void> recordCheckInAttempt({required DateTime date, required bool isSuccess});
+
+  Future<void> clearCheckInHistory();
+
+  /// Returns a list of all dates where the check-in was successful.
+  Future<List<DateTime>> getSuccessfulCheckInDates();
   Future<void> generateDummyData();
   Future<void> deleteAllData();
 

@@ -20,7 +20,8 @@ enum PaymentType { oneOff, recurring }
 
 class PaymentForm extends ConsumerStatefulWidget {
   final Transaction? initialTransaction;
-  const PaymentForm({super.key, this.initialTransaction});
+  final DateTime? initialDate;
+  const PaymentForm({super.key, this.initialTransaction, this.initialDate});
 
   @override
   ConsumerState<PaymentForm> createState() => _PaymentFormState();
@@ -77,7 +78,7 @@ class _PaymentFormState extends ConsumerState<PaymentForm> {
         }
       }
     } else {
-      _selectedDate = ref.read(clockNotifierProvider).now();
+      _selectedDate = widget.initialDate ?? ref.read(clockNotifierProvider).now();
       _isWalleted = true;
     }
   }

@@ -6,7 +6,7 @@ part of 'clock_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$clockNotifierHash() => r'0c757b4b73d466d44571b290eb24aa49bdfbd019';
+String _$clockNotifierHash() => r'43c5eea70814d468024c26eba9194752c791c2cd';
 
 /// See also [ClockNotifier].
 @ProviderFor(ClockNotifier)

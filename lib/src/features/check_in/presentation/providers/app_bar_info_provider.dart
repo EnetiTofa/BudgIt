@@ -1,7 +1,7 @@
 // lib/src/features/check_in/presentation/app_bar_info_provider.dart
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:budgit/src/features/check_in/presentation/is_check_in_available_provider.dart';
-import 'package:budgit/src/features/check_in/presentation/streak_provider.dart';
+import 'package:budgit/src/features/check_in/presentation/providers/is_check_in_available_provider.dart';
+import 'package:budgit/src/features/check_in/presentation/providers/streak_provider.dart';
 
 part 'app_bar_info_provider.g.dart';
 
