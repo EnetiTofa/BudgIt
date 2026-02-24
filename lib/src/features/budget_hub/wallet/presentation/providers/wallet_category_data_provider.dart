@@ -51,7 +51,7 @@ Future<List<WalletCategoryData>> walletCategoryData(
 
   for (final category in categories) {
     // --- FILTER: Skip categories that have no wallet configured ---
-    if (category.walletAmount == null) continue;
+    if (category.walletAmount == null || category.walletAmount! <= 0) continue;
 
     // A. Transactions (Current Week)
     final categoryWalletTxs = transactionLog

@@ -289,6 +289,7 @@ class _PaymentFormState extends ConsumerState<PaymentForm> {
                     labelText: 'Start Date', selectedDate: _selectedDate,
                     layout: DateSelectorLayout.vertical,
                     onDateSelected: (date) => setState(() => _selectedDate = date),
+                    allowFutureDates: true
                   ),
                 ),
                 const SizedBox(width: 16),

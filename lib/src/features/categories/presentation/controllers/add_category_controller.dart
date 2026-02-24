@@ -7,6 +7,7 @@ import 'package:budgit/src/core/constants/app_icons.dart';
 import 'package:budgit/src/core/domain/models/category.dart';
 import 'package:budgit/src/core/data/providers/transaction_repository_provider.dart';
 import 'package:budgit/src/core/data/providers/category_list_provider.dart';
+import 'package:budgit/src/features/transaction_hub/transactions/presentation/providers/transaction_log_provider.dart';
 
 part 'add_category_controller.g.dart';
 
@@ -80,6 +81,7 @@ class AddCategoryController extends _$AddCategoryController {
 
       await repository.addCategory(newCategory);
       ref.invalidate(categoryListProvider);
+      ref.invalidate(transactionLogProvider);
       return newCategory;
     } finally {
       state = state.copyWith(isLoading: false);

@@ -229,6 +229,7 @@ class ManageCategoryController extends _$ManageCategoryController {
 
     ref.invalidate(categoryListProvider);
     ref.invalidate(allTransactionOccurrencesProvider);
+    ref.invalidate(transactionLogProvider);
   }
 
   void setTotalBudget(double rawAmount) {
