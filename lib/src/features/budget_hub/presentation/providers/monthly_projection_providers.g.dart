@@ -162,7 +162,7 @@ class _MonthlyCategoryProgressProviderElement
 }
 
 String _$globalMonthlyHistoryHash() =>
-    r'686afa36d5f550fa979f4b3a09cf255403f01ed5';
+    r'd4174eb7c85cb7c381efe3a1fb6a6cc7344e5592';
 
 /// See also [globalMonthlyHistory].
 @ProviderFor(globalMonthlyHistory)

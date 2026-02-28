@@ -1,7 +1,7 @@
 // lib/src/features/budget_hub/presentation/screens/budget_hub_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:budgit/src/features/budget_hub/presentation/screens/budgets_screen.dart';
+import 'package:budgit/src/features/budget_hub/presentation/screens/monthly_screen.dart';
 import 'package:budgit/src/features/budget_hub/presentation/screens/weekly_screen.dart';
 import 'package:budgit/src/core/data/providers/category_list_provider.dart';
 
@@ -65,15 +65,15 @@ class _BudgetHubScreenState extends ConsumerState<BudgetHubScreen>
             tabs: [
               // 2. Change icons dynamically based on lock status
               Tab(
-                text: 'Wallet',
+                text: 'Weekly View',
                 icon: Icon(
-                  isLocked ? Icons.lock_outline : Icons.wallet_outlined,
+                  isLocked ? Icons.lock_outline : Icons.track_changes_outlined,
                 ),
               ),
               Tab(
-                text: 'Budgets',
+                text: 'Monthly View',
                 icon: Icon(
-                  isLocked ? Icons.lock_outline : Icons.track_changes_outlined,
+                  isLocked ? Icons.lock_outline : Icons.calendar_month_outlined,
                 ),
               ),
               const Tab(text: 'Savings', icon: Icon(Icons.lock_outline)),
@@ -86,7 +86,7 @@ class _BudgetHubScreenState extends ConsumerState<BudgetHubScreen>
             children: [
               // 3. Render the lock screen or the actual screens
               isLocked ? const _NoCategoriesView() : const WeeklyScreen(),
-              isLocked ? const _NoCategoriesView() : const BudgetsScreen(),
+              isLocked ? const _NoCategoriesView() : const MonthlyScreen(),
               isLocked ? const _NoCategoriesView() : const _LockedSavingsView(),
             ],
           ),

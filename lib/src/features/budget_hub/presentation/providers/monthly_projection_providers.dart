@@ -127,16 +127,30 @@ Future<List<MonthlySpending>> globalMonthlyHistory(Ref ref) async {
     final monthStartDate = currentMonth;
     final monthEndDate = DateTime(currentMonth.year, currentMonth.month + 1, 0);
 
-    final double totalForMonth = allOccurrences
-        .whereType<OneOffPayment>()
-        .where(
-          (p) =>
-              !p.date.isBefore(monthStartDate) && !p.date.isAfter(monthEndDate),
-        )
-        .fold(0.0, (sum, p) => sum + p.amount);
+    // Filter the payments for the month
+    final paymentsForMonth = allOccurrences.whereType<OneOffPayment>().where(
+      (p) => !p.date.isBefore(monthStartDate) && !p.date.isAfter(monthEndDate),
+    );
 
+    // Calculate the total
+    final double totalForMonth = paymentsForMonth.fold(
+      0.0,
+      (sum, p) => sum + p.amount,
+    );
+
+    // Calculate the category breakdown
+    final Map<String, double> catTotals = {};
+    for (final p in paymentsForMonth) {
+      catTotals[p.category.id] = (catTotals[p.category.id] ?? 0.0) + p.amount;
+    }
+
+    // Add to our list
     monthlyTotals.add(
-      MonthlySpending(date: monthStartDate, amount: totalForMonth),
+      MonthlySpending(
+        date: monthStartDate,
+        amount: totalForMonth,
+        categoryTotals: catTotals, // Feed the category map in here
+      ),
     );
     currentMonth = DateTime(currentMonth.year, currentMonth.month + 1, 1);
   }

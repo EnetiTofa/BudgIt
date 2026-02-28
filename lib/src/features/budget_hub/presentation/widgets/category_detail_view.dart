@@ -2,15 +2,13 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fl_chart/fl_chart.dart'; // Add this import
 import 'package:intl/intl.dart';
-import 'dart:ui' as ui;
 import 'package:budgit/src/core/domain/models/category.dart';
 import 'package:budgit/src/core/data/providers/category_list_provider.dart';
 import 'package:budgit/src/utils/palette_generator.dart';
 import 'package:budgit/src/features/transaction_hub/transactions/presentation/providers/next_recurring_payment_provider.dart';
 import 'package:budgit/src/common_widgets/summary_stat_card.dart';
-
-// FIX 1: Point to the consolidated monthly provider file
 import 'package:budgit/src/features/budget_hub/presentation/providers/monthly_projection_providers.dart';
 
 class CategoryDetailView extends ConsumerStatefulWidget {
@@ -52,19 +50,6 @@ class _CategoryDetailViewState extends ConsumerState<CategoryDetailView> {
     }
   }
 
-  void _handleChartTap(
-    Offset localPosition,
-    List<MonthlySpendingBreakdown> data,
-  ) {
-    final int tappedIndex =
-        ((localPosition.dx + _chartScrollController.offset) / _itemWidth)
-            .floor();
-
-    if (tappedIndex >= 0 && tappedIndex < data.length) {
-      ref.read(selectedMonthProvider.notifier).state = data[tappedIndex].date;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final categoryListAsync = ref.watch(categoryListProvider);
@@ -86,7 +71,7 @@ class _CategoryDetailViewState extends ConsumerState<CategoryDetailView> {
           return const SizedBox.shrink();
         }
 
-        // --- FETCH DATA (From the unified provider) ---
+        // --- FETCH DATA ---
         final historicalData = ref.watch(
           historicalCategorySpendingProvider(categoryId: category.id),
         );
@@ -106,6 +91,18 @@ class _CategoryDetailViewState extends ConsumerState<CategoryDetailView> {
         final palette = generateSpendingPalette(category.color);
         final colorScheme = Theme.of(context).colorScheme;
         final textTheme = Theme.of(context).textTheme;
+
+        // Calculate maximum Y value for the chart to scale properly
+        double maxAmount = 10.0;
+        if (historicalData.isNotEmpty) {
+          final highestDataPoint = historicalData
+              .map((d) => d.total)
+              .reduce((a, b) => a > b ? a : b);
+          if (highestDataPoint > maxAmount) {
+            maxAmount = highestDataPoint;
+          }
+        }
+        final maxY = maxAmount * 1.2; // Add 20% padding to the top
 
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20.0),
@@ -207,7 +204,7 @@ class _CategoryDetailViewState extends ConsumerState<CategoryDetailView> {
 
               const SizedBox(height: 20),
 
-              // 3. History Card
+              // 2. History Card (Updated with fl_chart)
               _DetailCard(
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -222,7 +219,7 @@ class _CategoryDetailViewState extends ConsumerState<CategoryDetailView> {
                       ),
                       const SizedBox(height: 16),
                       SizedBox(
-                        height: 140,
+                        height: 180, // Slightly taller to fit fl_chart cleanly
                         child: Builder(
                           builder: (context) {
                             if (historicalData.isEmpty) {
@@ -239,38 +236,254 @@ class _CategoryDetailViewState extends ConsumerState<CategoryDetailView> {
                             if (!_hasScrolledToEnd) {
                               WidgetsBinding.instance.addPostFrameCallback((_) {
                                 _scrollToEnd();
-                                if (mounted)
+                                if (mounted) {
                                   setState(() => _hasScrolledToEnd = true);
+                                }
                               });
                             }
 
                             return LayoutBuilder(
                               builder: (context, constraints) {
-                                return GestureDetector(
-                                  onTapDown: (details) => _handleChartTap(
-                                    details.localPosition,
-                                    historicalData,
-                                  ),
-                                  child: SingleChildScrollView(
-                                    controller: _chartScrollController,
-                                    scrollDirection: Axis.horizontal,
-                                    child: Container(
-                                      width: _itemWidth * historicalData.length,
-                                      height: constraints.maxHeight,
-                                      color: Colors.transparent,
-                                      child: CustomPaint(
-                                        painter: ChartPainter(
-                                          spendingData: historicalData,
-                                          selectedMonth: widget.selectedMonth,
-                                          // FIX 2: Correctly map the fixed and variable colors from the palette
-                                          recurringColor: palette.recurring,
-                                          variableColor: palette.wallet,
-                                          itemWidth: _itemWidth,
-                                          textTheme: textTheme,
-                                          primaryColor: colorScheme.primary,
-                                          secondaryColor: colorScheme.secondary,
+                                return SingleChildScrollView(
+                                  controller: _chartScrollController,
+                                  scrollDirection: Axis.horizontal,
+                                  child: SizedBox(
+                                    width: _itemWidth * historicalData.length,
+                                    height: constraints.maxHeight,
+                                    child: Stack(
+                                      children: [
+                                        // A. The Chart underneath
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                            top: 16,
+                                            bottom: 4,
+                                          ),
+                                          child: BarChart(
+                                            BarChartData(
+                                              alignment:
+                                                  BarChartAlignment.spaceAround,
+                                              minY: 0,
+                                              maxY: maxY,
+                                              barTouchData: BarTouchData(
+                                                enabled: false,
+                                              ), // Handle touches manually below
+                                              borderData: FlBorderData(
+                                                show: false,
+                                              ),
+                                              gridData: FlGridData(
+                                                show: true,
+                                                drawVerticalLine: false,
+                                                getDrawingHorizontalLine:
+                                                    (value) => FlLine(
+                                                      color: Theme.of(context)
+                                                          .dividerColor
+                                                          .withOpacity(0.1),
+                                                      strokeWidth: 1,
+                                                    ),
+                                              ),
+                                              titlesData: FlTitlesData(
+                                                topTitles: const AxisTitles(
+                                                  sideTitles: SideTitles(
+                                                    showTitles: false,
+                                                  ),
+                                                ),
+                                                rightTitles: const AxisTitles(
+                                                  sideTitles: SideTitles(
+                                                    showTitles: false,
+                                                  ),
+                                                ),
+                                                leftTitles: const AxisTitles(
+                                                  sideTitles: SideTitles(
+                                                    showTitles: false,
+                                                  ),
+                                                ),
+                                                bottomTitles: AxisTitles(
+                                                  sideTitles: SideTitles(
+                                                    showTitles: true,
+                                                    reservedSize: 32,
+                                                    getTitlesWidget: (value, meta) {
+                                                      final index = value
+                                                          .toInt();
+                                                      if (index < 0 ||
+                                                          index >=
+                                                              historicalData
+                                                                  .length)
+                                                        return const SizedBox.shrink();
+
+                                                      final item =
+                                                          historicalData[index];
+                                                      final isSelected =
+                                                          item.date.year ==
+                                                              widget
+                                                                  .selectedMonth
+                                                                  .year &&
+                                                          item.date.month ==
+                                                              widget
+                                                                  .selectedMonth
+                                                                  .month;
+
+                                                      return SideTitleWidget(
+                                                        meta: meta,
+                                                        space: 8,
+                                                        child: Text(
+                                                          DateFormat.MMM()
+                                                              .format(
+                                                                item.date,
+                                                              ),
+                                                          style: TextStyle(
+                                                            fontSize: 12,
+                                                            fontWeight:
+                                                                isSelected
+                                                                ? FontWeight
+                                                                      .bold
+                                                                : FontWeight
+                                                                      .normal,
+                                                            color: isSelected
+                                                                ? colorScheme
+                                                                      .primary
+                                                                : colorScheme
+                                                                      .secondary,
+                                                          ),
+                                                        ),
+                                                      );
+                                                    },
+                                                  ),
+                                                ),
+                                              ),
+                                              barGroups: List.generate(
+                                                historicalData.length,
+                                                (index) {
+                                                  final item =
+                                                      historicalData[index];
+                                                  final isSelected =
+                                                      item.date.year ==
+                                                          widget
+                                                              .selectedMonth
+                                                              .year &&
+                                                      item.date.month ==
+                                                          widget
+                                                              .selectedMonth
+                                                              .month;
+                                                  final opacity = isSelected
+                                                      ? 1.0
+                                                      : 0.3;
+
+                                                  return BarChartGroupData(
+                                                    x: index,
+                                                    barRods: [
+                                                      BarChartRodData(
+                                                        toY: item.total > 0
+                                                            ? item.total
+                                                            : 0.1,
+                                                        width:
+                                                            22, // Match your old bar width
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              4,
+                                                            ),
+                                                        // Stack the recurring and variable values
+                                                        rodStackItems: [
+                                                          if (item.recurring >
+                                                              0)
+                                                            BarChartRodStackItem(
+                                                              0,
+                                                              item.recurring,
+                                                              palette.recurring
+                                                                  .withOpacity(
+                                                                    opacity,
+                                                                  ),
+                                                            ),
+                                                          if (item.variable > 0)
+                                                            BarChartRodStackItem(
+                                                              item.recurring,
+                                                              item.total,
+                                                              palette.wallet
+                                                                  .withOpacity(
+                                                                    opacity,
+                                                                  ),
+                                                            ),
+                                                        ],
+                                                        color: colorScheme
+                                                            .surfaceContainerHighest
+                                                            .withOpacity(
+                                                              opacity,
+                                                            ),
+                                                      ),
+                                                    ],
+                                                  );
+                                                },
+                                              ),
+                                            ),
+                                          ),
                                         ),
-                                      ),
+
+                                        // B. The Touch Overlay on top
+                                        Positioned.fill(
+                                          child: Row(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.stretch,
+                                            children: List.generate(
+                                              historicalData.length,
+                                              (index) {
+                                                final item =
+                                                    historicalData[index];
+                                                final isSelected =
+                                                    item.date.year ==
+                                                        widget
+                                                            .selectedMonth
+                                                            .year &&
+                                                    item.date.month ==
+                                                        widget
+                                                            .selectedMonth
+                                                            .month;
+
+                                                return Expanded(
+                                                  child: GestureDetector(
+                                                    behavior:
+                                                        HitTestBehavior.opaque,
+                                                    onTap: () {
+                                                      // Update selected month provider
+                                                      ref
+                                                          .read(
+                                                            selectedMonthProvider
+                                                                .notifier,
+                                                          )
+                                                          .state = item
+                                                          .date;
+                                                    },
+                                                    child: Container(
+                                                      margin:
+                                                          const EdgeInsets.symmetric(
+                                                            horizontal: 2,
+                                                            vertical: 0,
+                                                          ),
+                                                      decoration: isSelected
+                                                          ? BoxDecoration(
+                                                              border: Border.all(
+                                                                color:
+                                                                    colorScheme
+                                                                        .primary,
+                                                                width: 2,
+                                                              ),
+                                                              borderRadius:
+                                                                  BorderRadius.circular(
+                                                                    12,
+                                                                  ),
+                                                              color: colorScheme
+                                                                  .primary
+                                                                  .withOpacity(
+                                                                    0.05,
+                                                                  ),
+                                                            )
+                                                          : null,
+                                                    ),
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 );
@@ -283,8 +496,9 @@ class _CategoryDetailViewState extends ConsumerState<CategoryDetailView> {
                   ),
                 ),
               ),
+
               const SizedBox(height: 16),
-              // 2. Summary Card
+              // 3. Summary Card
               SummaryStatCard(
                 stats: [
                   SummaryStat(
@@ -337,108 +551,4 @@ class _DetailCard extends StatelessWidget {
   }
 }
 
-class ChartPainter extends CustomPainter {
-  const ChartPainter({
-    required this.spendingData,
-    required this.selectedMonth,
-    required this.recurringColor,
-    required this.variableColor,
-    required this.itemWidth,
-    required this.textTheme,
-    required this.primaryColor,
-    required this.secondaryColor,
-  });
-
-  final List<MonthlySpendingBreakdown> spendingData;
-  final DateTime selectedMonth;
-  final Color recurringColor;
-  final Color variableColor;
-  final double itemWidth;
-  final TextTheme textTheme;
-  final Color primaryColor;
-  final Color secondaryColor;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (spendingData.isEmpty) return;
-
-    const double barWidth = 22.0;
-    const double bottomPadding = 20.0;
-    final double chartHeight = size.height - bottomPadding;
-
-    final maxAmount = spendingData
-        .map((d) => d.total)
-        .reduce((a, b) => a > b ? a : b);
-    final effectiveMaxAmount = maxAmount > 0 ? maxAmount : 1.0;
-
-    for (int i = 0; i < spendingData.length; i++) {
-      final item = spendingData[i];
-      final bool isSelected =
-          item.date.year == selectedMonth.year &&
-          item.date.month == selectedMonth.month;
-
-      final barX = (itemWidth * i) + (itemWidth - barWidth) / 2;
-      double currentY = size.height - bottomPadding;
-
-      // FIX 3: Actually stack the fixed and variable spending together!
-      final segments = [
-        _ChartSegment(value: item.recurring, color: recurringColor),
-        _ChartSegment(value: item.variable, color: variableColor),
-      ];
-
-      for (final segment in segments) {
-        if (segment.value <= 0) continue;
-
-        final segmentHeight =
-            (segment.value / effectiveMaxAmount) * chartHeight;
-        final segmentPaint = Paint()
-          ..color = isSelected ? segment.color : segment.color.withOpacity(0.5);
-
-        final rect = Rect.fromLTWH(
-          barX,
-          currentY - segmentHeight,
-          barWidth,
-          segmentHeight,
-        );
-        canvas.drawRect(rect, segmentPaint);
-        currentY -= segmentHeight;
-      }
-
-      final textStyle = textTheme.labelMedium?.copyWith(
-        fontWeight: FontWeight.w600,
-        color: isSelected ? primaryColor : secondaryColor,
-        fontSize: 11,
-      );
-      final textSpan = TextSpan(
-        text: DateFormat.MMM().format(item.date),
-        style: textStyle,
-      );
-      final textPainter = TextPainter(
-        text: textSpan,
-        textAlign: TextAlign.center,
-        textDirection: ui.TextDirection.ltr,
-      );
-      textPainter.layout();
-      final textOffset = Offset(
-        (itemWidth * i) + (itemWidth / 2) - (textPainter.width / 2),
-        size.height - 14,
-      );
-      textPainter.paint(canvas, textOffset);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant ChartPainter oldDelegate) {
-    return oldDelegate.spendingData != spendingData ||
-        oldDelegate.selectedMonth != selectedMonth ||
-        oldDelegate.recurringColor != recurringColor ||
-        oldDelegate.variableColor != variableColor;
-  }
-}
-
-class _ChartSegment {
-  final double value;
-  final Color color;
-
-  _ChartSegment({required this.value, required this.color});
-}
+// NOTE: ChartPainter and _ChartSegment have been safely removed!

@@ -54,7 +54,7 @@ class _AppShellState extends ConsumerState<AppShell> {
   final List<String> _screenTitles = const [
     'Dashboard',
     'Transactions',
-    'Financial Overview',
+    'Budget',
     'Menu',
   ];
 
@@ -100,7 +100,10 @@ class _AppShellState extends ConsumerState<AppShell> {
                     error: (e, s) => SizedBox(
                       height: 34.0,
                       child: Center(
-                        child: Icon(Icons.cloud_off, color: theme.colorScheme.tertiary),
+                        child: Icon(
+                          Icons.cloud_off,
+                          color: theme.colorScheme.tertiary,
+                        ),
                       ),
                     ),
                     data: (info) {
@@ -186,25 +189,52 @@ class _AppShellState extends ConsumerState<AppShell> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: <Widget>[
-            _buildNavItem(index: 0, currentIndex: selectedIndex, outlinedIcon: Icons.dashboard_outlined, filledIcon: Icons.dashboard),
-            _buildNavItem(index: 1, currentIndex: selectedIndex, outlinedIcon: Icons.history_outlined, filledIcon: Icons.history),
+            _buildNavItem(
+              index: 0,
+              currentIndex: selectedIndex,
+              outlinedIcon: Icons.dashboard_outlined,
+              filledIcon: Icons.dashboard,
+            ),
+            _buildNavItem(
+              index: 1,
+              currentIndex: selectedIndex,
+              outlinedIcon: Icons.history_outlined,
+              filledIcon: Icons.history,
+            ),
             _buildAddMenuItem(context),
-            _buildNavItem(index: 2, currentIndex: selectedIndex, outlinedIcon: Icons.track_changes_outlined, filledIcon: Icons.track_changes),
-            _buildNavItem(index: 3, currentIndex: selectedIndex, outlinedIcon: Icons.menu_outlined, filledIcon: Icons.menu),
+            _buildNavItem(
+              index: 2,
+              currentIndex: selectedIndex,
+              outlinedIcon: Icons.track_changes_outlined,
+              filledIcon: Icons.track_changes,
+            ),
+            _buildNavItem(
+              index: 3,
+              currentIndex: selectedIndex,
+              outlinedIcon: Icons.menu_outlined,
+              filledIcon: Icons.menu,
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildNavItem({required int index, required int currentIndex, required IconData outlinedIcon, required IconData filledIcon}) {
+  Widget _buildNavItem({
+    required int index,
+    required int currentIndex,
+    required IconData outlinedIcon,
+    required IconData filledIcon,
+  }) {
     final isSelected = currentIndex == index;
     final theme = Theme.of(context);
     return IconButton(
       onPressed: () => ref.read(mainPageIndexProvider.notifier).setIndex(index),
       icon: Icon(
         isSelected ? filledIcon : outlinedIcon,
-        color: isSelected ? theme.colorScheme.primary : theme.colorScheme.secondary,
+        color: isSelected
+            ? theme.colorScheme.primary
+            : theme.colorScheme.secondary,
       ),
     );
   }
@@ -233,10 +263,11 @@ class _AppShellState extends ConsumerState<AppShell> {
         return Consumer(
           builder: (context, ref, child) {
             final theme = Theme.of(context);
-            
+
             // 1. Check Availability
-            final isCheckInAvailable = ref.watch(isCheckInAvailableProvider).valueOrNull ?? false;
-            
+            final isCheckInAvailable =
+                ref.watch(isCheckInAvailableProvider).valueOrNull ?? false;
+
             final categoriesAsync = ref.watch(categoryListProvider);
             final bool hasCategories = categoriesAsync.maybeWhen(
               data: (categories) => categories.isNotEmpty,
@@ -260,7 +291,11 @@ class _AppShellState extends ConsumerState<AppShell> {
                       child: ElevatedButton.icon(
                         onPressed: () {
                           Navigator.pop(ctx);
-                          Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CheckInScreen()));
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const CheckInScreen(),
+                            ),
+                          );
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: theme.colorScheme.primary,
@@ -273,14 +308,19 @@ class _AppShellState extends ConsumerState<AppShell> {
                         icon: const Icon(Icons.check_circle_outline),
                         label: const Text(
                           'Complete Weekly Check-in',
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
                         ),
                       ),
                     ),
                     const SizedBox(height: 12),
                     Text(
                       "Please check in to unlock these actions",
-                      style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.error),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.error,
+                      ),
                     ),
                     const SizedBox(height: 12),
                   ],
@@ -293,58 +333,87 @@ class _AppShellState extends ConsumerState<AppShell> {
                         context: ctx,
                         icon: Icons.remove_circle,
                         label: 'Payment',
-                        color: areButtonsLocked 
-                            ? theme.colorScheme.surfaceContainerHighest // Locked Color
-                            : (hasCategories ? Colors.red.shade400 : theme.colorScheme.surfaceContainer),
+                        color: areButtonsLocked
+                            ? theme
+                                  .colorScheme
+                                  .surfaceContainerHighest // Locked Color
+                            : (hasCategories
+                                  ? Colors.red.shade400
+                                  : theme.colorScheme.surfaceContainer),
                         contentColor: areButtonsLocked
-                            ? theme.colorScheme.outline // Locked Icon Color
-                            : (hasCategories ? Colors.white : theme.colorScheme.secondary),
-                        onTap: areButtonsLocked ? null : () { // Disable tap
-                          Navigator.pop(ctx);
-                          if (hasCategories) {
-                            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AddPaymentScreen()));
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Add a category first.')),
-                            );
-                          }
-                        },
+                            ? theme
+                                  .colorScheme
+                                  .outline // Locked Icon Color
+                            : (hasCategories
+                                  ? Colors.white
+                                  : theme.colorScheme.secondary),
+                        onTap: areButtonsLocked
+                            ? null
+                            : () {
+                                // Disable tap
+                                Navigator.pop(ctx);
+                                if (hasCategories) {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) => const AddPaymentScreen(),
+                                    ),
+                                  );
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Add a category first.'),
+                                    ),
+                                  );
+                                }
+                              },
                       ),
                       const SizedBox(width: 24),
-                      
+
                       // INCOME
                       _buildMenuButton(
                         context: ctx,
                         icon: Icons.add_circle,
                         label: 'Income',
-                        color: areButtonsLocked 
-                            ? theme.colorScheme.surfaceContainerHighest 
+                        color: areButtonsLocked
+                            ? theme.colorScheme.surfaceContainerHighest
                             : Colors.green.shade400,
-                        contentColor: areButtonsLocked 
+                        contentColor: areButtonsLocked
                             ? theme.colorScheme.outline
                             : Colors.white,
-                        onTap: areButtonsLocked ? null : () {
-                          Navigator.pop(ctx);
-                          Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AddIncomeScreen()));
-                        },
+                        onTap: areButtonsLocked
+                            ? null
+                            : () {
+                                Navigator.pop(ctx);
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => const AddIncomeScreen(),
+                                  ),
+                                );
+                              },
                       ),
                       const SizedBox(width: 24),
-                      
+
                       // CATEGORY
                       _buildMenuButton(
                         context: ctx,
                         icon: Icons.create_new_folder,
                         label: 'Category',
-                        color: areButtonsLocked 
-                            ? theme.colorScheme.surfaceContainerHighest 
+                        color: areButtonsLocked
+                            ? theme.colorScheme.surfaceContainerHighest
                             : Colors.amber.shade400,
-                        contentColor: areButtonsLocked 
-                            ? theme.colorScheme.outline 
+                        contentColor: areButtonsLocked
+                            ? theme.colorScheme.outline
                             : Colors.white,
-                        onTap: areButtonsLocked ? null : () {
-                          Navigator.pop(ctx);
-                          Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AddCategoryScreen()));
-                        },
+                        onTap: areButtonsLocked
+                            ? null
+                            : () {
+                                Navigator.pop(ctx);
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => const AddCategoryScreen(),
+                                  ),
+                                );
+                              },
                       ),
                     ],
                   ),
@@ -367,7 +436,7 @@ class _AppShellState extends ConsumerState<AppShell> {
   }) {
     return Expanded(
       child: AspectRatio(
-        aspectRatio: 1.0, 
+        aspectRatio: 1.0,
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(28),
@@ -376,7 +445,7 @@ class _AppShellState extends ConsumerState<AppShell> {
               color: color,
               borderRadius: BorderRadius.circular(28),
             ),
-            child: Center( 
+            child: Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -384,7 +453,10 @@ class _AppShellState extends ConsumerState<AppShell> {
                   const SizedBox(height: 8),
                   Text(
                     label,
-                    style: TextStyle(color: contentColor, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      color: contentColor,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
