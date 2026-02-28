@@ -1,5 +1,3 @@
-// lib/src/features/categories/presentation/widgets/total_budget_controls.dart
-
 import 'package:flutter/material.dart';
 import 'package:budgit/src/common_widgets/currency_input_field.dart';
 import 'package:budgit/src/common_widgets/custom_dropdown_field.dart';
@@ -22,14 +20,15 @@ class TotalBudgetControls extends StatelessWidget {
       padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
-          // --- THIS IS THE MODIFIED SECTION ---
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(
                 child: Text(
-                  'Total Budget',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                  'Total Ceiling',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
               IconButton(
@@ -39,7 +38,6 @@ class TotalBudgetControls extends StatelessWidget {
               ),
             ],
           ),
-          // --- END OF MODIFICATION ---
           const SizedBox(height: 16),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -51,6 +49,9 @@ class TotalBudgetControls extends StatelessWidget {
                   initialValue: state.displayTotalBudget,
                   onChanged: (value) => notifier.setTotalBudget(value),
                   minValue: state.minimumBudget,
+                  // Safety hint: Let them know they can't go lower than their bills
+                  helperText:
+                      "Cannot be lower than fixed bills (\$${state.minimumBudget.toStringAsFixed(0)})",
                 ),
               ),
               const SizedBox(width: 12),
@@ -62,7 +63,10 @@ class TotalBudgetControls extends StatelessWidget {
                   items: BudgetPeriod.values.map((period) {
                     return DropdownMenuItem(
                       value: period,
-                      child: Text(period.name.substring(0, 1).toUpperCase() + period.name.substring(1)),
+                      child: Text(
+                        period.name.substring(0, 1).toUpperCase() +
+                            period.name.substring(1),
+                      ),
                     );
                   }).toList(),
                   onChanged: (value) {
@@ -76,11 +80,11 @@ class TotalBudgetControls extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Center(
-            child: FilledButton(
+            child: OutlinedButton(
               onPressed: () => notifier.minimizeBudget(),
-              child: const Text('Minimise Total Budget'),
+              child: const Text('Minimize to Match Fixed Bills'),
             ),
-          )
+          ),
         ],
       ),
     );

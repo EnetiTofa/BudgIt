@@ -1,5 +1,3 @@
-// lib/src/features/categories/presentation/controllers/manage_category_controller.dart
-
 import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -17,18 +15,14 @@ class ManageCategoryState extends Equatable {
   const ManageCategoryState({
     required this.initialCategory,
     this.recurringTransactions = const [],
-    this.isBudgetLocked = true,
     this.budgetPeriod = BudgetPeriod.monthly,
   });
-  
+
   final Category initialCategory;
   final List<RecurringPayment> recurringTransactions;
-  final bool isBudgetLocked;
   final BudgetPeriod budgetPeriod;
 
   double get totalBudget => initialCategory.budgetAmount;
-  double get walletAmount => initialCategory.walletAmount ?? 0.0;
-  double get monthlyWalletAmount => walletAmount * 4.33;
 
   double get displayTotalBudget {
     switch (budgetPeriod) {
@@ -53,39 +47,39 @@ class ManageCategoryState extends Equatable {
         return sum + (p.amount / 12);
     }
   });
-  
-  // Provides the minimum budget allowed based on current allocations.
-  double get minimumBudget => recurringSum + monthlyWalletAmount;
 
-  double get availableForAllocation => totalBudget - recurringSum;
-  double get oneOffsAmount => availableForAllocation - monthlyWalletAmount;
+  // The absolute minimum budget is just the sum of their fixed recurring bills.
+  double get minimumBudget => recurringSum;
+
+  // This is what becomes their Weekly Dashboard allowance (divided by 4.33)
+  double get variableBudget => totalBudget - recurringSum;
 
   @override
-  List<Object> get props => [initialCategory, recurringTransactions, isBudgetLocked, budgetPeriod];
+  List<Object> get props => [
+    initialCategory,
+    recurringTransactions,
+    budgetPeriod,
+  ];
 
   ManageCategoryState copyWith({
     Category? initialCategory,
     List<RecurringPayment>? recurringTransactions,
-    bool? isBudgetLocked,
     BudgetPeriod? budgetPeriod,
   }) {
     return ManageCategoryState(
       initialCategory: initialCategory ?? this.initialCategory,
-      recurringTransactions: recurringTransactions ?? this.recurringTransactions,
-      isBudgetLocked: isBudgetLocked ?? this.isBudgetLocked,
+      recurringTransactions:
+          recurringTransactions ?? this.recurringTransactions,
       budgetPeriod: budgetPeriod ?? this.budgetPeriod,
     );
   }
 }
 
-
 @riverpod
 class ManageCategoryController extends _$ManageCategoryController {
-  double _initialWalletAmount = 0.0;
   List<RecurringPayment> _initialRecurringTransactions = [];
   double _initialBudget = 0.0;
 
-  /// A private helper to get the standardized monthly value of any payment.
   double _getMonthlyValue(RecurringPayment payment) {
     switch (payment.recurrence) {
       case RecurrencePeriod.daily:
@@ -98,17 +92,19 @@ class ManageCategoryController extends _$ManageCategoryController {
         return payment.amount / 12;
     }
   }
-  
+
   @override
   Future<ManageCategoryState> build(String categoryId) async {
     final repository = ref.read(transactionRepositoryProvider);
     final category = await repository.getCategory(categoryId);
-    final transactions = await repository.getRecurringTransactionsForCategory(categoryId);
+    final transactions = await repository.getRecurringTransactionsForCategory(
+      categoryId,
+    );
 
     if (category == null) {
       throw Exception('Category with ID $categoryId not found');
     }
-    _initialWalletAmount = category.walletAmount ?? 0.0;
+
     _initialRecurringTransactions = transactions;
     _initialBudget = category.budgetAmount;
 
@@ -120,31 +116,35 @@ class ManageCategoryController extends _$ManageCategoryController {
 
   double getInitialBudget() => _initialBudget;
 
-  /// This method now automatically increases the budget.
   void addRecurringPayment(RecurringPayment payment) {
     if (state.value == null) return;
     final currentState = state.value!;
 
-    // Calculate the monthly increase and update the budget
+    // Automatically expand the total budget to accommodate the new bill
+    // This perfectly preserves their existing Variable budget allowance.
     final budgetIncrease = _getMonthlyValue(payment);
     final newTotalBudget = currentState.totalBudget + budgetIncrease;
 
     final updatedList = [...currentState.recurringTransactions, payment];
-    
-    state = AsyncData(currentState.copyWith(
-      recurringTransactions: updatedList,
-      initialCategory: currentState.initialCategory.copyWith(budgetAmount: newTotalBudget),
-    ));
+
+    state = AsyncData(
+      currentState.copyWith(
+        recurringTransactions: updatedList,
+        initialCategory: currentState.initialCategory.copyWith(
+          budgetAmount: newTotalBudget,
+        ),
+      ),
+    );
   }
 
-  /// This method now adjusts the budget based on the change in the payment.
   void updateRecurringPayment(RecurringPayment updatedPayment) {
     if (state.value == null) return;
     final currentState = state.value!;
-    
-    // Find the original payment to calculate the budget difference
-    final originalPayment = currentState.recurringTransactions.firstWhereOrNull((p) => p.id == updatedPayment.id);
-    if (originalPayment == null) return; // Should not happen
+
+    final originalPayment = currentState.recurringTransactions.firstWhereOrNull(
+      (p) => p.id == updatedPayment.id,
+    );
+    if (originalPayment == null) return;
 
     final originalMonthlyValue = _getMonthlyValue(originalPayment);
     final updatedMonthlyValue = _getMonthlyValue(updatedPayment);
@@ -156,47 +156,57 @@ class ManageCategoryController extends _$ManageCategoryController {
         .map((p) => p.id == updatedPayment.id ? updatedPayment : p)
         .toList();
 
-    state = AsyncData(currentState.copyWith(
-      recurringTransactions: updatedList,
-      initialCategory: currentState.initialCategory.copyWith(budgetAmount: newTotalBudget),
-    ));
+    state = AsyncData(
+      currentState.copyWith(
+        recurringTransactions: updatedList,
+        initialCategory: currentState.initialCategory.copyWith(
+          budgetAmount: newTotalBudget,
+        ),
+      ),
+    );
   }
 
-  /// This method now automatically decreases the budget.
   void removeRecurringPayment(String paymentId) {
     if (state.value == null) return;
     final currentState = state.value!;
-    
-    // Find the payment to be removed to calculate the budget decrease
-    final paymentToRemove = currentState.recurringTransactions.firstWhereOrNull((p) => p.id == paymentId);
-    if (paymentToRemove == null) return; // Should not happen
 
+    final paymentToRemove = currentState.recurringTransactions.firstWhereOrNull(
+      (p) => p.id == paymentId,
+    );
+    if (paymentToRemove == null) return;
+
+    // Automatically shrink the budget, preserving Variable allowance
     final budgetDecrease = _getMonthlyValue(paymentToRemove);
-    // Ensure budget doesn't fall below zero
-    final newTotalBudget = (currentState.totalBudget - budgetDecrease).clamp(0.0, double.infinity);
+    final newTotalBudget = (currentState.totalBudget - budgetDecrease).clamp(
+      0.0,
+      double.infinity,
+    );
 
     final updatedList = currentState.recurringTransactions
         .where((p) => p.id != paymentId)
         .toList();
-        
-    state = AsyncData(currentState.copyWith(
-      recurringTransactions: updatedList,
-      initialCategory: currentState.initialCategory.copyWith(budgetAmount: newTotalBudget),
-    ));
+
+    state = AsyncData(
+      currentState.copyWith(
+        recurringTransactions: updatedList,
+        initialCategory: currentState.initialCategory.copyWith(
+          budgetAmount: newTotalBudget,
+        ),
+      ),
+    );
   }
 
   void resetTotalBudget() {
     if (state.value == null) return;
-    // Directly update the state's budget amount to the stored initial value.
-    state = AsyncData(state.value!.copyWith(
-      initialCategory: state.value!.initialCategory.copyWith(budgetAmount: _initialBudget),
-    ));
+    state = AsyncData(
+      state.value!.copyWith(
+        initialCategory: state.value!.initialCategory.copyWith(
+          budgetAmount: _initialBudget,
+        ),
+      ),
+    );
   }
 
-  void resetWalletAmount() { 
-    setWalletAmount(_initialWalletAmount); 
-  }
-  
   Future<void> saveChanges() async {
     if (state.value == null) return;
     final repository = ref.read(transactionRepositoryProvider);
@@ -209,7 +219,9 @@ class ManageCategoryController extends _$ManageCategoryController {
 
     final addedIds = finalIds.difference(initialIds);
     for (final id in addedIds) {
-      final payment = finalState.recurringTransactions.firstWhere((p) => p.id == id);
+      final payment = finalState.recurringTransactions.firstWhere(
+        (p) => p.id == id,
+      );
       await repository.addTransaction(payment);
     }
 
@@ -217,11 +229,15 @@ class ManageCategoryController extends _$ManageCategoryController {
     for (final id in deletedIds) {
       await repository.deleteTransaction(id);
     }
-    
+
     final potentiallyUpdatedIds = initialIds.intersection(finalIds);
     for (final id in potentiallyUpdatedIds) {
-      final initialPayment = _initialRecurringTransactions.firstWhere((p) => p.id == id);
-      final finalPayment = finalState.recurringTransactions.firstWhere((p) => p.id == id);
+      final initialPayment = _initialRecurringTransactions.firstWhere(
+        (p) => p.id == id,
+      );
+      final finalPayment = finalState.recurringTransactions.firstWhere(
+        (p) => p.id == id,
+      );
       if (initialPayment != finalPayment) {
         await repository.updateTransaction(finalPayment);
       }
@@ -235,7 +251,7 @@ class ManageCategoryController extends _$ManageCategoryController {
   void setTotalBudget(double rawAmount) {
     if (state.value == null) return;
     final currentState = state.value!;
-    
+
     double monthlyBudget;
     switch (currentState.budgetPeriod) {
       case BudgetPeriod.weekly:
@@ -248,65 +264,37 @@ class ManageCategoryController extends _$ManageCategoryController {
         monthlyBudget = rawAmount / 12;
         break;
     }
-    
-    // Use the new getter here
+
+    // Safety check: Cannot set budget lower than fixed bills
     final minBudget = currentState.minimumBudget;
     final finalTotal = monthlyBudget < minBudget ? minBudget : monthlyBudget;
 
-    state = AsyncData(currentState.copyWith(
-      initialCategory: currentState.initialCategory.copyWith(budgetAmount: finalTotal),
-    ));
+    state = AsyncData(
+      currentState.copyWith(
+        initialCategory: currentState.initialCategory.copyWith(
+          budgetAmount: finalTotal,
+        ),
+      ),
+    );
   }
-  
+
   void setBudgetPeriod(BudgetPeriod newPeriod) {
     if (state.value == null) return;
     state = AsyncData(state.value!.copyWith(budgetPeriod: newPeriod));
-  }
-  
-  void setWalletAmount(double newWeeklyWallet) {
-    if (state.value == null) return;
-    final currentState = state.value!;
-
-    if (currentState.isBudgetLocked) {
-      final maxWeeklyWallet = currentState.availableForAllocation / 4.33;
-      final finalWallet = newWeeklyWallet > maxWeeklyWallet
-          ? maxWeeklyWallet
-          : (newWeeklyWallet < 0 ? 0.0 : newWeeklyWallet);
-      state = AsyncData(currentState.copyWith(
-        initialCategory:
-            currentState.initialCategory.copyWith(walletAmount: finalWallet),
-      ));
-    } else {
-      final newMonthlyWallet = newWeeklyWallet * 4.33;
-      final newTotalBudget = currentState.recurringSum + newMonthlyWallet;
-      if (newTotalBudget > currentState.totalBudget) {
-        state = AsyncData(currentState.copyWith(
-          initialCategory: currentState.initialCategory.copyWith(
-            budgetAmount: newTotalBudget,
-            walletAmount: newWeeklyWallet,
-          ),
-        ));
-      } else {
-        state = AsyncData(currentState.copyWith(
-          initialCategory:
-              currentState.initialCategory.copyWith(walletAmount: newWeeklyWallet),
-        ));
-      }
-    }
-  }
-
-  void toggleBudgetLock() {
-    if (state.value == null) return;
-    state = AsyncData(state.value!
-        .copyWith(isBudgetLocked: !state.value!.isBudgetLocked));
   }
 
   void minimizeBudget() {
     if (state.value == null) return;
     final currentState = state.value!;
+
+    // Sets the budget to exactly their fixed expenses (0 Variable allowance)
     final minMonthlyBudget = currentState.minimumBudget;
-    state = AsyncData(currentState.copyWith(
-      initialCategory: currentState.initialCategory.copyWith(budgetAmount: minMonthlyBudget),
-    ));
+    state = AsyncData(
+      currentState.copyWith(
+        initialCategory: currentState.initialCategory.copyWith(
+          budgetAmount: minMonthlyBudget,
+        ),
+      ),
+    );
   }
 }

@@ -1,7 +1,7 @@
 // lib/src/features/categories/presentation/widgets/income_context_bar.dart
 
 import 'package:flutter/material.dart';
-import 'package:budgit/src/features/budget_hub/budgets/presentation/providers/overall_budget_summary_provider.dart';
+import 'package:budgit/src/features/budget_hub/presentation/providers/overall_budget_summary_provider.dart';
 import 'package:budgit/src/core/domain/models/category.dart';
 import 'dart:math';
 
@@ -21,13 +21,15 @@ class IncomeContextBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    final List<Category> updatedCategories = allCategories
-        .where((c) => c.id != thisCategory.id)
-        .toList()
-      ..add(thisCategory);
+    final List<Category> updatedCategories =
+        allCategories.where((c) => c.id != thisCategory.id).toList()
+          ..add(thisCategory);
 
-    final totalUsed = updatedCategories.fold<double>(0.0, (sum, c) => sum + c.budgetAmount);
-    
+    final totalUsed = updatedCategories.fold<double>(
+      0.0,
+      (sum, c) => sum + c.budgetAmount,
+    );
+
     final remaining = summary.totalIncome - totalUsed;
     final isOverBudget = remaining < 0;
 
@@ -35,24 +37,28 @@ class IncomeContextBar extends StatelessWidget {
     final safeBarTotal = barTotal > 0 ? barTotal : 1.0;
 
     final List<Widget> segments = [];
-    
+
     for (final category in updatedCategories) {
       if (category.budgetAmount <= 0) continue;
-      
-      segments.add(Expanded(
-        flex: (category.budgetAmount / safeBarTotal * 1000000).toInt(),
-        child: Container(
-          color: category.color,
-          child: Tooltip(message: category.name, waitDuration: Duration.zero),
+
+      segments.add(
+        Expanded(
+          flex: (category.budgetAmount / safeBarTotal * 1000000).toInt(),
+          child: Container(
+            color: category.color,
+            child: Tooltip(message: category.name, waitDuration: Duration.zero),
+          ),
         ),
-      ));
+      );
     }
 
     if (!isOverBudget && remaining > 0) {
-      segments.add(Expanded(
-        flex: (remaining / safeBarTotal * 1000000).toInt(),
-        child: Container(color: theme.colorScheme.surfaceDim), 
-      ));
+      segments.add(
+        Expanded(
+          flex: (remaining / safeBarTotal * 1000000).toInt(),
+          child: Container(color: theme.colorScheme.surfaceDim),
+        ),
+      );
     }
 
     return Padding(
@@ -62,7 +68,9 @@ class IncomeContextBar extends StatelessWidget {
         children: [
           Text(
             'Impact on Overall Budget',
-            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
           ),
           const SizedBox(height: 8),
           Stack(
@@ -83,8 +91,10 @@ class IncomeContextBar extends StatelessWidget {
               if (isOverBudget && totalUsed > 0)
                 LayoutBuilder(
                   builder: (context, constraints) {
-                    final position = (summary.totalIncome / totalUsed) * constraints.maxWidth;
-                    
+                    final position =
+                        (summary.totalIncome / totalUsed) *
+                        constraints.maxWidth;
+
                     // --- FIX APPLIED HERE ---
                     // Ensure the padding value is never negative by taking the max of 0 or the calculated value.
                     final leftPadding = max(0.0, position - 1);
@@ -100,7 +110,7 @@ class IncomeContextBar extends StatelessWidget {
                         ),
                       ),
                     );
-                  }
+                  },
                 ),
             ],
           ),
@@ -115,12 +125,14 @@ class IncomeContextBar extends StatelessWidget {
               Text(
                 '\$${remaining.abs().toStringAsFixed(0)} ${isOverBudget ? "Over Income" : "Remaining"}',
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: isOverBudget ? theme.colorScheme.error : theme.colorScheme.primary,
+                  color: isOverBudget
+                      ? theme.colorScheme.error
+                      : theme.colorScheme.primary,
                   fontWeight: isOverBudget ? FontWeight.bold : null,
                 ),
               ),
             ],
-          )
+          ),
         ],
       ),
     );

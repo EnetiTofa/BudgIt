@@ -1,5 +1,3 @@
-// lib/src/features/categories/presentation/widgets/recurring_controls.dart
-
 import 'package:flutter/material.dart';
 import 'package:budgit/src/core/domain/models/category.dart';
 import 'package:budgit/src/features/categories/presentation/controllers/manage_category_controller.dart';
@@ -30,7 +28,9 @@ class RecurringControls extends StatelessWidget {
             children: [
               Text(
                 'Recurring Transactions',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
               ),
             ],
           ),
@@ -42,7 +42,8 @@ class RecurringControls extends StatelessWidget {
                   Dismissible(
                     key: ValueKey(payment.id),
                     direction: DismissDirection.endToStart,
-                    onDismissed: (_) => notifier.removeRecurringPayment(payment.id),
+                    onDismissed: (_) =>
+                        notifier.removeRecurringPayment(payment.id),
                     background: Container(
                       color: Colors.red,
                       alignment: Alignment.centerRight,
@@ -53,14 +54,15 @@ class RecurringControls extends StatelessWidget {
                       payment: payment,
                       category: state.initialCategory,
                       onTap: () async {
-                        final result = await Navigator.of(context).push<RecurringPayment>(
-                          MaterialPageRoute(
-                            builder: (context) => AddRecurringPaymentForm(
-                              category: state.initialCategory,
-                              initialPayment: payment,
-                            ),
-                          ),
-                        );
+                        final result = await Navigator.of(context)
+                            .push<RecurringPayment>(
+                              MaterialPageRoute(
+                                builder: (context) => AddRecurringPaymentForm(
+                                  category: state.initialCategory,
+                                  initialPayment: payment,
+                                ),
+                              ),
+                            );
                         if (result != null) {
                           notifier.updateRecurringPayment(result);
                         }
@@ -70,21 +72,25 @@ class RecurringControls extends StatelessWidget {
               ],
             )
           else
-            const SizedBox(height: 48, child: Text('No recurring payments added yet.')),
-          
+            const SizedBox(
+              height: 48,
+              child: Text('No recurring payments added yet.'),
+            ),
+
           const SizedBox(height: 16),
           Center(
             child: OutlinedButton.icon(
               icon: const Icon(Icons.add),
               label: const Text('Add Recurring Payment'),
               onPressed: () async {
-                final result = await Navigator.of(context).push<RecurringPayment>(
-                  MaterialPageRoute(
-                    builder: (context) => AddRecurringPaymentForm(
-                      category: state.initialCategory,
-                    ),
-                  ),
-                );
+                final result = await Navigator.of(context)
+                    .push<RecurringPayment>(
+                      MaterialPageRoute(
+                        builder: (context) => AddRecurringPaymentForm(
+                          category: state.initialCategory,
+                        ),
+                      ),
+                    );
                 if (result != null) {
                   notifier.addRecurringPayment(result);
                 }
@@ -103,10 +109,10 @@ class RecurringPaymentCard extends StatelessWidget {
   final VoidCallback onTap;
 
   const RecurringPaymentCard({
-    super.key, 
-    required this.payment, 
-    required this.category, 
-    required this.onTap
+    super.key,
+    required this.payment,
+    required this.category,
+    required this.onTap,
   });
 
   String _getRecurrenceText() {
@@ -117,10 +123,17 @@ class RecurringPaymentCard extends StatelessWidget {
         suffix = 'th';
       } else {
         switch (day % 10) {
-          case 1: suffix = 'st'; break;
-          case 2: suffix = 'nd'; break;
-          case 3: suffix = 'rd'; break;
-          default: suffix = 'th';
+          case 1:
+            suffix = 'st';
+            break;
+          case 2:
+            suffix = 'nd';
+            break;
+          case 3:
+            suffix = 'rd';
+            break;
+          default:
+            suffix = 'th';
         }
       }
       return 'Monthly on the $day$suffix';
@@ -134,22 +147,22 @@ class RecurringPaymentCard extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 6.0),
       elevation: 0,
-      // --- MODIFIED ---
-      // Removed the 'side' property to get rid of the border.
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      // --- END OF MODIFICATION ---
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
-        leading: Icon(
-          category.icon,
-          color: theme.colorScheme.secondary,
+        leading: Icon(category.icon, color: theme.colorScheme.secondary),
+        title: Text(
+          payment.paymentName,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
-        title: Text(payment.paymentName, maxLines: 1, overflow: TextOverflow.ellipsis),
         subtitle: Text(_getRecurrenceText()),
         trailing: Text(
           '-\$${payment.amount.toStringAsFixed(2)}',
-          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.red, fontSize: 16),
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.red,
+            fontSize: 16,
+          ),
         ),
         onTap: onTap,
       ),

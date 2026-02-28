@@ -1,27 +1,28 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'add_category_controller.dart';
+part of 'overall_budget_summary_provider.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$addCategoryControllerHash() =>
-    r'93b3377e11212c42aab291bd8f748a7bb7191201';
+String _$overallBudgetSummaryHash() =>
+    r'166efdc8b9edbb66c13219ca73e0a12fc42bd2b8';
 
-/// See also [AddCategoryController].
-@ProviderFor(AddCategoryController)
-final addCategoryControllerProvider = AutoDisposeNotifierProvider<
-    AddCategoryController, AddCategoryState>.internal(
-  AddCategoryController.new,
-  name: r'addCategoryControllerProvider',
+/// See also [overallBudgetSummary].
+@ProviderFor(overallBudgetSummary)
+final overallBudgetSummaryProvider =
+    AutoDisposeFutureProvider<OverallBudgetSummary>.internal(
+  overallBudgetSummary,
+  name: r'overallBudgetSummaryProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
       ? null
-      : _$addCategoryControllerHash,
+      : _$overallBudgetSummaryHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
-typedef _$AddCategoryController = AutoDisposeNotifier<AddCategoryState>;
+typedef OverallBudgetSummaryRef
+    = AutoDisposeFutureProviderRef<OverallBudgetSummary>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

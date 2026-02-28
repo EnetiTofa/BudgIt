@@ -7,7 +7,7 @@ part of 'manage_category_controller.dart';
 // **************************************************************************
 
 String _$manageCategoryControllerHash() =>
-    r'c5f68c50c1de660c2a6a108262e849aeaf83f1cd';
+    r'35b4a62dfbc02c342bfb9c775d0312c446a3f07c';
 
 /// Copied from Dart SDK
 class _SystemHash {

@@ -46,7 +46,6 @@ class AddCategoryState {
 
 @riverpod
 class AddCategoryController extends _$AddCategoryController {
-  
   @override
   AddCategoryState build() {
     // We can now use autoDispose as the state doesn't need to be preserved
@@ -66,7 +65,7 @@ class AddCategoryController extends _$AddCategoryController {
     state = state.copyWith(isLoading: true);
     try {
       final repository = ref.read(transactionRepositoryProvider);
-      
+
       // Create a new category with 0 for budget fields
       final newCategory = Category(
         id: state.id,
@@ -76,7 +75,6 @@ class AddCategoryController extends _$AddCategoryController {
         iconFontPackage: state.icon.fontPackage,
         colorValue: state.color.value,
         budgetAmount: 0.0, // Default to 0
-        walletAmount: 0.0, // Default to 0
       );
 
       await repository.addCategory(newCategory);
@@ -87,7 +85,7 @@ class AddCategoryController extends _$AddCategoryController {
       state = state.copyWith(isLoading: false);
     }
   }
-  
+
   void setName(String name) {
     state = state.copyWith(name: name);
   }

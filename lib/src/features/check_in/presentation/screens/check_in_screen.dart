@@ -2,14 +2,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:budgit/src/features/check_in/presentation/controllers/check_in_controller.dart';
-import 'package:budgit/src/features/check_in/presentation/pages/check_in_boost_page.dart';
+import 'package:budgit/src/features/check_in/presentation/pages/check_in_transfer_page.dart';
 import 'package:budgit/src/features/check_in/presentation/pages/rollover_save_page.dart';
 import 'package:budgit/src/features/check_in/presentation/pages/debt_rollover_page.dart'; // NEW IMPORT
 import 'package:budgit/src/features/check_in/presentation/pages/confirmation_page.dart';
 import 'package:budgit/src/features/check_in/presentation/providers/streak_provider.dart';
 import 'package:budgit/src/features/check_in/presentation/screens/streak_screen.dart';
 import 'package:budgit/src/features/check_in/presentation/screens/streak_ended_screen.dart';
-import 'package:budgit/src/features/check_in/presentation/pages/transaction_review_page.dart'; 
+import 'package:budgit/src/features/check_in/presentation/pages/transaction_review_page.dart';
 
 class CheckInScreen extends ConsumerStatefulWidget {
   const CheckInScreen({super.key});
@@ -24,8 +24,8 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
 
   // Added DebtRolloverPage to the flow
   final List<Widget> _checkInPages = [
-    const TransactionReviewPage(), 
-    const CheckInBoostPage(),     
+    const TransactionReviewPage(),
+    const CheckInTransferPage(),
     const RolloverSavePage(),
     const DebtRolloverPage(), // NEW: Step 4
     const ConfirmationPage(),
@@ -63,12 +63,14 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
         curve: Curves.easeIn,
       );
     } else {
-      final isSuccess = await ref.read(checkInControllerProvider.notifier).completeCheckIn();
+      final isSuccess = await ref
+          .read(checkInControllerProvider.notifier)
+          .completeCheckIn();
       final newStreakCount = await ref.read(checkInStreakProvider.future);
 
       if (mounted) {
         Navigator.of(context).pop(); // Close the check-in screen
-        
+
         if (isSuccess) {
           Navigator.of(context).push(
             MaterialPageRoute(
@@ -76,11 +78,9 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
             ),
           );
         } else {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => const StreakEndedScreen(),
-            ),
-          );
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const StreakEndedScreen()));
         }
       }
     }

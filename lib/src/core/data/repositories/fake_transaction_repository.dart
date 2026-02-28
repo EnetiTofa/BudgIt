@@ -3,7 +3,7 @@ import 'package:budgit/src/core/domain/models/savings_goal.dart';
 import 'package:budgit/src/core/data/repositories/transaction_repository.dart';
 import 'package:budgit/src/core/domain/models/category.dart';
 import 'package:budgit/src/core/domain/models/transaction.dart';
-import 'package:budgit/src/features/budget_hub/wallet/domain/wallet_adjustment.dart';
+import 'package:budgit/src/features/budget_hub/domain/budget_transfer.dart';
 
 class FakeTransactionRepository implements TransactionRepository {
   final Ref ref;
@@ -11,8 +11,8 @@ class FakeTransactionRepository implements TransactionRepository {
 
   final List<Transaction> _transactions = [];
   final List<Category> _categories = [];
-  final List<WalletAdjustment> _adjustments = [];
-  
+  final List<BudgetTransfer> _adjustments = [];
+
   List<String>? _categoryOrder;
   SavingsGoal? _savingsGoal;
   double _totalSavings = 0.0;
@@ -32,7 +32,7 @@ class FakeTransactionRepository implements TransactionRepository {
   Future<List<Transaction>> getAllTransactions() async {
     return List.unmodifiable(_transactions);
   }
-  
+
   @override
   Future<void> updateTransaction(Transaction transaction) async {
     final index = _transactions.indexWhere((t) => t.id == transaction.id);
@@ -100,7 +100,9 @@ class FakeTransactionRepository implements TransactionRepository {
 
   // --- Recurring Methods ---
   @override
-  Future<List<RecurringPayment>> getRecurringTransactionsForCategory(String categoryId) async {
+  Future<List<RecurringPayment>> getRecurringTransactionsForCategory(
+    String categoryId,
+  ) async {
     return _transactions
         .whereType<RecurringPayment>()
         .where((t) => t.category.id == categoryId)
@@ -109,25 +111,33 @@ class FakeTransactionRepository implements TransactionRepository {
 
   // --- Wallet Adjustment Methods ---
   @override
-  Future<void> addWalletAdjustment(WalletAdjustment adjustment) async {
+  Future<void> addBudgetTransfer(BudgetTransfer adjustment) async {
     _adjustments.add(adjustment);
   }
 
   @override
-  Future<List<WalletAdjustment>> getWalletAdjustmentsForWeek(DateTime dateInWeek) async {
+  Future<List<BudgetTransfer>> getBudgetTransfersForWeek(
+    DateTime dateInWeek,
+  ) async {
     // For fake repo, we might just return all to simplify testing
     // or implement simple logic if needed.
     return _adjustments;
   }
 
   @override
-  Future<List<WalletAdjustment>> getWalletAdjustments(String toCategoryId, DateTime dateInWeek) async {
+  Future<List<BudgetTransfer>> getBudgetTransfers(
+    String toCategoryId,
+    DateTime dateInWeek,
+  ) async {
     // Return adjustments for the target category.
     return _adjustments.where((a) => a.toCategoryId == toCategoryId).toList();
   }
 
   @override
-  Future<void> deleteWalletAdjustments(String toCategoryId, DateTime dateInWeek) async {
+  Future<void> deleteBudgetTransfers(
+    String toCategoryId,
+    DateTime dateInWeek,
+  ) async {
     _adjustments.removeWhere((a) => a.toCategoryId == toCategoryId);
   }
 
@@ -159,7 +169,9 @@ class FakeTransactionRepository implements TransactionRepository {
 
   // --- Check In Methods ---
   @override
-  Future<void> saveCheckInSummary({required double lastWeekWalletSpending}) async {
+  Future<void> saveCheckInSummary({
+    required double lastWeekWalletSpending,
+  }) async {
     _lastWeekWalletSpending = lastWeekWalletSpending;
   }
 
@@ -177,17 +189,19 @@ class FakeTransactionRepository implements TransactionRepository {
   }
 
   @override
-    Future<void> recordCheckInAttempt({required DateTime date, required bool isSuccess}) async {
-      _lastCheckInDate = date;
+  Future<void> recordCheckInAttempt({
+    required DateTime date,
+    required bool isSuccess,
+  }) async {
+    _lastCheckInDate = date;
 
-      if (isSuccess) {
-        // Add to history if it's not already there (simple check)
-        if (!_checkInHistory.contains(date)) {
-          _checkInHistory.add(date);
-        }
-      } else {
+    if (isSuccess) {
+      // Add to history if it's not already there (simple check)
+      if (!_checkInHistory.contains(date)) {
+        _checkInHistory.add(date);
       }
-    }
+    } else {}
+  }
 
   @override
   Future<List<DateTime>> getSuccessfulCheckInDates() async {
@@ -195,9 +209,9 @@ class FakeTransactionRepository implements TransactionRepository {
   }
 
   @override
-    Future<void> clearCheckInHistory() async {
-      _checkInHistory.clear();
-    }
+  Future<void> clearCheckInHistory() async {
+    _checkInHistory.clear();
+  }
 
   @override
   Future<int> getCheckInStreak() async {
@@ -246,11 +260,16 @@ class FakeTransactionRepository implements TransactionRepository {
   Future<List<String>> getRecentIcons() async {
     return _recentIcons;
   }
-  
+
   Map<String, dynamic>? _undoState;
 
   @override
-  Future<void> saveUndoCheckInState({required DateTime date, required double savedAmount, required int previousStreak, required bool wasSuccess}) async {
+  Future<void> saveUndoCheckInState({
+    required DateTime date,
+    required double savedAmount,
+    required int previousStreak,
+    required bool wasSuccess,
+  }) async {
     _undoState = {
       'date': date,
       'savedAmount': savedAmount,
@@ -271,7 +290,9 @@ class FakeTransactionRepository implements TransactionRepository {
 
   @override
   Future<void> deleteRolloverAdjustments(DateTime date) async {
-    _adjustments.removeWhere((a) => a.fromCategoryId == 'rollover' && a.date.isAtSameMomentAs(date));
+    _adjustments.removeWhere(
+      (a) => a.fromCategoryId == 'rollover' && a.date.isAtSameMomentAs(date),
+    );
   }
 
   @override

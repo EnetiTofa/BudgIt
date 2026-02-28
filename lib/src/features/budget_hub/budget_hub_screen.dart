@@ -1,8 +1,8 @@
 // lib/src/features/budget_hub/presentation/screens/budget_hub_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:budgit/src/features/budget_hub/budgets/presentation/screens/budgets_screen.dart';
-import 'package:budgit/src/features/budget_hub/wallet/presentation/screens/wallet_screen.dart';
+import 'package:budgit/src/features/budget_hub/presentation/screens/budgets_screen.dart';
+import 'package:budgit/src/features/budget_hub/presentation/screens/weekly_screen.dart';
 import 'package:budgit/src/core/data/providers/category_list_provider.dart';
 
 // Note: SavingsScreen import is temporarily commented out while locked
@@ -16,13 +16,18 @@ class BudgetHubScreen extends ConsumerStatefulWidget {
   ConsumerState<BudgetHubScreen> createState() => _BudgetHubScreenState();
 }
 
-class _BudgetHubScreenState extends ConsumerState<BudgetHubScreen> with SingleTickerProviderStateMixin {
+class _BudgetHubScreenState extends ConsumerState<BudgetHubScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this, initialIndex: widget.initialTabIndex);
+    _tabController = TabController(
+      length: 3,
+      vsync: this,
+      initialIndex: widget.initialTabIndex,
+    );
   }
 
   @override
@@ -37,7 +42,8 @@ class _BudgetHubScreenState extends ConsumerState<BudgetHubScreen> with SingleTi
     final categoriesAsync = ref.watch(categoryListProvider);
     final isLocked = categoriesAsync.maybeWhen(
       data: (categories) => categories.isEmpty,
-      orElse: () => false, // Default to unlocked while loading to prevent UI flashing
+      orElse: () =>
+          false, // Default to unlocked while loading to prevent UI flashing
     );
 
     return Column(
@@ -58,9 +64,19 @@ class _BudgetHubScreenState extends ConsumerState<BudgetHubScreen> with SingleTi
             ),
             tabs: [
               // 2. Change icons dynamically based on lock status
-              Tab(text: 'Wallet', icon: Icon(isLocked ? Icons.lock_outline : Icons.wallet_outlined)),
-              Tab(text: 'Budgets', icon: Icon(isLocked ? Icons.lock_outline : Icons.track_changes_outlined)),
-              const Tab(text: 'Savings', icon: Icon(Icons.lock_outline)), 
+              Tab(
+                text: 'Wallet',
+                icon: Icon(
+                  isLocked ? Icons.lock_outline : Icons.wallet_outlined,
+                ),
+              ),
+              Tab(
+                text: 'Budgets',
+                icon: Icon(
+                  isLocked ? Icons.lock_outline : Icons.track_changes_outlined,
+                ),
+              ),
+              const Tab(text: 'Savings', icon: Icon(Icons.lock_outline)),
             ],
           ),
         ),
@@ -69,9 +85,9 @@ class _BudgetHubScreenState extends ConsumerState<BudgetHubScreen> with SingleTi
             controller: _tabController,
             children: [
               // 3. Render the lock screen or the actual screens
-              isLocked ? const _NoCategoriesView() : const WalletScreen(),
+              isLocked ? const _NoCategoriesView() : const WeeklyScreen(),
               isLocked ? const _NoCategoriesView() : const BudgetsScreen(),
-              isLocked ? const _NoCategoriesView() : const _LockedSavingsView(), 
+              isLocked ? const _NoCategoriesView() : const _LockedSavingsView(),
             ],
           ),
         ),
@@ -87,26 +103,30 @@ class _NoCategoriesView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Padding(
       padding: const EdgeInsets.all(32.0),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.lock_outline, 
-            size: 80, 
-            color: theme.colorScheme.secondary.withOpacity(0.5)
+            Icons.lock_outline,
+            size: 80,
+            color: theme.colorScheme.secondary.withOpacity(0.5),
           ),
           const SizedBox(height: 24),
           Text(
             "Hub Locked",
-            style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 12),
           Text(
             "Create your first category to unlock the Wallet and Budgets features!",
-            style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.secondary),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.secondary,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 32),
@@ -123,26 +143,30 @@ class _LockedSavingsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Padding(
       padding: const EdgeInsets.all(32.0),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.lock_outline, 
-            size: 80, 
-            color: theme.colorScheme.secondary.withOpacity(0.5)
+            Icons.lock_outline,
+            size: 80,
+            color: theme.colorScheme.secondary.withOpacity(0.5),
           ),
           const SizedBox(height: 24),
           Text(
             "Savings Locked",
-            style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 12),
           Text(
             "The savings feature is currently locked. Check back later to start tracking your goals!",
-            style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.secondary),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.secondary,
+            ),
             textAlign: TextAlign.center,
           ),
         ],

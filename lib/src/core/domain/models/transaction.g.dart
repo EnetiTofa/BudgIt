@@ -25,7 +25,6 @@ class OneOffPaymentAdapter extends TypeAdapter<OneOffPayment> {
       itemName: fields[1] as String,
       store: fields[2] as String,
       category: fields[3] as Category,
-      isWalleted: fields[4] as bool,
       parentRecurringId: fields[9] as String?,
       iconCodePoint: fields[10] as int?,
       iconFontFamily: fields[11] as String?,
@@ -36,7 +35,7 @@ class OneOffPaymentAdapter extends TypeAdapter<OneOffPayment> {
   @override
   void write(BinaryWriter writer, OneOffPayment obj) {
     writer
-      ..writeByte(13)
+      ..writeByte(12)
       ..writeByte(0)
       ..write(obj.date)
       ..writeByte(1)
@@ -45,8 +44,6 @@ class OneOffPaymentAdapter extends TypeAdapter<OneOffPayment> {
       ..write(obj.store)
       ..writeByte(3)
       ..write(obj.category)
-      ..writeByte(4)
-      ..write(obj.isWalleted)
       ..writeByte(9)
       ..write(obj.parentRecurringId)
       ..writeByte(10)
@@ -309,7 +306,6 @@ class PaymentOccurrenceAdapter extends TypeAdapter<PaymentOccurrence> {
       itemName: fields[1] as String,
       store: fields[2] as String,
       category: fields[3] as Category,
-      isWalleted: fields[4] as bool,
       iconCodePoint: fields[10] as int?,
       iconFontFamily: fields[11] as String?,
       iconFontPackage: fields[12] as String?,
@@ -319,7 +315,7 @@ class PaymentOccurrenceAdapter extends TypeAdapter<PaymentOccurrence> {
   @override
   void write(BinaryWriter writer, PaymentOccurrence obj) {
     writer
-      ..writeByte(13)
+      ..writeByte(12)
       ..writeByte(0)
       ..write(obj.date)
       ..writeByte(1)
@@ -328,8 +324,6 @@ class PaymentOccurrenceAdapter extends TypeAdapter<PaymentOccurrence> {
       ..write(obj.store)
       ..writeByte(3)
       ..write(obj.category)
-      ..writeByte(4)
-      ..write(obj.isWalleted)
       ..writeByte(9)
       ..write(obj.parentRecurringId)
       ..writeByte(10)

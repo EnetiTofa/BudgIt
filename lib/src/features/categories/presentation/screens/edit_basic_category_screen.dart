@@ -4,11 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:budgit/src/core/domain/models/category.dart';
 import 'package:budgit/src/core/data/providers/category_list_provider.dart';
-import 'package:budgit/src/features/budget_hub/budgets/presentation/providers/category_gauge_data_provider.dart';
 import 'package:budgit/src/common_widgets/color_picker_field.dart';
 import 'package:budgit/src/common_widgets/icon_picker_field.dart';
 // Import your new custom text field
 import 'package:budgit/src/common_widgets/custom_text_input_field.dart';
+
+// FIX: Point to the new consolidated monthly providers
+import 'package:budgit/src/features/budget_hub/presentation/providers/monthly_projection_providers.dart';
 
 class EditBasicCategoryScreen extends ConsumerStatefulWidget {
   final Category category;
@@ -56,13 +58,13 @@ class _EditBasicCategoryScreenState
       iconFontPackage: _selectedIcon.fontPackage,
       colorValue: _selectedColor.value,
       budgetAmount: widget.category.budgetAmount,
-      walletAmount: widget.category.walletAmount,
     );
 
     await ref
         .read(categoryListProvider.notifier)
         .updateCategory(updatedCategory);
-    
+
+    // This now successfully points to the consolidated provider!
     ref.invalidate(categoryGaugeDataProvider);
 
     if (mounted) {
@@ -76,10 +78,7 @@ class _EditBasicCategoryScreenState
       appBar: AppBar(
         title: const Text('Edit Category'),
         actions: [
-          TextButton(
-            onPressed: _saveChanges,
-            child: const Text('Save'),
-          ),
+          TextButton(onPressed: _saveChanges, child: const Text('Save')),
         ],
       ),
       body: SingleChildScrollView(
@@ -87,13 +86,11 @@ class _EditBasicCategoryScreenState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // --- THE FIX IS HERE ---
             // Replaced the standard TextField with your custom widget.
             CustomTextInputField(
               controller: _nameController,
               labelText: 'Category Name',
             ),
-            // --- END OF FIX ---
             const SizedBox(height: 24),
 
             ColorPickerField(
@@ -105,7 +102,7 @@ class _EditBasicCategoryScreenState
               },
             ),
             const SizedBox(height: 24),
-            
+
             IconPickerField(
               selectedIcon: _selectedIcon,
               onIconSelected: (newIcon) {
