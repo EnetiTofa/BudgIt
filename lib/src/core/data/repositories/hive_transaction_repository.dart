@@ -308,13 +308,52 @@ class HiveTransactionRepository implements TransactionRepository {
     final categories = _categoryBox.values.toList();
     if (categories.isEmpty) return;
 
-    final generatedTransactions = <OneOffPayment>[];
+    final generatedTransactions = <Transaction>[];
 
     for (int i = 0; i < 12; i++) {
       for (var category in categories) {
-        final numTransactions = random.nextInt(5) + 1;
         final monthlyBudget = category.budgetAmount;
-        final mean = monthlyBudget / (numTransactions * 1.5);
+
+        // --- 1. GENERATE A FAKE FIXED RECURRING BILL (30% of budget) ---
+        final fixedAmount = monthlyBudget * 0.3;
+        final recurringId = 'dummy_recurring_${category.id}_$i';
+
+        // Add the parent recurring object (simulating a subscription)
+        generatedTransactions.add(
+          RecurringPayment(
+            id: recurringId,
+            notes: 'Dummy Subscription',
+            createdAt: now,
+            amount: fixedAmount,
+            paymentName: 'Monthly ${category.name} Bill',
+            payee: 'Fake Corp',
+            startDate: DateTime(now.year, now.month - i, 1),
+            category: category,
+            recurrence: RecurrencePeriod.monthly,
+            recurrenceFrequency: 1,
+          ),
+        );
+
+        // Add the actual payment instance for that month
+        final fixedPaymentDate = DateTime(now.year, now.month - i, 5);
+        generatedTransactions.add(
+          OneOffPayment(
+            id: uuid.v4(),
+            notes: 'Auto-paid bill',
+            createdAt: fixedPaymentDate,
+            amount: fixedAmount,
+            date: fixedPaymentDate,
+            itemName: 'Monthly ${category.name} Bill',
+            store: 'Fake Corp',
+            category: category,
+            parentRecurringId: recurringId, // <--- THIS MAKES IT FIXED!
+          ),
+        );
+
+        // --- 2. GENERATE FAKE VARIABLE SPENDING (Remaining 70% of budget) ---
+        final numTransactions = random.nextInt(5) + 2;
+        final variableBudget = monthlyBudget * 0.7;
+        final mean = variableBudget / (numTransactions * 1.2);
         final stdDev = mean * 0.4;
 
         for (int j = 0; j < numTransactions; j++) {
@@ -330,10 +369,10 @@ class HiveTransactionRepository implements TransactionRepository {
               createdAt: transactionDate,
               amount: _generateNormalRandom(random, mean, stdDev),
               date: transactionDate,
-              itemName: 'Monthly spend for ${category.name}',
-              store: 'Generated Online Store',
+              itemName: 'Variable spend for ${category.name}',
+              store: 'Generated Store',
               category: category,
-              // isWalleted: false, <-- REMOVED: All OneOffPayments are now inherently 'Variable'
+              parentRecurringId: null, // <--- THIS MAKES IT VARIABLE!
             ),
           );
         }
@@ -347,7 +386,6 @@ class HiveTransactionRepository implements TransactionRepository {
   @override
   Future<void> deleteAllData() async {
     await _transactionBox.clear();
-    await _categoryBox.clear();
     await _BudgetTransferBox.clear();
   }
 

@@ -3,10 +3,10 @@ import 'dart:math' as math;
 import 'package:budgit/src/common_widgets/custom_toggle.dart';
 
 class SpendingSpeedometer extends StatefulWidget {
-  final double currentSpeed;      // Average Daily Spending (Past)
-  final double recommendedSpeed;  // Recommended Daily Spending (Future)
-  final int daysRemaining;        // Days remaining in the period
-  final Color color;              // This is the CATEGORY color
+  final double currentSpeed; // Average Daily Spending (Past)
+  final double recommendedSpeed; // Recommended Daily Spending (Future)
+  final int daysRemaining; // Days remaining in the period
+  final Color color; // This is the CATEGORY color
 
   const SpendingSpeedometer({
     super.key,
@@ -20,13 +20,14 @@ class SpendingSpeedometer extends StatefulWidget {
   State<SpendingSpeedometer> createState() => _SpendingSpeedometerState();
 }
 
-class _SpendingSpeedometerState extends State<SpendingSpeedometer> with SingleTickerProviderStateMixin {
+class _SpendingSpeedometerState extends State<SpendingSpeedometer>
+    with SingleTickerProviderStateMixin {
   // 1. Set default mode to Recommended
   String _selectedMode = "Recommended";
-  
+
   late AnimationController _controller;
   late Animation<double> _animation;
-  
+
   // Track start and end for smooth transitions
   double _beginValue = 0.0;
   double _endValue = 0.0;
@@ -34,12 +35,14 @@ class _SpendingSpeedometerState extends State<SpendingSpeedometer> with SingleTi
   @override
   void initState() {
     super.initState();
-    
+
     // 2. FIX: Initialize _endValue based on the default mode
     // Previously it was hardcoded to widget.currentSpeed
-    _endValue = _selectedMode == "Average" ? widget.currentSpeed : widget.recommendedSpeed;
-    
-    _beginValue = 0.0; 
+    _endValue = _selectedMode == "Average"
+        ? widget.currentSpeed
+        : widget.recommendedSpeed;
+
+    _beginValue = 0.0;
 
     _controller = AnimationController(
       vsync: this,
@@ -53,22 +56,25 @@ class _SpendingSpeedometerState extends State<SpendingSpeedometer> with SingleTi
   @override
   void didUpdateWidget(covariant SpendingSpeedometer oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.currentSpeed != widget.currentSpeed || 
+    if (oldWidget.currentSpeed != widget.currentSpeed ||
         oldWidget.recommendedSpeed != widget.recommendedSpeed) {
       _updateTarget();
     }
   }
 
   void _setupAnimation() {
-    _animation = Tween<double>(begin: _beginValue, end: _endValue).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
-    );
+    _animation = Tween<double>(
+      begin: _beginValue,
+      end: _endValue,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
   }
 
   void _updateTarget() {
     setState(() {
       _beginValue = _animation.value;
-      _endValue = _selectedMode == "Average" ? widget.currentSpeed : widget.recommendedSpeed;
+      _endValue = _selectedMode == "Average"
+          ? widget.currentSpeed
+          : widget.recommendedSpeed;
     });
 
     _setupAnimation();
@@ -85,20 +91,20 @@ class _SpendingSpeedometerState extends State<SpendingSpeedometer> with SingleTi
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     // Scale Logic
     final maxVal = math.max(widget.currentSpeed, widget.recommendedSpeed) * 1.5;
     final safeMax = maxVal > 0 ? maxVal : 100.0;
-    
+
     // Adjust sizeScale to fit your screen width preference
-    const double sizeScale = 0.85; 
+    const double sizeScale = 0.85;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         // 1. The Speedometer Arc & Needle
         SizedBox(
-          height: 150 * sizeScale, 
+          height: 150 * sizeScale,
           width: 260 * sizeScale,
           child: AnimatedBuilder(
             animation: _animation,
@@ -109,16 +115,15 @@ class _SpendingSpeedometerState extends State<SpendingSpeedometer> with SingleTi
                   maxValue: safeMax,
                   categoryColor: widget.color,
                   appPrimaryColor: theme.colorScheme.primary, // Needle Color
-                  backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                  backgroundColor: theme.colorScheme.surfaceDim,
                 ),
               );
             },
           ),
         ),
-        
+
         // Spacing between Needle Pivot and Text
         const SizedBox(height: 24), // Reduced slightly to keep it tight
-
         // 2. The Value Text & Subtitle
         AnimatedBuilder(
           animation: _animation,
@@ -126,9 +131,9 @@ class _SpendingSpeedometerState extends State<SpendingSpeedometer> with SingleTi
             // Determine Subtitle based on mode
             String subtitle;
             if (_selectedMode == "Average") {
-               subtitle = "Current average"; 
+              subtitle = "Current average";
             } else {
-               subtitle = "for next ${widget.daysRemaining} days";
+              subtitle = "for next ${widget.daysRemaining} days";
             }
 
             return Column(
@@ -139,11 +144,11 @@ class _SpendingSpeedometerState extends State<SpendingSpeedometer> with SingleTi
                     style: theme.textTheme.headlineLarge?.copyWith(
                       fontWeight: FontWeight.w900,
                       color: theme.colorScheme.primary,
-                      fontSize: 32 * sizeScale, 
+                      fontSize: 32 * sizeScale,
                     ),
                     children: [
                       TextSpan(
-                        text: "\$${_animation.value.toStringAsFixed(2)}"
+                        text: "\$${_animation.value.toStringAsFixed(2)}",
                       ),
                       TextSpan(
                         text: " / day",
@@ -156,7 +161,7 @@ class _SpendingSpeedometerState extends State<SpendingSpeedometer> with SingleTi
                     ],
                   ),
                 ),
-                
+
                 // Subtitle
                 const SizedBox(height: 4),
                 Text(
@@ -170,7 +175,7 @@ class _SpendingSpeedometerState extends State<SpendingSpeedometer> with SingleTi
             );
           },
         ),
-        
+
         // Spacing between Text and Toggle
         const SizedBox(height: 15),
 
@@ -194,8 +199,8 @@ class _SpendingSpeedometerState extends State<SpendingSpeedometer> with SingleTi
 class _SpeedometerPainter extends CustomPainter {
   final double value;
   final double maxValue;
-  final Color categoryColor;   
-  final Color appPrimaryColor; 
+  final Color categoryColor;
+  final Color appPrimaryColor;
   final Color backgroundColor;
 
   _SpeedometerPainter({
@@ -210,14 +215,14 @@ class _SpeedometerPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     // 1. Geometry
     // We anchor the center at the bottom-ish of the container
-    final center = Offset(size.width / 2, size.height * 0.90); 
+    final center = Offset(size.width / 2, size.height * 0.90);
     final radius = math.min(size.width / 2, center.dy - 10);
-    
+
     const double degreesToRadians = math.pi / 180.0;
     const totalSweepDeg = 220.0;
-    const startAngle = (-90 - (totalSweepDeg / 2)) * degreesToRadians; 
-    const sweepAngle = totalSweepDeg * degreesToRadians;   
-    
+    const startAngle = (-90 - (totalSweepDeg / 2)) * degreesToRadians;
+    const sweepAngle = totalSweepDeg * degreesToRadians;
+
     const double strokeWidth = 20.0;
 
     // 2. Background Arc
@@ -226,7 +231,7 @@ class _SpeedometerPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.butt;
-      
+
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),
       startAngle,
@@ -238,13 +243,13 @@ class _SpeedometerPainter extends CustomPainter {
     // 3. Category Fill Arc
     final pct = (value / maxValue).clamp(0.0, 1.0);
     final fillAngle = sweepAngle * pct;
-    
+
     final fillPaint = Paint()
       ..color = categoryColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.butt;
-      
+
     if (pct > 0) {
       canvas.drawArc(
         Rect.fromCircle(center: center, radius: radius),
@@ -256,45 +261,46 @@ class _SpeedometerPainter extends CustomPainter {
     }
 
     // 4. Measurement Notches
-    final tickPaint = Paint()
-      ..style = PaintingStyle.stroke;
+    final tickPaint = Paint()..style = PaintingStyle.stroke;
 
-    final int totalTicks = 30; 
-    final double innerRadius = radius - strokeWidth / 2; 
-    
+    final int totalTicks = 30;
+    final double innerRadius = radius - strokeWidth / 2;
+
     for (int i = 0; i <= totalTicks; i++) {
       final tickPct = i / totalTicks;
       final tickAngle = startAngle + (sweepAngle * tickPct);
-      
+
       // LOGIC: The loop runs 0 to 30. The exact middle (15) is 12 o'clock.
       final bool isTopCenter = (i == totalTicks ~/ 2);
       final bool isMajor = i % 5 == 0;
-      
+
       // Determine Size based on hierarchy: Top > Major > Minor
-      final double tickLength = isTopCenter 
-          ? 18.0   // 12 o'clock length
+      final double tickLength = isTopCenter
+          ? 18.0 // 12 o'clock length
           : (isMajor ? 12.0 : 6.0);
-          
-      final double tickThickness = isTopCenter 
-          ? 3.5    // 12 o'clock thickness
+
+      final double tickThickness = isTopCenter
+          ? 3.5 // 12 o'clock thickness
           : (isMajor ? 2.5 : 1.5);
-      
-      final double tickOffset = 4.0; 
+
+      final double tickOffset = 4.0;
 
       final p1 = Offset(
         center.dx + (innerRadius - tickOffset) * math.cos(tickAngle),
         center.dy + (innerRadius - tickOffset) * math.sin(tickAngle),
       );
-      
+
       final p2 = Offset(
-        center.dx + (innerRadius - tickOffset - tickLength) * math.cos(tickAngle),
-        center.dy + (innerRadius - tickOffset - tickLength) * math.sin(tickAngle),
+        center.dx +
+            (innerRadius - tickOffset - tickLength) * math.cos(tickAngle),
+        center.dy +
+            (innerRadius - tickOffset - tickLength) * math.sin(tickAngle),
       );
-      
+
       tickPaint.strokeWidth = tickThickness;
       // Make the top one slightly darker/more opaque than standard majors
-      tickPaint.color = (isTopCenter || isMajor) 
-          ? Colors.grey.withOpacity(0.8) 
+      tickPaint.color = (isTopCenter || isMajor)
+          ? Colors.grey.withOpacity(0.8)
           : Colors.grey.withOpacity(0.3);
 
       canvas.drawLine(p1, p2, tickPaint);
@@ -302,8 +308,8 @@ class _SpeedometerPainter extends CustomPainter {
 
     // 5. Needle
     final needleAngle = startAngle + fillAngle;
-    final needleLen = radius + 5; 
-    
+    final needleLen = radius + 5;
+
     final needleTip = Offset(
       center.dx + needleLen * math.cos(needleAngle),
       center.dy + needleLen * math.sin(needleAngle),
@@ -317,7 +323,7 @@ class _SpeedometerPainter extends CustomPainter {
       center.dx + baseWidth * math.cos(baseAngleLeft),
       center.dy + baseWidth * math.sin(baseAngleLeft),
     );
-    
+
     final baseRight = Offset(
       center.dx + baseWidth * math.cos(baseAngleRight),
       center.dy + baseWidth * math.sin(baseAngleRight),
@@ -334,15 +340,15 @@ class _SpeedometerPainter extends CustomPainter {
       ..style = PaintingStyle.fill;
 
     canvas.drawPath(needlePath, needlePaint);
-    
+
     // Center Pivot
     canvas.drawCircle(center, baseWidth, Paint()..color = appPrimaryColor);
   }
 
   @override
   bool shouldRepaint(covariant _SpeedometerPainter oldDelegate) {
-    return oldDelegate.value != value || 
-           oldDelegate.categoryColor != categoryColor ||
-           oldDelegate.appPrimaryColor != appPrimaryColor;
+    return oldDelegate.value != value ||
+        oldDelegate.categoryColor != categoryColor ||
+        oldDelegate.appPrimaryColor != appPrimaryColor;
   }
 }

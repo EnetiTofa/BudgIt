@@ -10,7 +10,6 @@ import 'package:budgit/src/core/domain/models/transaction.dart';
 import 'package:budgit/src/features/transaction_hub/transactions/presentation/controllers/add_transaction_controller.dart';
 import 'package:budgit/src/core/data/providers/category_list_provider.dart';
 import 'package:budgit/src/utils/clock_provider.dart';
-import 'package:budgit/src/features/transaction_hub/transactions/presentation/widgets/wallet_toggle.dart';
 import 'package:budgit/src/common_widgets/date_selector_field.dart';
 import 'package:budgit/src/features/transaction_hub/transactions/presentation/widgets/period_selector_field.dart';
 import 'package:budgit/src/common_widgets/icon_picker_field.dart';
@@ -41,7 +40,6 @@ class _PaymentFormState extends ConsumerState<PaymentForm> {
   DateTime? _endDate;
   RecurrencePeriod _recurrence = RecurrencePeriod.monthly;
   int _recurrenceFrequency = 1;
-  bool _isWalleted = true;
 
   bool get isEditing => widget.initialTransaction != null;
 
@@ -78,7 +76,6 @@ class _PaymentFormState extends ConsumerState<PaymentForm> {
     } else {
       _selectedDate =
           widget.initialDate ?? ref.read(clockNotifierProvider).now();
-      _isWalleted = true;
     }
   }
 
@@ -127,7 +124,6 @@ class _PaymentFormState extends ConsumerState<PaymentForm> {
     final controller = ref.read(addTransactionControllerProvider.notifier);
 
     if (isEditing) {
-      // --- EDITING LOGIC (UNCHANGED) ---
       final originalTx = widget.initialTransaction!;
       if (originalTx is OneOffPayment) {
         final updatedTx = OneOffPayment(
@@ -161,7 +157,6 @@ class _PaymentFormState extends ConsumerState<PaymentForm> {
         await controller.updateTransaction(updatedTx);
       }
     } else {
-      // --- ADDING NEW TRANSACTION LOGIC ---
       if (_paymentType == PaymentType.oneOff) {
         await controller.addOneOffPayment(
           amount: _amount,
@@ -287,22 +282,10 @@ class _PaymentFormState extends ConsumerState<PaymentForm> {
                   setState(() => _selectedCategory = category),
             ),
             const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: DateSelectorField(
-                    labelText: 'Date',
-                    selectedDate: _selectedDate,
-                    onDateSelected: (date) =>
-                        setState(() => _selectedDate = date),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                WalletToggle(
-                  isWalleted: _isWalleted,
-                  onChanged: (value) => setState(() => _isWalleted = value),
-                ),
-              ],
+            DateSelectorField(
+              labelText: 'Date',
+              selectedDate: _selectedDate,
+              onDateSelected: (date) => setState(() => _selectedDate = date),
             ),
           ] else ...[
             CustomTextInputField(

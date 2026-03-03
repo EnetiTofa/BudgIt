@@ -6,10 +6,7 @@ import 'package:budgit/src/core/domain/models/category.dart';
 import 'package:budgit/src/core/data/providers/category_list_provider.dart';
 import 'package:budgit/src/common_widgets/color_picker_field.dart';
 import 'package:budgit/src/common_widgets/icon_picker_field.dart';
-// Import your new custom text field
 import 'package:budgit/src/common_widgets/custom_text_input_field.dart';
-
-// FIX: Point to the new consolidated monthly providers
 import 'package:budgit/src/features/budget_hub/presentation/providers/monthly_projection_providers.dart';
 
 class EditBasicCategoryScreen extends ConsumerStatefulWidget {
@@ -64,7 +61,6 @@ class _EditBasicCategoryScreenState
         .read(categoryListProvider.notifier)
         .updateCategory(updatedCategory);
 
-    // This now successfully points to the consolidated provider!
     ref.invalidate(categoryGaugeDataProvider);
 
     if (mounted) {
@@ -86,14 +82,13 @@ class _EditBasicCategoryScreenState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Replaced the standard TextField with your custom widget.
             CustomTextInputField(
               controller: _nameController,
               labelText: 'Category Name',
             ),
             const SizedBox(height: 24),
-
             ColorPickerField(
+              labelText: 'Color',
               selectedColor: _selectedColor,
               onColorSelected: (newColor) {
                 setState(() {
@@ -102,8 +97,8 @@ class _EditBasicCategoryScreenState
               },
             ),
             const SizedBox(height: 24),
-
             IconPickerField(
+              labelText: 'Icon',
               selectedIcon: _selectedIcon,
               onIconSelected: (newIcon) {
                 setState(() {

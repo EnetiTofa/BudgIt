@@ -12,15 +12,14 @@ class UnifiedBudgetGauge extends StatefulWidget {
     required this.totalSpent,
     this.labelSuffix = "Spent",
     this.subLabel,
-    this.showLegend = false,
-  });
+  }); // Removed showLegend from constructor
 
   final List<GaugeSegment> segments;
   final double totalBudget;
   final double totalSpent;
   final String labelSuffix;
   final String? subLabel;
-  final bool showLegend;
+  // Removed final bool showLegend;
 
   @override
   State<UnifiedBudgetGauge> createState() => _UnifiedBudgetGaugeState();
@@ -120,7 +119,7 @@ class _UnifiedBudgetGaugeState extends State<UnifiedBudgetGauge>
           ),
         ),
 
-        // 2. The SubLabel (Moved outside, effectively swapping position with legend if used)
+        // 2. The SubLabel
         if (widget.subLabel != null) ...[
           const SizedBox(height: 12),
           Text(
@@ -134,39 +133,7 @@ class _UnifiedBudgetGaugeState extends State<UnifiedBudgetGauge>
           ),
         ],
 
-        // 3. The Legend
-        if (widget.showLegend && widget.segments.isNotEmpty) ...[
-          const SizedBox(height: 24),
-          Wrap(
-            spacing: 16.0,
-            runSpacing: 8.0,
-            alignment: WrapAlignment.center,
-            children: widget.segments.map((segment) {
-              return Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 12,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: segment.color,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    segment.label,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.secondary,
-                    ),
-                  ),
-                ],
-              );
-            }).toList(),
-          ),
-        ],
+        // The Legend block has been completely removed!
       ],
     );
   }

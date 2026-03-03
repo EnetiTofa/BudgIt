@@ -2,19 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:budgit/src/features/budget_hub/domain/weekly_category_data.dart';
-import 'package:budgit/src/features/budget_hub/presentation/widgets/wallet_speedometer.dart';
-import 'package:budgit/src/features/budget_hub/presentation/screens/wallet_category_detail_screen.dart';
+import 'package:budgit/src/features/budget_hub/presentation/widgets/weekly_speedometer.dart';
+import 'package:budgit/src/features/budget_hub/presentation/widgets/weekly_category_detail_view.dart';
 
-class WalletCategoryCard extends ConsumerStatefulWidget {
+class WeeklyCategoryCard extends ConsumerStatefulWidget {
   final WeeklyCategoryData data;
 
-  const WalletCategoryCard({super.key, required this.data});
+  const WeeklyCategoryCard({super.key, required this.data});
 
   @override
-  ConsumerState<WalletCategoryCard> createState() => _WalletCategoryCardState();
+  ConsumerState<WeeklyCategoryCard> createState() => _WeeklyCategoryCardState();
 }
 
-class _WalletCategoryCardState extends ConsumerState<WalletCategoryCard>
+class _WeeklyCategoryCardState extends ConsumerState<WeeklyCategoryCard>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
@@ -34,7 +34,7 @@ class _WalletCategoryCardState extends ConsumerState<WalletCategoryCard>
   }
 
   @override
-  void didUpdateWidget(covariant WalletCategoryCard oldWidget) {
+  void didUpdateWidget(covariant WeeklyCategoryCard oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.data.weeklyProgress != oldWidget.data.weeklyProgress) {
       _animation = Tween<double>(
@@ -73,7 +73,7 @@ class _WalletCategoryCardState extends ConsumerState<WalletCategoryCard>
         onTap: () {
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (_) => WeeklyCategoryDetailScreen(data: data),
+              builder: (_) => WeeklyCategoryDetailView(data: data),
             ),
           );
         },
@@ -154,7 +154,7 @@ class _WalletCategoryCardState extends ConsumerState<WalletCategoryCard>
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  WalletSpeedometer(
+                  WeeklySpeedometer(
                     targetAverage: data.recommendedDailySpending,
                     currentAverage: data.averageDailySpending,
                     color: contentColor,

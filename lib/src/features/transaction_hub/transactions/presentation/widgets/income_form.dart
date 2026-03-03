@@ -45,7 +45,11 @@ class _IncomeFormState extends ConsumerState<IncomeForm> {
         _amount = tx.amount;
         _selectedDate = tx.date;
         _referenceController.text = tx.reference ?? '';
-        _selectedIcon = IconData(tx.iconCodePoint, fontFamily: tx.iconFontFamily, fontPackage: tx.iconFontPackage,);
+        _selectedIcon = IconData(
+          tx.iconCodePoint,
+          fontFamily: tx.iconFontFamily,
+          fontPackage: tx.iconFontPackage,
+        );
       } else if (tx is RecurringIncome) {
         _incomeType = IncomeType.recurring;
         _sourceController.text = tx.source;
@@ -55,7 +59,11 @@ class _IncomeFormState extends ConsumerState<IncomeForm> {
         _recurrence = tx.recurrence;
         _recurrenceFrequency = tx.recurrenceFrequency;
         _referenceController.text = tx.reference ?? '';
-        _selectedIcon = IconData(tx.iconCodePoint, fontFamily: tx.iconFontFamily, fontPackage: tx.iconFontPackage,);
+        _selectedIcon = IconData(
+          tx.iconCodePoint,
+          fontFamily: tx.iconFontFamily,
+          fontPackage: tx.iconFontPackage,
+        );
       }
     } else {
       _selectedDate = ref.read(clockNotifierProvider).now();
@@ -73,10 +81,14 @@ class _IncomeFormState extends ConsumerState<IncomeForm> {
   void _submitForm() {
     final source = _sourceController.text;
     final reference = _referenceController.text;
-    if (source.isEmpty || _amount <= 0 || _selectedDate == null || _selectedIcon == null) return;
+    if (source.isEmpty ||
+        _amount <= 0 ||
+        _selectedDate == null ||
+        _selectedIcon == null)
+      return;
 
     final controller = ref.read(addTransactionControllerProvider.notifier);
-    
+
     if (isEditing) {
       final tx = widget.initialTransaction!;
       if (tx is OneOffIncome) {
@@ -116,8 +128,8 @@ class _IncomeFormState extends ConsumerState<IncomeForm> {
     } else {
       if (_incomeType == IncomeType.oneOff) {
         controller.addOneOffIncome(
-          amount: _amount, 
-          source: source, 
+          amount: _amount,
+          source: source,
           date: _selectedDate!,
           reference: reference.isEmpty ? null : reference,
           iconCodePoint: _selectedIcon!.codePoint,
@@ -154,17 +166,24 @@ class _IncomeFormState extends ConsumerState<IncomeForm> {
               child: Center(
                 child: CustomToggle(
                   options: const ['One-Off', 'Recurring'],
-                  selectedValue: _incomeType == IncomeType.oneOff ? 'One-Off' : 'Recurring',
+                  selectedValue: _incomeType == IncomeType.oneOff
+                      ? 'One-Off'
+                      : 'Recurring',
                   onChanged: (value) {
                     setState(() {
-                      _incomeType = value == 'One-Off' ? IncomeType.oneOff : IncomeType.recurring;
+                      _incomeType = value == 'One-Off'
+                          ? IncomeType.oneOff
+                          : IncomeType.recurring;
                     });
                   },
                 ),
               ),
             ),
-          
-          CustomTextInputField(controller: _sourceController, labelText: 'Source (e.g., Salary)'),
+
+          CustomTextInputField(
+            controller: _sourceController,
+            labelText: 'Source (e.g., Salary)',
+          ),
           const SizedBox(height: 16),
           CurrencyInputField(
             labelText: 'Amount',
@@ -173,7 +192,10 @@ class _IncomeFormState extends ConsumerState<IncomeForm> {
             onChanged: (value) => _amount = value,
           ),
           const SizedBox(height: 16),
-          CustomTextInputField(controller: _referenceController, labelText: 'Reference (Optional)'),
+          CustomTextInputField(
+            controller: _referenceController,
+            labelText: 'Reference (Optional)',
+          ),
           const SizedBox(height: 16),
           IconPickerField(
             selectedIcon: _selectedIcon,
@@ -209,7 +231,9 @@ class _IncomeFormState extends ConsumerState<IncomeForm> {
                     labelText: 'Start Date',
                     selectedDate: _selectedDate,
                     layout: DateSelectorLayout.vertical,
-                    onDateSelected: (date) => setState(() => _selectedDate = date),
+                    onDateSelected: (date) =>
+                        setState(() => _selectedDate = date),
+                    allowFutureDates: true,
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -224,7 +248,7 @@ class _IncomeFormState extends ConsumerState<IncomeForm> {
                 ),
               ],
             ),
-          ] else ... [
+          ] else ...[
             // 3. Replace one-off date button
             DateSelectorField(
               labelText: 'Date',
@@ -232,13 +256,15 @@ class _IncomeFormState extends ConsumerState<IncomeForm> {
               onDateSelected: (date) => setState(() => _selectedDate = date),
             ),
           ],
-          
+
           const SizedBox(height: 32),
           Center(
             child: ElevatedButton(
               onPressed: _submitForm,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
+                backgroundColor: Theme.of(
+                  context,
+                ).colorScheme.surfaceContainerLowest,
                 foregroundColor: Theme.of(context).colorScheme.onSurface,
                 elevation: 0,
                 fixedSize: const Size(250, 50),

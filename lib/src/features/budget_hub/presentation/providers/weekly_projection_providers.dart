@@ -114,35 +114,29 @@ Future<List<WeeklyCategoryData>> weeklyCategoryData(
       }
     }
 
-    // D. Transfers (formerly Boosts/Rollovers)
-    final incoming = allTransfers
+    // D. Transfers (The Physics Update)
+    // Money coming IN increases the budget
+    final incomingTransfers = allTransfers
         .where((b) => b.toCategoryId == category.id)
         .fold(0.0, (sum, b) => sum + b.amount);
 
-    for (final b in allTransfers.where(
-      (b) => b.fromCategoryId == category.id,
-    )) {
-      final dayIndex = b.date.difference(startOfSelectedWeek).inDays;
-      if (dayIndex >= 0 && dayIndex < 7)
-        currentWeekPattern[dayIndex] += b.amount;
-
-      if (isCurrentWeek) {
-        if (b.date.isBefore(startOfToday))
-          spentInCompletedDays += b.amount;
-        else
-          spendingToday += b.amount;
-      } else {
-        spentInCompletedDays += b.amount;
-      }
-    }
+    // Money going OUT decreases the budget
+    final outgoingTransfers = allTransfers
+        .where((b) => b.fromCategoryId == category.id)
+        .fold(0.0, (sum, b) => sum + b.amount);
 
     // E. Math & Physics
-    final double effectiveWeeklyBudget = baseWeeklyBudget + incoming;
+    // The budget is strictly: Base + In - Out
+    final double effectiveWeeklyBudget =
+        baseWeeklyBudget + incomingTransfers - outgoingTransfers;
+
     final int daysRemaining = isCurrentWeek
         ? (7 - now.difference(startOfCurrentWeek).inDays).clamp(1, 7)
         : 0;
+
     final double budgetAvailableAtStartOfDay =
         effectiveWeeklyBudget - spentInCompletedDays;
+
     final double recommendedDailySpending = daysRemaining > 0
         ? (budgetAvailableAtStartOfDay / daysRemaining).clamp(
             0.0,

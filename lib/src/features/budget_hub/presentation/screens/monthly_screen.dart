@@ -2,8 +2,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:fl_chart/fl_chart.dart'; // Added for the history chart
-import 'package:intl/intl.dart'; // Added for DateFormat
+import 'package:fl_chart/fl_chart.dart';
+import 'package:intl/intl.dart';
 
 import 'package:budgit/src/common_widgets/pulsing_button.dart';
 import 'package:budgit/src/features/categories/presentation/screens/add_category_screen.dart';
@@ -16,9 +16,13 @@ import 'package:budgit/src/features/budget_hub/presentation/widgets/category_det
 import 'package:budgit/src/features/budget_hub/presentation/widgets/unified_budget_gauge.dart';
 import 'package:budgit/src/features/budget_hub/domain/category_gauge_data.dart';
 import 'package:budgit/src/core/data/providers/category_list_provider.dart';
+import 'package:budgit/src/features/categories/presentation/screens/edit_basic_category_screen.dart';
+import 'package:budgit/src/utils/clock_provider.dart';
+import 'package:budgit/src/features/budget_hub/presentation/widgets/monthly_transaction_calendar.dart';
 
-// --- NEW IMPORTS (Consolidated Providers) ---
 import 'package:budgit/src/features/budget_hub/presentation/providers/monthly_projection_providers.dart';
+// --- ADDED IMPORT FOR PALETTE GENERATOR ---
+import 'package:budgit/src/utils/palette_generator.dart';
 
 final selectedCategoryProvider = StateProvider<Category?>((ref) => null);
 
@@ -27,7 +31,6 @@ class MonthlyScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // WATCH THE NEW CONSOLIDATED PROVIDER
     final budgetDataAsync = ref.watch(monthlyScreenDataProvider);
     final selectedCategory = ref.watch(selectedCategoryProvider);
 
@@ -36,12 +39,11 @@ class MonthlyScreen extends ConsumerWidget {
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, stack) => Center(child: Text('Error: $error')),
       data: (screenData) {
-        // We still use selectedMonthProvider, but it now lives in the consolidated file
         final selectedMonth =
             ref.watch(selectedMonthProvider) ??
             (screenData.historicalSpending.isNotEmpty
                 ? screenData.historicalSpending.last.date
-                : DateTime.now());
+                : ref.read(clockNotifierProvider).now());
 
         return WillPopScope(
           onWillPop: () async {
@@ -62,10 +64,32 @@ class MonthlyScreen extends ConsumerWidget {
                     child: Stack(
                       alignment: Alignment.center,
                       children: [
+                        if (selectedCategory != null)
+                          Positioned(
+                            left: 0,
+                            child: IconButton(
+                              iconSize: 28,
+                              icon: Icon(
+                                Icons.edit,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                              onPressed: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        EditBasicCategoryScreen(
+                                          category: selectedCategory,
+                                        ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+
                         MonthSelector(
                           selectedDate: selectedMonth,
                           onMonthChanged: (newMonth) {
-                            final now = DateTime.now();
+                            final now = ref.read(clockNotifierProvider).now();
                             final currentMonth = DateTime(now.year, now.month);
 
                             if (newMonth.isAfter(currentMonth)) return;
@@ -74,6 +98,7 @@ class MonthlyScreen extends ConsumerWidget {
                                 newMonth;
                           },
                         ),
+
                         if (selectedCategory != null)
                           Positioned(
                             right: 0,
@@ -98,8 +123,9 @@ class MonthlyScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
+
                   SizedBox(
-                    height: 300,
+                    height: 270,
                     child: AnimatedSwitcher(
                       duration: const Duration(milliseconds: 400),
                       switchInCurve: Curves.easeInOut,
@@ -136,7 +162,6 @@ class MonthlyScreen extends ConsumerWidget {
                             ),
                     ),
                   ),
-
                   const SizedBox(height: 4),
 
                   if (screenData.budgetProgress.isEmpty)
@@ -163,8 +188,19 @@ class MonthlyScreen extends ConsumerWidget {
                       },
                     ),
 
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 16),
 
+                  // --- 1. THE UNIFIED, NON-MOVING HISTORY CHART ---
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                    child: UnifiedMonthlyHistoryChart(
+                      categoryId: selectedCategory?.id,
+                      selectedMonth: selectedMonth,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // --- 2. ANIMATED SWITCHER FOR REMAINING DETAILS ---
                   AnimatedSwitcher(
                     duration: const Duration(milliseconds: 300),
                     switchInCurve: Curves.easeInOut,
@@ -235,12 +271,10 @@ class MonthlyScreen extends ConsumerWidget {
         totalBudget: totalBudget,
         totalSpent: totalSpent,
         labelSuffix: "of \$${totalBudget.toStringAsFixed(0)} Budget",
-        showLegend: false,
       ),
     );
   }
 
-  // Consolidated the history chart and summary card for the global view
   Widget _buildGlobalDetails(
     BuildContext context,
     MonthlyScreenData screenData,
@@ -249,14 +283,17 @@ class MonthlyScreen extends ConsumerWidget {
     return Column(
       key: const ValueKey('GlobalDetails'),
       children: [
+        // Activity Calendar First (since History Chart is now unified above it)
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20.0),
-          child: _GlobalHistoryChart(
-            historicalData: screenData.historicalSpending,
+          child: MonthlyTransactionCalendar(
             selectedMonth: selectedMonth,
+            categoryId: null,
           ),
         ),
         const SizedBox(height: 16),
+
+        // Summary Stats Second
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: SummaryStatCard(
@@ -301,7 +338,6 @@ class _CategoryGaugeWrapper extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // WATCH THE NEW CONSOLIDATED SYNCHRONOUS PROVIDER
     final gaugeData = ref.watch(
       categoryGaugeDataProvider(category: category, month: month),
     );
@@ -313,27 +349,29 @@ class _CategoryGaugeWrapper extends ConsumerWidget {
         totalBudget: gaugeData.totalBudget,
         totalSpent: gaugeData.totalSpent,
         labelSuffix: "of \$${gaugeData.totalBudget.toStringAsFixed(0)} Budget",
-        showLegend: true,
       ),
     );
   }
 }
 
-class _GlobalHistoryChart extends ConsumerStatefulWidget {
-  final List<dynamic> historicalData;
+// --- NEW: THE UNIFIED HISTORY CHART ---
+class UnifiedMonthlyHistoryChart extends ConsumerStatefulWidget {
+  final String? categoryId; // Null = Global View, String = Category View
   final DateTime selectedMonth;
 
-  const _GlobalHistoryChart({
-    required this.historicalData,
+  const UnifiedMonthlyHistoryChart({
+    super.key,
+    required this.categoryId,
     required this.selectedMonth,
   });
 
   @override
-  ConsumerState<_GlobalHistoryChart> createState() =>
-      _GlobalHistoryChartState();
+  ConsumerState<UnifiedMonthlyHistoryChart> createState() =>
+      _UnifiedMonthlyHistoryChartState();
 }
 
-class _GlobalHistoryChartState extends ConsumerState<_GlobalHistoryChart> {
+class _UnifiedMonthlyHistoryChartState
+    extends ConsumerState<UnifiedMonthlyHistoryChart> {
   late final ScrollController _chartScrollController;
   static const double _itemWidth = 65.0;
   bool _hasScrolledToEnd = false;
@@ -363,16 +401,28 @@ class _GlobalHistoryChartState extends ConsumerState<_GlobalHistoryChart> {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
-    // --- NEW: Watch categories to get their colors ---
     final categories = ref.watch(categoryListProvider).valueOrNull ?? [];
 
+    // --- DYNAMIC DATA FETCHING ---
+    // Safely pull either the global data or the category-specific data
+    List<dynamic> historicalData = [];
+    if (widget.categoryId == null) {
+      final screenData = ref.watch(monthlyScreenDataProvider).valueOrNull;
+      historicalData = screenData?.historicalSpending ?? [];
+    } else {
+      historicalData = ref.watch(
+        historicalCategorySpendingProvider(categoryId: widget.categoryId!),
+      );
+    }
+
     double maxAmount = 10.0;
-    if (widget.historicalData.isNotEmpty) {
-      final highestDataPoint = widget.historicalData
-          .map((d) => d.amount as double)
-          .reduce((a, b) => a > b ? a : b);
-      if (highestDataPoint > maxAmount) {
-        maxAmount = highestDataPoint;
+    if (historicalData.isNotEmpty) {
+      for (final d in historicalData) {
+        // Global item uses .amount, Category item uses .total
+        double val = widget.categoryId == null
+            ? (d.amount as double)
+            : (d.total as double);
+        if (val > maxAmount) maxAmount = val;
       }
     }
     final maxY = maxAmount * 1.2;
@@ -393,10 +443,10 @@ class _GlobalHistoryChartState extends ConsumerState<_GlobalHistoryChart> {
           ),
           const SizedBox(height: 16),
           SizedBox(
-            height: 180,
+            height: 140,
             child: Builder(
               builder: (context) {
-                if (widget.historicalData.isEmpty) {
+                if (historicalData.isEmpty) {
                   return Center(
                     child: Text(
                       'No spending data yet.',
@@ -420,11 +470,10 @@ class _GlobalHistoryChartState extends ConsumerState<_GlobalHistoryChart> {
                       controller: _chartScrollController,
                       scrollDirection: Axis.horizontal,
                       child: SizedBox(
-                        width: _itemWidth * widget.historicalData.length,
+                        width: _itemWidth * historicalData.length,
                         height: constraints.maxHeight,
                         child: Stack(
                           children: [
-                            // A. The Chart underneath
                             Padding(
                               padding: const EdgeInsets.only(
                                 top: 16,
@@ -464,12 +513,10 @@ class _GlobalHistoryChartState extends ConsumerState<_GlobalHistoryChart> {
                                         getTitlesWidget: (value, meta) {
                                           final index = value.toInt();
                                           if (index < 0 ||
-                                              index >=
-                                                  widget.historicalData.length)
+                                              index >= historicalData.length)
                                             return const SizedBox.shrink();
 
-                                          final item =
-                                              widget.historicalData[index];
+                                          final item = historicalData[index];
                                           final isSelected =
                                               item.date.year ==
                                                   widget.selectedMonth.year &&
@@ -499,9 +546,9 @@ class _GlobalHistoryChartState extends ConsumerState<_GlobalHistoryChart> {
                                     ),
                                   ),
                                   barGroups: List.generate(
-                                    widget.historicalData.length,
+                                    historicalData.length,
                                     (index) {
-                                      final item = widget.historicalData[index];
+                                      final item = historicalData[index];
                                       final isSelected =
                                           item.date.year ==
                                               widget.selectedMonth.year &&
@@ -509,42 +556,87 @@ class _GlobalHistoryChartState extends ConsumerState<_GlobalHistoryChart> {
                                               widget.selectedMonth.month;
                                       final opacity = isSelected ? 1.0 : 0.3;
 
-                                      // --- NEW: Generate Stacked Segments ---
-                                      double currentY = 0;
                                       final rodStackItems =
                                           <BarChartRodStackItem>[];
+                                      double totalY = 0.0;
 
-                                      for (final category in categories) {
-                                        if (item.categoryTotals.containsKey(
-                                          category.id,
-                                        )) {
-                                          final amount =
-                                              item.categoryTotals[category.id]!;
-                                          rodStackItems.add(
-                                            BarChartRodStackItem(
-                                              currentY,
-                                              currentY + amount,
-                                              Color(
-                                                category.colorValue,
-                                              ).withOpacity(opacity),
-                                            ),
-                                          );
-                                          currentY += amount;
+                                      // --- DYNAMIC BAR RENDERING ---
+                                      if (widget.categoryId == null) {
+                                        // Global View: Stack all categories
+                                        double currentY = 0;
+                                        for (final category in categories) {
+                                          if (item.categoryTotals.containsKey(
+                                            category.id,
+                                          )) {
+                                            final amount = item
+                                                .categoryTotals[category.id]!;
+                                            rodStackItems.add(
+                                              BarChartRodStackItem(
+                                                currentY,
+                                                currentY + amount,
+                                                Color(
+                                                  category.colorValue,
+                                                ).withOpacity(opacity),
+                                              ),
+                                            );
+                                            currentY += amount;
+                                          }
                                         }
+                                        totalY = currentY;
+                                      } else {
+                                        // Category View: Stack Fixed vs Variable
+                                        final category = categories.firstWhere(
+                                          (c) => c.id == widget.categoryId,
+                                          orElse: () => Category(
+                                            id: '',
+                                            name: '',
+                                            iconCodePoint: 0,
+                                            colorValue: 0,
+                                            budgetAmount: 0,
+                                          ),
+                                        );
+
+                                        if (category.id.isNotEmpty) {
+                                          final palette =
+                                              generateSpendingPalette(
+                                                category.color,
+                                              );
+                                          if (item.recurring > 0) {
+                                            rodStackItems.add(
+                                              BarChartRodStackItem(
+                                                0,
+                                                item.recurring,
+                                                palette.recurring.withOpacity(
+                                                  opacity,
+                                                ),
+                                              ),
+                                            );
+                                          }
+                                          if (item.variable > 0) {
+                                            rodStackItems.add(
+                                              BarChartRodStackItem(
+                                                item.recurring,
+                                                item.total,
+                                                palette.wallet.withOpacity(
+                                                  opacity,
+                                                ),
+                                              ),
+                                            );
+                                          }
+                                        }
+                                        totalY = item.total;
                                       }
-                                      // ----------------------------------------
 
                                       return BarChartGroupData(
                                         x: index,
                                         barRods: [
                                           BarChartRodData(
-                                            toY: currentY > 0 ? currentY : 0.1,
+                                            toY: totalY > 0 ? totalY : 0.1,
                                             width: 22,
                                             borderRadius: BorderRadius.circular(
                                               4,
                                             ),
-                                            rodStackItems:
-                                                rodStackItems, // Feed the stacks in
+                                            rodStackItems: rodStackItems,
                                             color: colorScheme
                                                 .surfaceContainerHighest
                                                 .withOpacity(opacity),
@@ -556,54 +648,51 @@ class _GlobalHistoryChartState extends ConsumerState<_GlobalHistoryChart> {
                                 ),
                               ),
                             ),
-
-                            // B. The Touch Overlay on top
                             Positioned.fill(
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: List.generate(
-                                  widget.historicalData.length,
-                                  (index) {
-                                    final item = widget.historicalData[index];
-                                    final isSelected =
-                                        item.date.year ==
-                                            widget.selectedMonth.year &&
-                                        item.date.month ==
-                                            widget.selectedMonth.month;
+                                children: List.generate(historicalData.length, (
+                                  index,
+                                ) {
+                                  final item = historicalData[index];
+                                  final isSelected =
+                                      item.date.year ==
+                                          widget.selectedMonth.year &&
+                                      item.date.month ==
+                                          widget.selectedMonth.month;
 
-                                    return Expanded(
-                                      child: GestureDetector(
-                                        behavior: HitTestBehavior.opaque,
-                                        onTap: () {
-                                          ref
-                                              .read(
-                                                selectedMonthProvider.notifier,
-                                              )
-                                              .state = item
-                                              .date;
-                                        },
-                                        child: Container(
-                                          margin: const EdgeInsets.symmetric(
-                                            horizontal: 2,
-                                            vertical: 0,
-                                          ),
-                                          decoration: isSelected
-                                              ? BoxDecoration(
-                                                  border: Border.all(
-                                                    color: colorScheme.primary,
-                                                    width: 2,
-                                                  ),
-                                                  borderRadius:
-                                                      BorderRadius.circular(12),
-                                                  color: colorScheme.primary
-                                                      .withOpacity(0.05),
-                                                )
-                                              : null,
+                                  return Expanded(
+                                    child: GestureDetector(
+                                      behavior: HitTestBehavior.opaque,
+                                      onTap: () {
+                                        ref
+                                            .read(
+                                              selectedMonthProvider.notifier,
+                                            )
+                                            .state = item
+                                            .date;
+                                      },
+                                      child: Container(
+                                        margin: const EdgeInsets.symmetric(
+                                          horizontal: 2,
+                                          vertical: 0,
                                         ),
+                                        decoration: isSelected
+                                            ? BoxDecoration(
+                                                border: Border.all(
+                                                  color: colorScheme.primary,
+                                                  width: 2,
+                                                ),
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                                color: colorScheme.primary
+                                                    .withOpacity(0.05),
+                                              )
+                                            : null,
                                       ),
-                                    );
-                                  },
-                                ),
+                                    ),
+                                  );
+                                }),
                               ),
                             ),
                           ],

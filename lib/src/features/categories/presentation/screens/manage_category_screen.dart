@@ -1,14 +1,19 @@
+// lib/src/features/categories/presentation/screens/manage_category_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:budgit/src/core/domain/models/category.dart';
+
 import 'package:budgit/src/features/budget_hub/presentation/providers/overall_budget_summary_provider.dart';
-import 'package:budgit/src/features/categories/presentation/controllers/manage_category_controller.dart';
+import 'package:budgit/src/features/categories/presentation/widgets/income_context_bar.dart';
 import 'package:budgit/src/features/categories/presentation/widgets/interactive_budget_gauge.dart';
 import 'package:budgit/src/core/data/providers/category_list_provider.dart';
-import 'package:budgit/src/features/categories/presentation/widgets/income_context_bar.dart';
+
+// Controls
+import 'package:budgit/src/features/categories/presentation/controllers/manage_category_controller.dart';
 import 'package:budgit/src/features/categories/presentation/widgets/total_budget_controls.dart';
 import 'package:budgit/src/features/categories/presentation/widgets/recurring_controls.dart';
-// Note: We are replacing wallet_controls.dart with a new informative view below
+import 'package:budgit/src/features/transaction_hub/transactions/presentation/controllers/add_transaction_controller.dart';
 
 class ManageCategoryScreen extends ConsumerStatefulWidget {
   const ManageCategoryScreen({super.key, required this.category});
@@ -19,52 +24,65 @@ class ManageCategoryScreen extends ConsumerStatefulWidget {
       _ManageCategoryScreenState();
 }
 
-class _ManageCategoryScreenState extends ConsumerState<ManageCategoryScreen>
-    with SingleTickerProviderStateMixin {
-  late final TabController _tabController;
+class _ManageCategoryScreenState extends ConsumerState<ManageCategoryScreen> {
   GaugeSegmentType _selectedSegment = GaugeSegmentType.center;
 
-  // REFACTORED: Mapped to the new Binary Paradigm
-  final Map<int, GaugeSegmentType> _pageIndexToSegment = {
-    0: GaugeSegmentType.center,
-    1: GaugeSegmentType.fixed,
-    2: GaugeSegmentType.variable,
-  };
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 3, vsync: this);
-
-    _tabController.addListener(() {
-      if (!_tabController.indexIsChanging) {
-        final newSegment = _pageIndexToSegment[_tabController.index];
-        if (newSegment != null) {
-          setState(() {
-            _selectedSegment = newSegment;
-          });
-        }
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
-
   void _onGaugeTapped(GaugeSegmentType segment) {
-    if (segment == GaugeSegmentType.none) return;
+    if (segment != GaugeSegmentType.none) {
+      setState(() {
+        _selectedSegment = segment;
+      });
+    }
+  }
 
-    final pageIndex = _pageIndexToSegment.entries
-        .firstWhere(
-          (entry) => entry.value == segment,
-          orElse: () => _pageIndexToSegment.entries.first,
-        )
-        .key;
+  Future<void> _saveChanges() async {
+    final notifier = ref.read(
+      manageCategoryControllerProvider(widget.category.id).notifier,
+    );
+    await notifier.saveChanges();
 
-    _tabController.animateTo(pageIndex);
+    if (mounted) {
+      Navigator.of(context).pop();
+    }
+  }
+
+  // ... inside your _ManageCategoryScreenState class ...
+
+  Future<void> _deleteCategory() async {
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Category?'),
+        content: Text(
+          'Are you sure you want to delete the "${widget.category.name}" category? This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && mounted) {
+      // --- CHANGED THIS SECTION ---
+      // We use addTransactionControllerProvider instead of categoryListProvider
+      final controller = ref.read(addTransactionControllerProvider.notifier);
+      await controller.deleteCategory(widget.category.id);
+      // ----------------------------
+
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+    }
   }
 
   @override
@@ -77,26 +95,15 @@ class _ManageCategoryScreenState extends ConsumerState<ManageCategoryScreen>
     );
     final summaryAsync = ref.watch(overallBudgetSummaryProvider);
     final allCategoriesAsync = ref.watch(categoryListProvider);
+    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(widget.category.icon, color: widget.category.color),
-            const SizedBox(width: 8),
-            Text('Manage ${widget.category.name}'),
-          ],
-        ),
+        title: const Text('Manage Budget'),
         actions: [
           stateAsync.maybeWhen(
-            data: (_) => TextButton(
-              onPressed: () async {
-                await notifier.saveChanges();
-                if (context.mounted) Navigator.of(context).pop();
-              },
-              child: const Text('Save'),
-            ),
+            data: (_) =>
+                TextButton(onPressed: _saveChanges, child: const Text('Save')),
             orElse: () => const Padding(
               padding: EdgeInsets.only(right: 16.0),
               child: SizedBox(
@@ -114,6 +121,7 @@ class _ManageCategoryScreenState extends ConsumerState<ManageCategoryScreen>
             onTap: () => FocusScope.of(context).unfocus(),
             child: SingleChildScrollView(
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   summaryAsync.when(
                     data: (summary) => allCategoriesAsync.when(
@@ -125,19 +133,20 @@ class _ManageCategoryScreenState extends ConsumerState<ManageCategoryScreen>
                       loading: () => const SizedBox(height: 80),
                       error: (e, s) => const SizedBox(
                         height: 80,
-                        child: Center(child: Text('Error')),
+                        child: Center(child: Text('Error loading categories')),
                       ),
                     ),
                     loading: () => const SizedBox(height: 80),
                     error: (e, s) => const SizedBox(
                       height: 80,
-                      child: Center(child: Text('Error')),
+                      child: Center(child: Text('Error loading summary')),
                     ),
                   ),
+
                   Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 48.0,
-                      vertical: 0.0,
+                      vertical: 16.0,
                     ),
                     child: InteractiveBudgetGauge(
                       category: widget.category,
@@ -146,32 +155,74 @@ class _ManageCategoryScreenState extends ConsumerState<ManageCategoryScreen>
                       onSegmentTapped: _onGaugeTapped,
                     ),
                   ),
+
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 16.0),
+                    padding: const EdgeInsets.all(24.0),
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        TabBar(
-                          controller: _tabController,
-                          // REFACTORED: Tab names map to our binary domains
-                          tabs: const [
-                            Tab(text: 'Total'),
-                            Tab(text: 'Fixed'),
-                            Tab(text: 'Variable'),
-                          ],
+                        // --- 1. RECURRING TRANSACTIONS ---
+                        Text(
+                          'Recurring Bills',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Fixed subscriptions or payments inside this category.',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.secondary,
+                          ),
                         ),
                         const SizedBox(height: 16),
-                        IndexedStack(
-                          index: _tabController.index,
-                          children: [
-                            TotalBudgetControls(
-                              state: state,
-                              notifier: notifier,
-                            ),
-                            RecurringControls(state: state, notifier: notifier),
-                            // REPLACED WalletControls WITH OUR NEW VIEW
-                            _VariableAllowanceInfoView(state: state),
-                          ],
+                        RecurringControls(state: state, notifier: notifier),
+
+                        const SizedBox(height: 32),
+                        const Divider(),
+                        const SizedBox(height: 24),
+
+                        // --- 2. TOTAL BUDGET ---
+                        Text(
+                          'Monthly Budget',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Set the total monthly allowance for this category.',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.secondary,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        TotalBudgetControls(state: state, notifier: notifier),
+
+                        const SizedBox(height: 32),
+                        const Divider(),
+
+                        _VariableAllowanceInfoView(state: state),
+
+                        const SizedBox(height: 32),
+
+                        // --- NEW: DELETE BUTTON ---
+                        Center(
+                          child: TextButton.icon(
+                            onPressed: _deleteCategory,
+                            icon: const Icon(Icons.delete_outline),
+                            label: const Text('Delete Category'),
+                            style: TextButton.styleFrom(
+                              foregroundColor: theme.colorScheme.error,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 12,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 40),
                       ],
                     ),
                   ),
@@ -187,8 +238,6 @@ class _ManageCategoryScreenState extends ConsumerState<ManageCategoryScreen>
   }
 }
 
-// --- NEW COMPONENT: Explains the implicit math to the user ---
-// You can extract this into its own file (e.g., variable_allowance_info_view.dart) later.
 class _VariableAllowanceInfoView extends StatelessWidget {
   final ManageCategoryState state;
   const _VariableAllowanceInfoView({required this.state});

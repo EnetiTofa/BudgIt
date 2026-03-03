@@ -5,6 +5,7 @@ import 'package:budgit/src/core/domain/models/category.dart';
 import 'package:budgit/src/features/budget_hub/domain/budget_transfer.dart';
 import 'package:budgit/src/core/data/providers/category_list_provider.dart';
 import 'package:budgit/src/features/budget_hub/presentation/widgets/transfer_form.dart';
+import 'package:budgit/src/utils/clock_provider.dart';
 
 // FIX 1: Point to the correct transfer controller
 import 'package:budgit/src/features/budget_hub/presentation/controllers/transfer_controller.dart';
@@ -100,6 +101,7 @@ class ActiveTransfersSection extends ConsumerWidget {
                       amount: amount,
                       targetCategory: category,
                       onTap: () {
+                        final now = ref.read(clockNotifierProvider).now();
                         showModalBottomSheet(
                           context: context,
                           isScrollControlled: true,
@@ -116,7 +118,7 @@ class ActiveTransfersSection extends ConsumerWidget {
                               fromCategoryId: fromCategoryId,
                               toCategoryId: category.id,
                               amount: amount,
-                              date: DateTime.now(),
+                              date: now,
                             ),
                           ),
                         );

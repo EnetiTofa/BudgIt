@@ -1,4 +1,5 @@
 // lib/src/features/categories/presentation/screens/add_category_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:budgit/src/common_widgets/color_picker_field.dart';
@@ -22,7 +23,7 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
     super.initState();
     final notifier = ref.read(addCategoryControllerProvider.notifier);
     final initialState = ref.read(addCategoryControllerProvider);
-    
+
     _nameController = TextEditingController(text: initialState.name);
     _nameController.addListener(() {
       notifier.setName(_nameController.text);
@@ -42,7 +43,7 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
     if (mounted && newCategory != null) {
       // Pop the add screen
       Navigator.of(context).pop();
-      // Push the manage screen for the new category
+      // Instantly open the new unified Manage Category screen
       Navigator.of(context).push(
         MaterialPageRoute(
           builder: (context) => ManageCategoryScreen(category: newCategory),
@@ -63,42 +64,62 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
           state.isLoading
               ? const Padding(
                   padding: EdgeInsets.only(right: 16.0),
-                  child: Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))),
+                  child: Center(
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ),
                 )
               : TextButton(
-                  onPressed: _nameController.text.trim().isEmpty ? null : _saveAndNavigate,
+                  onPressed: _nameController.text.trim().isEmpty
+                      ? null
+                      : _saveAndNavigate,
                   child: const Text('Save'),
                 ),
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text("What's the category?",
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            const Text(
+              "What's the category?",
+              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 8),
             Text(
               "Give it a name, and choose an icon and color to make it recognizable.",
-              style: Theme.of(context).textTheme.bodyMedium,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.secondary,
+              ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
             CustomTextInputField(
               controller: _nameController,
               labelText: 'Category Name',
             ),
             const SizedBox(height: 16),
-            IconPickerField(
-              labelText: 'Icon',
-              selectedIcon: state.icon,
-              onIconSelected: (icon) => notifier.setIcon(icon),
-            ),
-            const SizedBox(height: 16),
-            ColorPickerField(
-              labelText: 'Color',
-              selectedColor: state.color,
-              onColorSelected: (color) => notifier.setColor(color),
+            Row(
+              children: [
+                Expanded(
+                  child: IconPickerField(
+                    labelText: 'Icon',
+                    selectedIcon: state.icon,
+                    onIconSelected: (icon) => notifier.setIcon(icon),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ColorPickerField(
+                    labelText: 'Color',
+                    selectedColor: state.color,
+                    onColorSelected: (color) => notifier.setColor(color),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

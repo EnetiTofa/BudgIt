@@ -9,7 +9,6 @@ import 'package:budgit/src/features/check_in/presentation/providers/is_check_in_
 import 'package:budgit/src/features/check_in/presentation/providers/streak_provider.dart';
 import 'package:budgit/src/features/check_in/presentation/providers/app_bar_info_provider.dart';
 
-// FIX: Point to the new consolidated weekly providers
 import 'package:budgit/src/features/budget_hub/presentation/providers/weekly_projection_providers.dart';
 
 part 'check_in_controller.g.dart';
@@ -64,8 +63,7 @@ class CheckInController extends _$CheckInController {
       range.start,
     );
 
-    // READ THE UNIFIED TRUTH: Get the exact math used by the dashboard for the past week
-    // FIX: Using the new weeklyCategoryDataProvider
+    // Fetch the recalculated engine data
     final pastWeekData = await ref.read(
       weeklyCategoryDataProvider(selectedDate: range.start).future,
     );
@@ -79,7 +77,6 @@ class CheckInController extends _$CheckInController {
     for (final transaction in allTransactions) {
       if (transaction is OneOffPayment &&
           transaction.parentRecurringId == null) {
-        // Variable Only
         if (!transaction.date.isBefore(range.start) &&
             transaction.date.isBefore(range.end)) {
           weekTransactions.add(transaction);
@@ -87,8 +84,9 @@ class CheckInController extends _$CheckInController {
       }
     }
 
-    // Calculate Balances directly from our Unified Data Provider
+    // Assign Unspent/Overspent from the unified calculation
     for (final data in pastWeekData) {
+      // Amount remaining automatically reflects transfers now!
       final difference = data.amountRemainingThisWeek;
 
       if (difference > 0) {
@@ -106,6 +104,14 @@ class CheckInController extends _$CheckInController {
       return dateB.compareTo(dateA);
     });
 
+    // SAFETY CLAMP: If user transferred funds away, ensure rollover amounts shrink to match the new lower unspent limits
+    final Map<String, double> validatedRollovers = {};
+    for (var entry in state.rolloverAmounts.entries) {
+      final maxUnspent = unspentByCategory[entry.key] ?? 0.0;
+      final clamped = entry.value.clamp(0.0, maxUnspent);
+      if (clamped > 0) validatedRollovers[entry.key] = clamped;
+    }
+
     state = state.copyWith(
       status: CheckInStatus.dataReady,
       unspentFundsByCategory: unspentByCategory,
@@ -114,6 +120,7 @@ class CheckInController extends _$CheckInController {
       checkInWeekDate: range.end.subtract(const Duration(minutes: 1)),
       checkInWeekBoosts: pastAdjustments,
       debtStreaks: debtStreaks,
+      rolloverAmounts: validatedRollovers, // Apply the safe limits
     );
   }
 
@@ -134,6 +141,7 @@ class CheckInController extends _$CheckInController {
     required double amount,
   }) async {
     final repository = ref.read(transactionRepositoryProvider);
+    final range = await _getWeekRange();
     final date =
         state.checkInWeekDate ??
         DateTime.now().subtract(const Duration(days: 7));
@@ -162,6 +170,12 @@ class CheckInController extends _$CheckInController {
     for (final adj in targetBoosts) {
       await repository.addBudgetTransfer(adj);
     }
+
+    // --- THE MAGIC FIX ---
+    // Destroy the old cached math and force the Unified Engine to recalculate!
+    ref.invalidate(weeklyCategoryDataProvider(selectedDate: range.start));
+    ref.invalidate(weeklyAggregateProvider);
+
     await refreshData();
   }
 
@@ -194,7 +208,6 @@ class CheckInController extends _$CheckInController {
     final nextWeekStart = range.end.add(const Duration(seconds: 1));
     final isMonthBoundary = range.start.month != nextWeekStart.month;
 
-    // 1. Process Positive Savings/Rollovers
     for (var entry in state.unspentFundsByCategory.entries) {
       final categoryId = entry.key;
       final rolloverAmount = state.rolloverAmounts[categoryId] ?? 0.0;
@@ -211,24 +224,21 @@ class CheckInController extends _$CheckInController {
       }
     }
 
-    // 2. Process NEGATIVE Debt
     for (final categoryId in state.rollingOverDebtCategoryIds) {
       final debtAmount = state.overspentFundsByCategory[categoryId] ?? 0.0;
 
       if (debtAmount > 0 && !isMonthBoundary) {
-        // CALIBRATION: Roll over to next week safely
         final debtAdjustment = BudgetTransfer(
           id: 'rollover_debt_${categoryId}_${now.toIso8601String()}',
           fromCategoryId: 'rollover',
           toCategoryId: categoryId,
-          amount: -debtAmount, // Negative amount reduces next week's budget!
+          amount: -debtAmount,
           date: now,
         );
         await repository.addBudgetTransfer(debtAdjustment);
       }
     }
 
-    // 3. Calculate Success
     final pastWeekData = await ref.read(
       weeklyCategoryDataProvider(selectedDate: range.start).future,
     );
@@ -256,15 +266,12 @@ class CheckInController extends _$CheckInController {
     ref.invalidate(checkInStreakProvider);
     ref.invalidate(isCheckInAvailableProvider);
     ref.invalidate(appBarInfoProvider);
-
-    // FIX: Invalidate the new weekly provider
     ref.invalidate(weeklyCategoryDataProvider);
     ref.invalidate(weeklyAggregateProvider);
 
     return isSuccess;
   }
 
-  // --- Surgical Undo Logic ---
   Future<bool> undoLastCheckIn() async {
     final repository = ref.read(transactionRepositoryProvider);
 
@@ -296,8 +303,6 @@ class CheckInController extends _$CheckInController {
     ref.invalidate(checkInStreakProvider);
     ref.invalidate(isCheckInAvailableProvider);
     ref.invalidate(appBarInfoProvider);
-
-    // FIX: Invalidate the new weekly provider
     ref.invalidate(weeklyCategoryDataProvider);
     ref.invalidate(weeklyAggregateProvider);
 
