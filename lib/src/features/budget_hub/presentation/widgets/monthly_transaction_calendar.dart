@@ -265,10 +265,9 @@ class MonthlyTransactionCalendar extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
                 Expanded(
-                  child: ListView.separated(
+                  child: ListView.builder(
                     controller: scrollController,
                     itemCount: transactions.length,
-                    separatorBuilder: (_, __) => const Divider(height: 1),
                     itemBuilder: (context, index) {
                       final tx = transactions[index];
                       final isVariable = tx.parentRecurringId == null;

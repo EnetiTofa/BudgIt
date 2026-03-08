@@ -1,6 +1,8 @@
-// lib/src/features/transactions/presentation/widgets/payment_form.dart
+// lib/src/features/transaction_hub/transactions/presentation/widgets/payment_form.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'package:budgit/src/common_widgets/currency_input_field.dart';
 import 'package:budgit/src/common_widgets/custom_text_input_field.dart';
 import 'package:budgit/src/common_widgets/custom_toggle.dart';
@@ -14,12 +16,25 @@ import 'package:budgit/src/common_widgets/date_selector_field.dart';
 import 'package:budgit/src/features/transaction_hub/transactions/presentation/widgets/period_selector_field.dart';
 import 'package:budgit/src/common_widgets/icon_picker_field.dart';
 
+// --- IMPORTS FOR PAYEES & SUGGESTIONS ---
+import 'package:budgit/src/core/constants/business_names.dart';
+import 'package:budgit/src/core/data/providers/custom_payees_provider.dart';
+
 enum PaymentType { oneOff, recurring }
 
 class PaymentForm extends ConsumerStatefulWidget {
   final Transaction? initialTransaction;
   final DateTime? initialDate;
-  const PaymentForm({super.key, this.initialTransaction, this.initialDate});
+  final DateTime? minDate;
+  final DateTime? maxDate;
+
+  const PaymentForm({
+    super.key,
+    this.initialTransaction,
+    this.initialDate,
+    this.minDate,
+    this.maxDate,
+  });
 
   @override
   ConsumerState<PaymentForm> createState() => _PaymentFormState();
@@ -120,6 +135,19 @@ class _PaymentFormState extends ConsumerState<PaymentForm> {
     if (_amount <= 0 || _selectedCategory == null || _selectedDate == null) {
       return;
     }
+
+    // --- SAVE CUSTOM PAYEES LOGIC ---
+    // If the user typed a store/payee that isn't in the hardcoded list, save it!
+    final storeText = _storeController.text.trim();
+    if (storeText.isNotEmpty && !commonNzBusinesses.contains(storeText)) {
+      ref.read(customPayeesProvider.notifier).addPayee(storeText);
+    }
+
+    final payeeText = _payeeController.text.trim();
+    if (payeeText.isNotEmpty && !commonNzBusinesses.contains(payeeText)) {
+      ref.read(customPayeesProvider.notifier).addPayee(payeeText);
+    }
+    // --------------------------------
 
     final controller = ref.read(addTransactionControllerProvider.notifier);
 
@@ -231,6 +259,12 @@ class _PaymentFormState extends ConsumerState<PaymentForm> {
 
   @override
   Widget build(BuildContext context) {
+    // 1. Watch the custom payees
+    final customPayees = ref.watch(customPayeesProvider);
+
+    // 2. Combine them with standard businesses, putting custom ones at the top
+    final allPayees = [...customPayees, ...commonNzBusinesses];
+
     ref.watch(categoryListProvider);
 
     return SingleChildScrollView(
@@ -271,10 +305,15 @@ class _PaymentFormState extends ConsumerState<PaymentForm> {
               onChanged: (value) => _amount = value,
             ),
             const SizedBox(height: 16),
+
+            // --- UPDATED: Pass the suggestions list here! ---
             CustomTextInputField(
               controller: _storeController,
               labelText: 'Store (Optional)',
+              suggestions: allPayees,
             ),
+
+            // ------------------------------------------------
             const SizedBox(height: 8),
             CategorySelectorField(
               selectedCategory: _selectedCategory,
@@ -286,6 +325,8 @@ class _PaymentFormState extends ConsumerState<PaymentForm> {
               labelText: 'Date',
               selectedDate: _selectedDate,
               onDateSelected: (date) => setState(() => _selectedDate = date),
+              minDate: widget.minDate,
+              maxDate: widget.maxDate,
             ),
           ] else ...[
             CustomTextInputField(
@@ -300,10 +341,15 @@ class _PaymentFormState extends ConsumerState<PaymentForm> {
               onChanged: (value) => _amount = value,
             ),
             const SizedBox(height: 16),
+
+            // --- UPDATED: Pass the suggestions list here! ---
             CustomTextInputField(
               controller: _payeeController,
               labelText: 'Payee',
+              suggestions: allPayees,
             ),
+
+            // ------------------------------------------------
             const SizedBox(height: 8),
             CategorySelectorField(
               selectedCategory: _selectedCategory,
@@ -350,7 +396,6 @@ class _PaymentFormState extends ConsumerState<PaymentForm> {
               ],
             ),
           ],
-
           const SizedBox(height: 32),
           Center(
             child: ElevatedButton(

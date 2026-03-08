@@ -7,6 +7,7 @@ import 'package:budgit/src/features/transaction_hub/transactions/presentation/co
 import 'package:budgit/src/features/transaction_hub/transactions/presentation/providers/recurring_transactions_provider.dart';
 import 'package:budgit/src/features/transaction_hub/transactions/presentation/widgets/recurring_transaction_card.dart';
 import 'package:budgit/src/features/transaction_hub/transactions/presentation/widgets/filter_chip_bar.dart'; // Import the new widget
+import 'package:budgit/src/features/transaction_hub/transactions/presentation/controllers/add_transaction_controller.dart';
 
 class RecurringScreen extends ConsumerWidget {
   const RecurringScreen({super.key});
@@ -69,8 +70,11 @@ class RecurringScreen extends ConsumerWidget {
     // --- MODIFICATION END ---
   }
 
-  Widget _buildTransactionList(BuildContext context, WidgetRef ref,
-      {required List<Transaction> transactions}) {
+  Widget _buildTransactionList(
+    BuildContext context,
+    WidgetRef ref, {
+    required List<Transaction> transactions,
+  }) {
     if (transactions.isEmpty) {
       final filterType = ref.read(logFilterProvider).transactionTypeFilter;
       final typeString = switch (filterType) {
@@ -104,22 +108,22 @@ class RecurringScreen extends ConsumerWidget {
               context: context,
               transaction: item,
             );
-            
+
             if (confirmed) {
               await ref
-                  .read(recurringTransactionsProvider.notifier)
-                  .removeTransaction(item.id);
+                  .read(addTransactionControllerProvider.notifier)
+                  .deleteTransaction(item.id);
             }
-            
+
             return confirmed;
           },
           onDismissed: (direction) {
             final name = item is RecurringPayment
                 ? item.paymentName
                 : (item as RecurringIncome).source;
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('$name rule deleted')),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text('$name rule deleted')));
           },
           child: RecurringTransactionCard(transaction: item),
         );

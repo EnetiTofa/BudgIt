@@ -18,6 +18,7 @@ import 'package:budgit/src/theme/app_theme.dart';
 import 'package:budgit/src/features/settings/presentation/theme_controller.dart';
 import 'package:budgit/src/features/transaction_hub/transactions/presentation/providers/transaction_log_provider.dart';
 import 'package:budgit/src/core/data/providers/category_list_provider.dart';
+import 'package:budgit/src/features/check_in/domain/check_in_state.dart';
 
 class MyApp extends ConsumerWidget {
   const MyApp({super.key});
@@ -264,9 +265,12 @@ class _AppShellState extends ConsumerState<AppShell> {
           builder: (context, ref, child) {
             final theme = Theme.of(context);
 
-            // 1. Check Availability
-            final isCheckInAvailable =
-                ref.watch(isCheckInAvailableProvider).valueOrNull ?? false;
+            // --- 1. Check Availability (UPDATED FOR ENUM) ---
+            final checkInType =
+                ref.watch(isCheckInAvailableProvider).valueOrNull ??
+                CheckInType.none;
+
+            final bool isCheckInAvailable = checkInType != CheckInType.none;
 
             final categoriesAsync = ref.watch(categoryListProvider);
             final bool hasCategories = categoriesAsync.maybeWhen(
@@ -277,6 +281,14 @@ class _AppShellState extends ConsumerState<AppShell> {
             // 2. Define Lock State
             // If check-in is available, the standard buttons are locked.
             final bool areButtonsLocked = isCheckInAvailable;
+
+            // Dynamically set the big button text based on the type
+            String checkInButtonText = 'Complete Weekly Check-in';
+            if (checkInType == CheckInType.firstTime) {
+              checkInButtonText = 'Set Up BudgIt (First Time)';
+            } else if (checkInType == CheckInType.monthly) {
+              checkInButtonText = 'Complete Monthly Check-in';
+            }
 
             return Padding(
               padding: const EdgeInsets.fromLTRB(24.0, 24.0, 24.0, 48.0),
@@ -306,9 +318,9 @@ class _AppShellState extends ConsumerState<AppShell> {
                           elevation: 0,
                         ),
                         icon: const Icon(Icons.check_circle_outline),
-                        label: const Text(
-                          'Complete Weekly Check-in',
-                          style: TextStyle(
+                        label: Text(
+                          checkInButtonText, // Use the dynamic text here
+                          style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
                           ),

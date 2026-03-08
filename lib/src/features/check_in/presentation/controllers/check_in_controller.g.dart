@@ -6,12 +6,12 @@ part of 'check_in_controller.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$checkInControllerHash() => r'03c71de22891a38bd5bc99132ef5b620f0f28f28';
+String _$checkInControllerHash() => r'69e3eb5706b6e96c44b45eb436225c3acda4ddc1';
 
 /// See also [CheckInController].
 @ProviderFor(CheckInController)
 final checkInControllerProvider =
-    AutoDisposeNotifierProvider<CheckInController, CheckInState>.internal(
+    NotifierProvider<CheckInController, CheckInState>.internal(
   CheckInController.new,
   name: r'checkInControllerProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
@@ -21,6 +21,6 @@ final checkInControllerProvider =
   allTransitiveDependencies: null,
 );
 
-typedef _$CheckInController = AutoDisposeNotifier<CheckInState>;
+typedef _$CheckInController = Notifier<CheckInState>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

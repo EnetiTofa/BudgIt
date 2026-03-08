@@ -15,11 +15,15 @@ class RolloverSavePage extends ConsumerWidget {
     final theme = Theme.of(context);
 
     // Calculate directly from the allocations, ignoring any global toggle
-    final totalUnspent = checkInState.unspentFundsByCategory.values
-        .fold(0.0, (sum, val) => sum + val);
+    final totalUnspent = checkInState.unspentFundsByCategory.values.fold(
+      0.0,
+      (sum, val) => sum + val,
+    );
 
-    final totalToRollover = checkInState.rolloverAmounts.values
-        .fold(0.0, (sum, val) => sum + val);
+    final totalToRollover = checkInState.rolloverAmounts.values.fold(
+      0.0,
+      (sum, val) => sum + val,
+    );
 
     final totalToSave = totalUnspent - totalToRollover;
 
@@ -27,7 +31,6 @@ class RolloverSavePage extends ConsumerWidget {
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, s) => const Center(child: Text('Could not load categories')),
       data: (categories) {
-        
         // Empty State
         if (checkInState.unspentFundsByCategory.isEmpty) {
           return Padding(
@@ -35,16 +38,24 @@ class RolloverSavePage extends ConsumerWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.account_balance_wallet_outlined, size: 80, color: theme.colorScheme.secondary.withOpacity(0.5)),
+                Icon(
+                  Icons.account_balance_wallet_outlined,
+                  size: 80,
+                  color: theme.colorScheme.secondary.withOpacity(0.5),
+                ),
                 const SizedBox(height: 16),
                 Text(
                   "No Surplus Funds",
-                  style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   "You utilized your full budget this week. Let's look at your individual categories next.",
-                  style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.secondary),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.secondary,
+                  ),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -60,13 +71,17 @@ class RolloverSavePage extends ConsumerWidget {
             children: [
               Text(
                 'Rollover Unspent Funds',
-                style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
               Text(
                 'Choose to save or rollover funds in categories with positive balances',
-                style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w500,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
@@ -80,37 +95,58 @@ class RolloverSavePage extends ConsumerWidget {
                 ),
                 child: Column(
                   children: [
-                    const Text(
+                    Text(
                       "Adding to Savings",
-                      style: TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        color: theme.colorScheme.secondary,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       '\$${totalToSave.toStringAsFixed(2)}',
-                      style: const TextStyle(color: Colors.white, fontSize: 40, fontWeight: FontWeight.bold, height: 1.0),
+                      style: TextStyle(
+                        color: theme.colorScheme.primary,
+                        fontSize: 40,
+                        fontWeight: FontWeight.bold,
+                        height: 1.0,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
-                        color: Colors.green.shade500.withOpacity(0.4),
+                        color: theme.colorScheme.surfaceContainerLow,
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
                         '+\$${totalToRollover.toStringAsFixed(2)} rolling over',
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 12),
+                        style: TextStyle(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
-              
+
               const SizedBox(height: 16),
 
               // Category Cards
               ...checkInState.unspentFundsByCategory.entries.map((entry) {
-                final category = categories.firstWhere((c) => c.id == entry.key);
-                return RolloverCard(category: category, unspentAmount: entry.value);
+                final category = categories.firstWhere(
+                  (c) => c.id == entry.key,
+                );
+                return RolloverCard(
+                  category: category,
+                  unspentAmount: entry.value,
+                );
               }),
             ],
           ),

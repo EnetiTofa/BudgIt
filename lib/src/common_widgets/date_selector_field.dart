@@ -1,5 +1,3 @@
-// lib/src/common_widgets/date_selector_field.dart
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -13,7 +11,10 @@ class DateSelectorField extends StatelessWidget {
     required this.onDateSelected,
     this.icon = Icons.calendar_today,
     this.layout = DateSelectorLayout.horizontal,
-    this.allowFutureDates = false, // 1. Add new property with a default
+    this.allowFutureDates = false,
+    this.minDate,
+    this.maxDate,
+    this.onOpenPicker, // <-- ADDED: Hook to fire right before opening
   });
 
   final String labelText;
@@ -21,27 +22,46 @@ class DateSelectorField extends StatelessWidget {
   final ValueChanged<DateTime> onDateSelected;
   final IconData icon;
   final DateSelectorLayout layout;
-  final bool allowFutureDates; // 2. Declare the final property
+  final bool allowFutureDates;
+  final DateTime? minDate;
+  final DateTime? maxDate;
+  final VoidCallback? onOpenPicker; // <-- ADDED
 
   Future<void> _pickDate(BuildContext context) async {
+    // 1. Tell the parent to close the dropdown immediately
+    onOpenPicker?.call();
+
+    // 2. WAIT for the dropdown overlay to vanish before showing the calendar
+    await Future.delayed(const Duration(milliseconds: 150));
+
+    // 3. Calculate constraints
+    final first = minDate ?? DateTime(2000);
+    final last =
+        maxDate ?? (allowFutureDates ? DateTime(2101) : DateTime.now());
+
+    DateTime initial = selectedDate ?? DateTime.now();
+    if (initial.isBefore(first)) initial = first;
+    if (initial.isAfter(last)) initial = last;
+
+    // 4. Open the picker
+    if (!context.mounted) return; // Safety check after the delay
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: selectedDate ?? DateTime.now(),
-      firstDate: DateTime(2000),
-      // 3. Use the new property to set the last selectable date
-      lastDate: allowFutureDates ? DateTime(2101) : DateTime.now(),
+      initialDate: initial,
+      firstDate: first,
+      lastDate: last,
     );
+
     if (picked != null && picked != selectedDate) {
       onDateSelected(picked);
     }
   }
-  
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    // Build the widget's content based on the chosen layout
     final Widget content = (layout == DateSelectorLayout.vertical)
         ? _buildVerticalLayout(context)
         : _buildHorizontalLayout(context);
@@ -53,14 +73,11 @@ class DateSelectorField extends StatelessWidget {
         height: (layout == DateSelectorLayout.vertical) ? null : 75.0,
         padding: const EdgeInsets.all(16.0),
         decoration: BoxDecoration(
-          border: Border.all(
-            color: colorScheme.outline, // Sets the border color
-            width: 1.0,                 // Sets the border thickness
-          ),
+          border: Border.all(color: colorScheme.outline, width: 1.0),
           color: colorScheme.surfaceContainerLowest,
           borderRadius: BorderRadius.circular(12.0),
         ),
-      child: content,
+        child: content,
       ),
     );
   }
@@ -92,7 +109,6 @@ class DateSelectorField extends StatelessWidget {
     );
   }
 
-  // The new vertical layout
   Widget _buildVerticalLayout(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
@@ -115,12 +131,12 @@ class DateSelectorField extends StatelessWidget {
         ),
         const SizedBox(height: 3),
         Padding(
-          padding: const EdgeInsets.only(left: 28.0), // Indent the date text
+          padding: const EdgeInsets.only(left: 28.0),
           child: Text(
             selectedDate == null
                 ? 'Select...'
                 : DateFormat.yMMMd().format(selectedDate!),
-            style: theme.textTheme.bodySmall?.copyWith( // Use smaller text
+            style: theme.textTheme.bodySmall?.copyWith(
               color: colorScheme.secondary,
             ),
           ),

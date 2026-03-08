@@ -439,13 +439,25 @@ class _CalendarGrid extends StatelessWidget {
     final leadingSpaces = firstDayOfMonth.weekday == 7
         ? 0
         : firstDayOfMonth.weekday;
-    final gridStart = firstDayOfMonth.subtract(Duration(days: leadingSpaces));
+
+    // CHANGED: Removed Duration
+    final gridStart = DateTime(
+      firstDayOfMonth.year,
+      firstDayOfMonth.month,
+      firstDayOfMonth.day - leadingSpaces,
+    );
 
     final daysSinceGridStart = today.difference(gridStart).inDays;
     final currentWeekRowIndex = (daysSinceGridStart / 7).floor();
 
     final safeWeekIndex = currentWeekRowIndex < 0 ? 0 : currentWeekRowIndex;
-    final weekStart = gridStart.add(Duration(days: safeWeekIndex * 7));
+
+    // CHANGED: Removed Duration
+    final weekStart = DateTime(
+      gridStart.year,
+      gridStart.month,
+      gridStart.day + (safeWeekIndex * 7),
+    );
 
     final startPoint = isExpanded ? gridStart : weekStart;
     final itemCount = isExpanded ? 35 : 7;
@@ -460,7 +472,12 @@ class _CalendarGrid extends StatelessWidget {
       ),
       itemCount: itemCount,
       itemBuilder: (context, index) {
-        final date = startPoint.add(Duration(days: index));
+        // CHANGED: Removed Duration. This is the main fix for the duplicate days!
+        final date = DateTime(
+          startPoint.year,
+          startPoint.month,
+          startPoint.day + index,
+        );
         final strippedDate = DateTime(date.year, date.month, date.day);
 
         final isToday = DateUtils.isSameDay(strippedDate, today);
@@ -469,8 +486,17 @@ class _CalendarGrid extends StatelessWidget {
         );
         final isDifferentMonth = date.month != displayedMonth.month;
 
-        final nextDate = strippedDate.add(const Duration(days: 1));
-        final prevDate = strippedDate.subtract(const Duration(days: 1));
+        // CHANGED: Removed Duration
+        final nextDate = DateTime(
+          strippedDate.year,
+          strippedDate.month,
+          strippedDate.day + 1,
+        );
+        final prevDate = DateTime(
+          strippedDate.year,
+          strippedDate.month,
+          strippedDate.day - 1,
+        );
 
         final isPartOfStreak = calendarState.highlightedDates.contains(
           strippedDate,

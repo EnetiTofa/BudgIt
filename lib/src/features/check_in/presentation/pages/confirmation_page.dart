@@ -14,8 +14,14 @@ class ConfirmationPage extends ConsumerWidget {
     final theme = Theme.of(context);
 
     // --- Calculate Totals ---
-    final totalUnspent = checkInState.unspentFundsByCategory.values.fold(0.0, (sum, val) => sum + val);
-    final totalToRollover = checkInState.rolloverAmounts.values.fold(0.0, (sum, val) => sum + val);
+    final totalUnspent = checkInState.unspentFundsByCategory.values.fold(
+      0.0,
+      (sum, val) => sum + val,
+    );
+    final totalToRollover = checkInState.rolloverAmounts.values.fold(
+      0.0,
+      (sum, val) => sum + val,
+    );
     final totalToSave = totalUnspent - totalToRollover;
 
     // --- Calculate Debt ---
@@ -25,7 +31,7 @@ class ConfirmationPage extends ConsumerWidget {
     }
 
     // --- Filter Manual Boosts ---
-    final manualBoosts = checkInState.checkInWeekBoosts
+    final manualBoosts = checkInState.checkInWeekTransfers
         .where((b) => b.fromCategoryId != 'rollover')
         .toList();
 
@@ -40,26 +46,40 @@ class ConfirmationPage extends ConsumerWidget {
             children: [
               Text(
                 'Review & Confirm',
-                style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
               Text(
                 'Here is the summary of your week. Press complete to finalize these actions.',
-                style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.secondary),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.secondary,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 32),
 
               // --- 1. SAVINGS & POSITIVE ROLLOVER SUMMARY ---
-              Text("Positive Balances", style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+              Text(
+                "Positive Balances",
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const SizedBox(height: 8),
               Card(
                 color: theme.colorScheme.surfaceContainerLow,
                 elevation: 0,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 8.0),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 20.0,
+                    horizontal: 8.0,
+                  ),
                   child: Row(
                     children: [
                       Expanded(
@@ -72,7 +92,10 @@ class ConfirmationPage extends ConsumerWidget {
                       ),
                       SizedBox(
                         height: 50,
-                        child: VerticalDivider(color: theme.dividerColor.withOpacity(0.5), width: 16),
+                        child: VerticalDivider(
+                          color: theme.dividerColor.withOpacity(0.5),
+                          width: 16,
+                        ),
                       ),
                       Expanded(
                         child: _SummaryStat(
@@ -90,7 +113,12 @@ class ConfirmationPage extends ConsumerWidget {
 
               // --- 2. DEBT ROLLOVER SUMMARY ---
               if (checkInState.rollingOverDebtCategoryIds.isNotEmpty) ...[
-                Text("Debt Rollover", style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                Text(
+                  "Debt Rollover",
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const SizedBox(height: 8),
                 Card(
                   color: Colors.orange.withOpacity(0.1),
@@ -106,25 +134,46 @@ class ConfirmationPage extends ConsumerWidget {
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.warning_amber_rounded, color: Colors.orange.shade800),
+                            Icon(
+                              Icons.warning_amber_rounded,
+                              color: Colors.orange.shade800,
+                            ),
                             const SizedBox(width: 8),
                             Text(
                               "Total Debt Forward: \$${totalDebtRollover.toStringAsFixed(2)}",
-                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange.shade900, fontSize: 16),
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.orange.shade900,
+                                fontSize: 16,
+                              ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 12),
                         ...checkInState.rollingOverDebtCategoryIds.map((id) {
-                          final category = categories.firstWhere((c) => c.id == id);
-                          final amount = checkInState.overspentFundsByCategory[id] ?? 0.0;
+                          final category = categories.firstWhere(
+                            (c) => c.id == id,
+                          );
+                          final amount =
+                              checkInState.overspentFundsByCategory[id] ?? 0.0;
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 4.0),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text("• ${category.name}", style: TextStyle(color: Colors.orange.shade900)),
-                                Text("-\$${amount.toStringAsFixed(2)}", style: TextStyle(color: Colors.orange.shade900, fontWeight: FontWeight.bold)),
+                                Text(
+                                  "• ${category.name}",
+                                  style: TextStyle(
+                                    color: Colors.orange.shade900,
+                                  ),
+                                ),
+                                Text(
+                                  "-\$${amount.toStringAsFixed(2)}",
+                                  style: TextStyle(
+                                    color: Colors.orange.shade900,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                               ],
                             ),
                           );
@@ -138,28 +187,45 @@ class ConfirmationPage extends ConsumerWidget {
 
               // --- 3. INTERNAL BOOSTS SUMMARY ---
               if (manualBoosts.isNotEmpty) ...[
-                Text("Internal Transfers", style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                Text(
+                  "Internal Transfers",
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const SizedBox(height: 8),
                 Card(
                   color: theme.colorScheme.surfaceContainerLowest,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
-                    side: BorderSide(color: theme.colorScheme.surfaceContainerHighest),
+                    side: BorderSide(
+                      color: theme.colorScheme.surfaceContainerHighest,
+                    ),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: manualBoosts.map((boost) {
-                        final sourceCat = categories.firstWhere((c) => c.id == boost.fromCategoryId, orElse: () => categories.first);
-                        final targetCat = categories.firstWhere((c) => c.id == boost.toCategoryId, orElse: () => categories.first);
+                        final sourceCat = categories.firstWhere(
+                          (c) => c.id == boost.fromCategoryId,
+                          orElse: () => categories.first,
+                        );
+                        final targetCat = categories.firstWhere(
+                          (c) => c.id == boost.toCategoryId,
+                          orElse: () => categories.first,
+                        );
 
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 8.0),
                           child: Row(
                             children: [
-                              Icon(Icons.compare_arrows_rounded, size: 16, color: theme.colorScheme.secondary),
+                              Icon(
+                                Icons.compare_arrows_rounded,
+                                size: 16,
+                                color: theme.colorScheme.secondary,
+                              ),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
@@ -169,7 +235,9 @@ class ConfirmationPage extends ConsumerWidget {
                               ),
                               Text(
                                 "\$${boost.amount.toStringAsFixed(2)}",
-                                style: const TextStyle(fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ],
                           ),
@@ -189,7 +257,12 @@ class ConfirmationPage extends ConsumerWidget {
 }
 
 class _SummaryStat extends StatelessWidget {
-  const _SummaryStat({required this.label, required this.amount, required this.color, required this.icon});
+  const _SummaryStat({
+    required this.label,
+    required this.amount,
+    required this.color,
+    required this.icon,
+  });
   final String label;
   final double amount;
   final Color color;

@@ -7,7 +7,7 @@ part of 'weekly_projection_providers.dart';
 // **************************************************************************
 
 String _$weeklyCategoryDataHash() =>
-    r'd5afd49d227174713acf21b850857e8c4ec56b77';
+    r'b5454b66c4cc9bc14b082c7ea60f52e8f9836ce8';
 
 /// Copied from Dart SDK
 class _SystemHash {

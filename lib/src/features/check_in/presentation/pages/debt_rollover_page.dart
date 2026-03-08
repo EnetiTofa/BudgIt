@@ -18,7 +18,6 @@ class DebtRolloverPage extends ConsumerWidget {
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, s) => const Center(child: Text('Could not load categories')),
       data: (categories) {
-        
         // Empty State: No Debt!
         if (checkInState.overspentFundsByCategory.isEmpty) {
           return Padding(
@@ -26,16 +25,24 @@ class DebtRolloverPage extends ConsumerWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.celebration_outlined, size: 80, color: Colors.green.shade400),
+                Icon(
+                  Icons.celebration_outlined,
+                  size: 80,
+                  color: Colors.green.shade400,
+                ),
                 const SizedBox(height: 16),
                 Text(
                   "No Overspending!",
-                  style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   "Great job! You stayed within your limits for all categories this week.",
-                  style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.secondary),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.secondary,
+                  ),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -51,17 +58,21 @@ class DebtRolloverPage extends ConsumerWidget {
             children: [
               Text(
                 'Debt Management',
-                style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
-              
+
               Text(
                 'Choose to absorb the debt now, or reduce next week\'s wallet.',
-                style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.secondary),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.secondary,
+                ),
                 textAlign: TextAlign.center,
               ),
-              
+
               // Streak saving tip
               Container(
                 margin: const EdgeInsets.only(top: 16, bottom: 24),
@@ -72,12 +83,17 @@ class DebtRolloverPage extends ConsumerWidget {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.lightbulb_outline, color: Colors.orange.shade500),
+                    Icon(
+                      Icons.lightbulb_outline,
+                      color: Colors.orange.shade500,
+                    ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         "Tip: Rolling over your debt keeps your streak alive!",
-                        style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.primary),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.primary,
+                        ),
                       ),
                     ),
                   ],
@@ -86,9 +102,12 @@ class DebtRolloverPage extends ConsumerWidget {
 
               // Debt Category Cards
               ...checkInState.overspentFundsByCategory.entries.map((entry) {
-                final category = categories.firstWhere((c) => c.id == entry.key);
+                final category = categories.firstWhere(
+                  (c) => c.id == entry.key,
+                );
                 final debtStreak = checkInState.debtStreaks[category.id] ?? 0;
-                final isRollingOver = checkInState.rollingOverDebtCategoryIds.contains(category.id);
+                final isRollingOver = checkInState.rollingOverDebtCategoryIds
+                    .contains(category.id);
 
                 return _DebtRolloverCard(
                   category: category,
@@ -129,9 +148,7 @@ class _DebtRolloverCard extends ConsumerWidget {
           ? Colors.green.withOpacity(0.15)
           : theme.colorScheme.errorContainer.withOpacity(0.3),
       elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -140,22 +157,34 @@ class _DebtRolloverCard extends ConsumerWidget {
               children: [
                 CircleAvatar(
                   backgroundColor: Color(category.colorValue),
-                  child: Icon(IconData(category.iconCodePoint, fontFamily: 'MaterialIcons'),
-                      color: category.contentColor),
+                  child: Icon(
+                    IconData(
+                      category.iconCodePoint,
+                      fontFamily: 'MaterialIcons',
+                    ),
+                    color: category.contentColor,
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(category.name,
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      Text(
+                        category.name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
                       Text(
                         isRollingOver
                             ? 'Debt reduces next week\'s wallet'
                             : 'Overspent by \$${overspentAmount.toStringAsFixed(2)}',
                         style: TextStyle(
-                          color: isRollingOver ? Colors.green.shade400 : theme.colorScheme.error,
+                          color: isRollingOver
+                              ? Colors.green.shade400
+                              : theme.colorScheme.error,
                           fontWeight: FontWeight.w600,
                           fontSize: 13,
                         ),
@@ -173,15 +202,28 @@ class _DebtRolloverCard extends ConsumerWidget {
                   "Week ${debtStreak + 1}/4",
                   style: theme.textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w600,
-                    color: isMaxDebt ? theme.colorScheme.error : theme.colorScheme.secondary,
+                    color: isMaxDebt
+                        ? theme.colorScheme.error
+                        : theme.colorScheme.secondary,
                   ),
                 ),
                 if (isMaxDebt)
                   Row(
                     children: [
-                      Icon(Icons.warning_amber_rounded, color: theme.colorScheme.error, size: 16),
+                      Icon(
+                        Icons.warning_amber_rounded,
+                        color: theme.colorScheme.error,
+                        size: 16,
+                      ),
                       const SizedBox(width: 4),
-                      Text("Max Limit Hit", style: TextStyle(color: theme.colorScheme.error, fontSize: 12, fontWeight: FontWeight.bold)),
+                      Text(
+                        "Max Limit Hit",
+                        style: TextStyle(
+                          color: theme.colorScheme.error,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ],
                   )
                 else
@@ -198,9 +240,11 @@ class _DebtRolloverCard extends ConsumerWidget {
                       Checkbox(
                         value: isRollingOver,
                         onChanged: (_) {
-                          ref.read(checkInControllerProvider.notifier).toggleDebtRollover(category.id);
+                          ref
+                              .read(checkInControllerProvider.notifier)
+                              .toggleDebtRollover(category.id);
                         },
-                      )
+                      ),
                     ],
                   ),
               ],

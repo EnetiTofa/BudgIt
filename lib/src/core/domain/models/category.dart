@@ -25,8 +25,6 @@ class Category extends Equatable with HiveObjectMixin {
   @HiveField(2)
   final double budgetAmount; // Represents the total unified monthly budget.
 
-  // @HiveField(3) was walletAmount. It is intentionally left blank to preserve Hive integrity.
-
   @HiveField(4)
   final int iconCodePoint;
 

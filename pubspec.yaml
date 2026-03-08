@@ -3,7 +3,7 @@ description: "New budget app base"
 publish_to: 'none'
 package_name: com.enetitofa.budgit
 
-version: 2.0.0+3
+version: 3.0.0+10
 
 environment:
   sdk: ^3.9.2
@@ -36,6 +36,7 @@ dependencies:
   # --- Database ---
   hive: ^2.2.3                  # Up-to-date
   hive_flutter: ^1.1.0          # Up-to-date
+  url_launcher: ^6.3.2
 
 dev_dependencies:
   flutter_test:

@@ -1,3 +1,5 @@
+// lib/src/features/categories/presentation/widgets/recurring_controls.dart
+
 import 'package:flutter/material.dart';
 import 'package:budgit/src/core/domain/models/category.dart';
 import 'package:budgit/src/features/categories/presentation/controllers/manage_category_controller.dart';
@@ -19,86 +21,84 @@ class RecurringControls extends StatelessWidget {
     final payments = state.recurringTransactions;
     final hasPayments = payments.isNotEmpty;
 
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    // Removed the outer padding so it matches the parent screen's width exactly
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (hasPayments)
+          Column(
             children: [
-              Text(
-                'Recurring Transactions',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          if (hasPayments)
-            Column(
-              children: [
-                for (final payment in payments)
-                  Dismissible(
-                    key: ValueKey(payment.id),
-                    direction: DismissDirection.endToStart,
-                    onDismissed: (_) =>
-                        notifier.removeRecurringPayment(payment.id),
-                    background: Container(
+              for (final payment in payments)
+                Dismissible(
+                  key: ValueKey(payment.id),
+                  direction: DismissDirection.endToStart,
+                  onDismissed: (_) =>
+                      notifier.removeRecurringPayment(payment.id),
+                  background: Container(
+                    margin: const EdgeInsets.only(bottom: 12.0),
+                    decoration: BoxDecoration(
                       color: Colors.red,
-                      alignment: Alignment.centerRight,
-                      padding: const EdgeInsets.only(right: 20),
-                      child: const Icon(Icons.delete, color: Colors.white),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    child: RecurringPaymentCard(
-                      payment: payment,
-                      category: state.initialCategory,
-                      onTap: () async {
-                        final result = await Navigator.of(context)
-                            .push<RecurringPayment>(
-                              MaterialPageRoute(
-                                builder: (context) => AddRecurringPaymentForm(
-                                  category: state.initialCategory,
-                                  initialPayment: payment,
-                                ),
-                              ),
-                            );
-                        if (result != null) {
-                          notifier.updateRecurringPayment(result);
-                        }
-                      },
-                    ),
+                    alignment: Alignment.centerRight,
+                    padding: const EdgeInsets.only(right: 20),
+                    child: const Icon(Icons.delete, color: Colors.white),
                   ),
-              ],
-            )
-          else
-            const SizedBox(
-              height: 48,
-              child: Text('No recurring payments added yet.'),
-            ),
-
-          const SizedBox(height: 16),
-          Center(
-            child: OutlinedButton.icon(
-              icon: const Icon(Icons.add),
-              label: const Text('Add Recurring Payment'),
-              onPressed: () async {
-                final result = await Navigator.of(context)
-                    .push<RecurringPayment>(
-                      MaterialPageRoute(
-                        builder: (context) => AddRecurringPaymentForm(
-                          category: state.initialCategory,
-                        ),
-                      ),
-                    );
-                if (result != null) {
-                  notifier.addRecurringPayment(result);
-                }
-              },
-            ),
+                  child: RecurringPaymentCard(
+                    payment: payment,
+                    category: state.initialCategory,
+                    onTap: () async {
+                      final result = await Navigator.of(context)
+                          .push<RecurringPayment>(
+                            MaterialPageRoute(
+                              builder: (context) => AddRecurringPaymentForm(
+                                category: state.initialCategory,
+                                initialPayment: payment,
+                              ),
+                            ),
+                          );
+                      if (result != null) {
+                        notifier.updateRecurringPayment(result);
+                      }
+                    },
+                  ),
+                ),
+            ],
+          )
+        else
+          const SizedBox(
+            height: 48,
+            child: Center(child: Text('No recurring payments added yet.')),
           ),
-        ],
-      ),
+
+        const SizedBox(height: 16),
+
+        // Made the button full width to match the rest of the UI
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            icon: const Icon(Icons.add),
+            label: const Text('Add Recurring Payment'),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            onPressed: () async {
+              final result = await Navigator.of(context).push<RecurringPayment>(
+                MaterialPageRoute(
+                  builder: (context) =>
+                      AddRecurringPaymentForm(category: state.initialCategory),
+                ),
+              );
+              if (result != null) {
+                notifier.addRecurringPayment(result);
+              }
+            },
+          ),
+        ),
+      ],
     );
   }
 }
@@ -145,8 +145,10 @@ class RecurringPaymentCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Card(
-      margin: const EdgeInsets.symmetric(vertical: 6.0),
+      // Changed vertical margins to match a full-width flat list look
+      margin: const EdgeInsets.only(bottom: 12.0),
       elevation: 0,
+      color: theme.colorScheme.surfaceContainerLowest,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
         leading: Icon(category.icon, color: theme.colorScheme.secondary),
@@ -154,6 +156,7 @@ class RecurringPaymentCard extends StatelessWidget {
           payment.paymentName,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         subtitle: Text(_getRecurrenceText()),
         trailing: Text(

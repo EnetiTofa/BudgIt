@@ -13,11 +13,14 @@ import 'package:budgit/src/features/transaction_hub/transactions/presentation/sc
 import 'package:budgit/src/features/transaction_hub/transactions/presentation/screens/edit_payment_screen.dart';
 import 'package:budgit/src/features/transaction_hub/transactions/presentation/providers/dropdown_active_provider.dart';
 import 'package:budgit/src/features/transaction_hub/transactions/presentation/widgets/filter_chip_bar.dart';
+import 'package:budgit/src/features/transaction_hub/transactions/presentation/controllers/add_transaction_controller.dart';
+
+// --- NEW IMPORT: We need the category provider to do the Live UI Join ---
+import 'package:budgit/src/core/data/providers/category_list_provider.dart';
 
 class TransactionLogScreen extends ConsumerWidget {
   const TransactionLogScreen({super.key});
 
-  // --- NEW: Helper method to confirm deletion via dialog ---
   Future<bool> _showDeleteConfirmationDialog({
     required BuildContext context,
     required Transaction transaction,
@@ -58,6 +61,10 @@ class TransactionLogScreen extends ConsumerWidget {
     final transactionsAsyncValue = ref.watch(transactionLogProvider);
     final filterState = ref.watch(logFilterProvider);
     final isDropdownActive = ref.watch(dropdownActiveProvider);
+
+    // --- NEW: Watch the live categories ---
+    final liveCategories = ref.watch(categoryListProvider).valueOrNull ?? [];
+
     final colorScheme = Theme.of(context).colorScheme;
 
     return Column(
@@ -85,6 +92,8 @@ class TransactionLogScreen extends ConsumerWidget {
                                 : 'Income';
                           case SortBy.date:
                             return DateFormat('yyyy-MM-dd').format(date);
+                          case SortBy.amount:
+                            return 'Sorted by Amount';
                         }
                       },
                       groupSeparatorBuilder: (String groupByValue) {
@@ -115,11 +124,24 @@ class TransactionLogScreen extends ConsumerWidget {
                       itemBuilder: (context, transaction) {
                         String? parentId;
                         Widget listTileContent;
+
                         if (transaction is OneOffPayment) {
                           parentId = transaction.parentRecurringId;
+
+                          // --- NEW: LIVE UI JOIN ---
+                          // Look up the most recent version of this transaction's category.
+                          // If it was deleted, gracefully fall back to the snapshot saved on the transaction.
+                          final currentCategory = liveCategories.firstWhere(
+                            (c) => c.id == transaction.category.id,
+                            orElse: () => transaction.category,
+                          );
+
                           listTileContent = ListTile(
                             leading: CircleAvatar(
-                              backgroundColor: transaction.category.color,
+                              // Use the live color
+                              backgroundColor: Color(
+                                currentCategory.colorValue,
+                              ),
                               child: Icon(
                                 transaction.iconCodePoint != null
                                     ? IconData(
@@ -128,7 +150,8 @@ class TransactionLogScreen extends ConsumerWidget {
                                         fontPackage:
                                             transaction.iconFontPackage,
                                       )
-                                    : transaction.category.icon,
+                                    // Use the live icon
+                                    : currentCategory.icon,
                                 color: colorScheme.surface,
                               ),
                             ),
@@ -244,7 +267,6 @@ class TransactionLogScreen extends ConsumerWidget {
                               color: Colors.white,
                             ),
                           ),
-                          // --- NEW: Add the confirmDismiss hook ---
                           confirmDismiss: (direction) async {
                             final bool confirmed =
                                 await _showDeleteConfirmationDialog(
@@ -255,9 +277,9 @@ class TransactionLogScreen extends ConsumerWidget {
                             if (confirmed) {
                               await ref
                                   .read(
-                                    allTransactionOccurrencesProvider.notifier,
+                                    addTransactionControllerProvider.notifier,
                                   )
-                                  .removeTransaction(transaction.id);
+                                  .deleteTransaction(transaction.id);
                             }
 
                             return confirmed;

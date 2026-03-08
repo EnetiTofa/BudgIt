@@ -1,5 +1,3 @@
-// lib/src/features/check_in/presentation/is_check_in_available_provider.dart
-
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +5,8 @@ import 'package:budgit/src/features/settings/data/settings_provider.dart';
 import 'package:budgit/src/core/data/providers/transaction_repository_provider.dart';
 import 'package:budgit/src/core/domain/models/transaction.dart';
 import 'package:budgit/src/utils/clock_provider.dart';
+import 'package:budgit/src/features/check_in/domain/check_in_state.dart';
+import 'package:budgit/src/utils/date_utils.dart';
 
 part 'is_check_in_available_provider.g.dart';
 
@@ -19,46 +19,86 @@ DateTime _getCreatedAtFromTransaction(Transaction t) {
 }
 
 @Riverpod(keepAlive: true)
-Future<bool> isCheckInAvailable(Ref ref) async {
+Future<CheckInType> isCheckInAvailable(Ref ref) async {
+  final settingsRepo = await ref.watch(settingsProvider.future);
+
+  // 1. FIRST-TIME CHECK
+  if (!settingsRepo.getHasCompletedFirstCheckIn()) {
+    return CheckInType.firstTime;
+  }
+
+  // 2. TRANSACTIONS CHECK
   final repository = ref.watch(transactionRepositoryProvider);
   final allTransactions = await repository.getAllTransactions();
-  
-  // RULE 1: You cannot check in if you have no transactions to review.
   if (allTransactions.isEmpty) {
-    return false;
+    return CheckInType.none;
   }
 
   final lastCheckInDate = await repository.getLastCheckInDate();
-  final settingsRepo = await ref.watch(settingsProvider.future);
+  final lastMonthlyCheckInDate = settingsRepo.getLastMonthlyCheckInDate();
   final checkInDay = settingsRepo.getCheckInDay();
   final now = ref.watch(clockNotifierProvider).now();
 
   // Find the most recent midnight occurrence of your chosen check-in day.
-  // (If today IS your check-in day, this returns today at 00:00:00).
   final startOfCurrentWeek = DateTime(
-    now.year, 
-    now.month, 
-    now.day - (now.weekday - checkInDay + 7) % 7
+    now.year,
+    now.month,
+    now.day - (now.weekday - checkInDay + 7) % 7,
   );
 
-  // RULE 2: If today IS the check-in day, allow it (unless already done today).
-  if (now.weekday == checkInDay) {
-    if (lastCheckInDate != null && DateUtils.isSameDay(lastCheckInDate, now)) {
-      return false; 
-    }
-    return true;
-  }
+  bool isDue = false;
+  final nowDateOnly = now.dateOnly;
+  final startOfWeekDateOnly = startOfCurrentWeek.dateOnly;
+  final lastCheckInDateOnly = lastCheckInDate?.dateOnly;
 
-  // RULE 3: If the user reset their check-in data (lastCheckInDate is null)
-  if (lastCheckInDate == null) {
+  // RULE A: If today IS the check-in day, allow it (unless already done today).
+  if (now.weekday == checkInDay) {
+    if (lastCheckInDateOnly == null ||
+        !DateUtils.isSameDay(lastCheckInDateOnly, nowDateOnly)) {
+      isDue = true;
+    }
+  }
+  // RULE B: Edge case (Should be caught by First Time now, but kept for safety)
+  else if (lastCheckInDateOnly == null) {
     final firstTxDate = allTransactions
         .map(_getCreatedAtFromTransaction)
-        .reduce((a, b) => a.isBefore(b) ? a : b);
-        
-    // Allow check-in if their oldest transaction happened before the most recent check-in day.
-    return firstTxDate.isBefore(startOfCurrentWeek);
+        .reduce((a, b) => a.isBefore(b) ? a : b)
+        .dateOnly;
+    if (firstTxDate.isBefore(startOfWeekDateOnly)) {
+      isDue = true;
+    }
+  }
+  // RULE C: If they missed the check-in for the current active week
+  else if (lastCheckInDateOnly.isBefore(startOfWeekDateOnly)) {
+    isDue = true;
   }
 
-  // RULE 4: Standard check - Did they check in before the most recent boundary?
-  return lastCheckInDate.isBefore(startOfCurrentWeek);
+  if (!isDue) {
+    return CheckInType.none;
+  }
+
+  // --- MONTHLY VS WEEKLY CALCULATION ---
+  // If we reach here, a check-in is due. We use `startOfCurrentWeek` to determine
+  // which month this check-in belongs to.
+
+  // Have they already done a monthly check-in for this specific month?
+  if (lastMonthlyCheckInDate == null ||
+      lastMonthlyCheckInDate.month != startOfWeekDateOnly.month ||
+      lastMonthlyCheckInDate.year != startOfWeekDateOnly.year) {
+    // Find what the FIRST check-in day of this target month is.
+    final firstCheckInOfTargetMonth = getFirstCheckInDayOfMonth(
+      startOfWeekDateOnly.year,
+      startOfWeekDateOnly.month,
+      checkInDay,
+    );
+
+    // Only prompt for a Monthly check-in if the week we are checking in for
+    // is ON or AFTER the first check-in day of the month.
+    if (!startOfWeekDateOnly.isBefore(firstCheckInOfTargetMonth.dateOnly)) {
+      return CheckInType.monthly;
+    }
+  }
+
+  // Otherwise, it's just a regular weekly check-in!
+  return CheckInType.weekly;
 }

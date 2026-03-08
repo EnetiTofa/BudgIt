@@ -1,5 +1,4 @@
 // lib/src/features/transaction_hub/transactions/presentation/screens/edit_payment_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:budgit/src/core/domain/models/transaction.dart';
@@ -8,7 +7,15 @@ import 'package:budgit/src/features/transaction_hub/transactions/presentation/pr
 
 class EditPaymentScreen extends ConsumerWidget {
   final Transaction transaction;
-  const EditPaymentScreen({super.key, required this.transaction});
+  final DateTime? minDate;
+  final DateTime? maxDate;
+
+  const EditPaymentScreen({
+    super.key,
+    required this.transaction,
+    this.minDate,
+    this.maxDate,
+  });
 
   Future<void> _deleteTransaction(BuildContext context, WidgetRef ref) async {
     final bool? confirm = await showDialog<bool>(
@@ -55,7 +62,11 @@ class EditPaymentScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: PaymentForm(initialTransaction: transaction),
+      body: PaymentForm(
+        initialTransaction: transaction,
+        minDate: minDate,
+        maxDate: maxDate,
+      ),
     );
   }
 }

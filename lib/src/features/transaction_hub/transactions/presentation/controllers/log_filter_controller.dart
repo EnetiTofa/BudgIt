@@ -35,8 +35,12 @@ class LogFilter extends _$LogFilter {
     }
     state = state.copyWith(selectedCategoryIds: newSet);
   }
-  
+
   void setSelectedCategoryIds(Set<String> ids) {
     state = state.copyWith(selectedCategoryIds: ids);
+  }
+
+  void setDateRange(DateTime? start, DateTime? end) {
+    state = state.copyWith(startDate: start, endDate: end);
   }
 }

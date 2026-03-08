@@ -7,11 +7,11 @@ part of 'is_check_in_available_provider.dart';
 // **************************************************************************
 
 String _$isCheckInAvailableHash() =>
-    r'59e6d2a23e61e76d3eb93752449615e7d6dc41c2';
+    r'7f5c517a71b42d8506b4ec2d3d5ef78bca4f5aab';
 
 /// See also [isCheckInAvailable].
 @ProviderFor(isCheckInAvailable)
-final isCheckInAvailableProvider = FutureProvider<bool>.internal(
+final isCheckInAvailableProvider = FutureProvider<CheckInType>.internal(
   isCheckInAvailable,
   name: r'isCheckInAvailableProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
@@ -21,6 +21,6 @@ final isCheckInAvailableProvider = FutureProvider<bool>.internal(
   allTransitiveDependencies: null,
 );
 
-typedef IsCheckInAvailableRef = FutureProviderRef<bool>;
+typedef IsCheckInAvailableRef = FutureProviderRef<CheckInType>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

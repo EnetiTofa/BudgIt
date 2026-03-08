@@ -16,12 +16,13 @@ final _privateConstructorUsedError = UnsupportedError(
 
 /// @nodoc
 mixin _$LogFilterState {
-// The @Default() annotation replaces constructor default values.
   TransactionTypeFilter get transactionTypeFilter =>
       throw _privateConstructorUsedError;
   String get searchQuery => throw _privateConstructorUsedError;
   SortBy get sortBy => throw _privateConstructorUsedError;
   Set<String> get selectedCategoryIds => throw _privateConstructorUsedError;
+  DateTime? get startDate => throw _privateConstructorUsedError;
+  DateTime? get endDate => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
   $LogFilterStateCopyWith<LogFilterState> get copyWith =>
@@ -38,7 +39,9 @@ abstract class $LogFilterStateCopyWith<$Res> {
       {TransactionTypeFilter transactionTypeFilter,
       String searchQuery,
       SortBy sortBy,
-      Set<String> selectedCategoryIds});
+      Set<String> selectedCategoryIds,
+      DateTime? startDate,
+      DateTime? endDate});
 }
 
 /// @nodoc
@@ -58,6 +61,8 @@ class _$LogFilterStateCopyWithImpl<$Res, $Val extends LogFilterState>
     Object? searchQuery = null,
     Object? sortBy = null,
     Object? selectedCategoryIds = null,
+    Object? startDate = freezed,
+    Object? endDate = freezed,
   }) {
     return _then(_value.copyWith(
       transactionTypeFilter: null == transactionTypeFilter
@@ -76,6 +81,14 @@ class _$LogFilterStateCopyWithImpl<$Res, $Val extends LogFilterState>
           ? _value.selectedCategoryIds
           : selectedCategoryIds // ignore: cast_nullable_to_non_nullable
               as Set<String>,
+      startDate: freezed == startDate
+          ? _value.startDate
+          : startDate // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
+      endDate: freezed == endDate
+          ? _value.endDate
+          : endDate // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
     ) as $Val);
   }
 }
@@ -92,7 +105,9 @@ abstract class _$$LogFilterStateImplCopyWith<$Res>
       {TransactionTypeFilter transactionTypeFilter,
       String searchQuery,
       SortBy sortBy,
-      Set<String> selectedCategoryIds});
+      Set<String> selectedCategoryIds,
+      DateTime? startDate,
+      DateTime? endDate});
 }
 
 /// @nodoc
@@ -110,6 +125,8 @@ class __$$LogFilterStateImplCopyWithImpl<$Res>
     Object? searchQuery = null,
     Object? sortBy = null,
     Object? selectedCategoryIds = null,
+    Object? startDate = freezed,
+    Object? endDate = freezed,
   }) {
     return _then(_$LogFilterStateImpl(
       transactionTypeFilter: null == transactionTypeFilter
@@ -128,6 +145,14 @@ class __$$LogFilterStateImplCopyWithImpl<$Res>
           ? _value._selectedCategoryIds
           : selectedCategoryIds // ignore: cast_nullable_to_non_nullable
               as Set<String>,
+      startDate: freezed == startDate
+          ? _value.startDate
+          : startDate // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
+      endDate: freezed == endDate
+          ? _value.endDate
+          : endDate // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
     ));
   }
 }
@@ -139,10 +164,11 @@ class _$LogFilterStateImpl implements _LogFilterState {
       {this.transactionTypeFilter = TransactionTypeFilter.all,
       this.searchQuery = '',
       this.sortBy = SortBy.date,
-      final Set<String> selectedCategoryIds = const {}})
+      final Set<String> selectedCategoryIds = const {},
+      this.startDate,
+      this.endDate})
       : _selectedCategoryIds = selectedCategoryIds;
 
-// The @Default() annotation replaces constructor default values.
   @override
   @JsonKey()
   final TransactionTypeFilter transactionTypeFilter;
@@ -163,8 +189,13 @@ class _$LogFilterStateImpl implements _LogFilterState {
   }
 
   @override
+  final DateTime? startDate;
+  @override
+  final DateTime? endDate;
+
+  @override
   String toString() {
-    return 'LogFilterState(transactionTypeFilter: $transactionTypeFilter, searchQuery: $searchQuery, sortBy: $sortBy, selectedCategoryIds: $selectedCategoryIds)';
+    return 'LogFilterState(transactionTypeFilter: $transactionTypeFilter, searchQuery: $searchQuery, sortBy: $sortBy, selectedCategoryIds: $selectedCategoryIds, startDate: $startDate, endDate: $endDate)';
   }
 
   @override
@@ -178,7 +209,10 @@ class _$LogFilterStateImpl implements _LogFilterState {
                 other.searchQuery == searchQuery) &&
             (identical(other.sortBy, sortBy) || other.sortBy == sortBy) &&
             const DeepCollectionEquality()
-                .equals(other._selectedCategoryIds, _selectedCategoryIds));
+                .equals(other._selectedCategoryIds, _selectedCategoryIds) &&
+            (identical(other.startDate, startDate) ||
+                other.startDate == startDate) &&
+            (identical(other.endDate, endDate) || other.endDate == endDate));
   }
 
   @override
@@ -187,7 +221,9 @@ class _$LogFilterStateImpl implements _LogFilterState {
       transactionTypeFilter,
       searchQuery,
       sortBy,
-      const DeepCollectionEquality().hash(_selectedCategoryIds));
+      const DeepCollectionEquality().hash(_selectedCategoryIds),
+      startDate,
+      endDate);
 
   @JsonKey(ignore: true)
   @override
@@ -202,9 +238,11 @@ abstract class _LogFilterState implements LogFilterState {
       {final TransactionTypeFilter transactionTypeFilter,
       final String searchQuery,
       final SortBy sortBy,
-      final Set<String> selectedCategoryIds}) = _$LogFilterStateImpl;
+      final Set<String> selectedCategoryIds,
+      final DateTime? startDate,
+      final DateTime? endDate}) = _$LogFilterStateImpl;
 
-  @override // The @Default() annotation replaces constructor default values.
+  @override
   TransactionTypeFilter get transactionTypeFilter;
   @override
   String get searchQuery;
@@ -212,6 +250,10 @@ abstract class _LogFilterState implements LogFilterState {
   SortBy get sortBy;
   @override
   Set<String> get selectedCategoryIds;
+  @override
+  DateTime? get startDate;
+  @override
+  DateTime? get endDate;
   @override
   @JsonKey(ignore: true)
   _$$LogFilterStateImplCopyWith<_$LogFilterStateImpl> get copyWith =>

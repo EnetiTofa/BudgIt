@@ -1,8 +1,8 @@
 // lib/src/features/menu/presentation/menu_screen.dart
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:budgit/src/features/categories/presentation/screens/manage_categories_screen.dart';
 import 'package:budgit/src/features/check_in/presentation/screens/check_in_screen.dart';
 import 'package:budgit/src/features/check_in/presentation/providers/is_check_in_available_provider.dart';
 import 'package:budgit/src/features/settings/data/settings_provider.dart';
@@ -11,8 +11,10 @@ import 'package:budgit/src/features/transaction_hub/transactions/presentation/co
 import 'package:budgit/src/features/check_in/presentation/providers/streak_provider.dart';
 import 'package:budgit/src/features/check_in/presentation/providers/app_bar_info_provider.dart';
 import 'package:budgit/src/features/debug/presentation/time_machine_screen.dart';
-// Note: Ensure this path matches your project structure for CheckInController
-import 'package:budgit/src/features/check_in/presentation/controllers/check_in_controller.dart'; 
+import 'package:budgit/src/features/check_in/presentation/controllers/check_in_controller.dart';
+import 'package:budgit/src/features/check_in/domain/check_in_state.dart';
+import 'package:budgit/src/features/settings/presentation/manage_payees_screen.dart';
+import 'package:budgit/src/features/settings/presentation/feedback_screen.dart';
 
 class MenuScreen extends ConsumerWidget {
   const MenuScreen({super.key});
@@ -47,10 +49,9 @@ class MenuScreen extends ConsumerWidget {
     return confirmed ?? false;
   }
 
-  // --- NEW: Inline Undo Logic ---
   Future<void> _handleUndoCheckIn(BuildContext context, WidgetRef ref) async {
     final theme = Theme.of(context);
-    
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -67,11 +68,16 @@ class MenuScreen extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text('Cancel', style: TextStyle(color: theme.colorScheme.secondary)),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: theme.colorScheme.secondary),
+            ),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            style: FilledButton.styleFrom(backgroundColor: Colors.orange.shade700),
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.orange.shade700,
+            ),
             child: const Text('Yes, Undo'),
           ),
         ],
@@ -81,12 +87,14 @@ class MenuScreen extends ConsumerWidget {
     if (confirmed != true) return;
 
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Reversing check-in...')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Reversing check-in...')));
     }
 
-    final success = await ref.read(checkInControllerProvider.notifier).undoLastCheckIn();
+    final success = await ref
+        .read(checkInControllerProvider.notifier)
+        .undoLastCheckIn();
 
     if (context.mounted) {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -125,33 +133,53 @@ class MenuScreen extends ConsumerWidget {
           child: Text('Management', style: headerStyle),
         ),
         isCheckInAvailableAsync.when(
-          data: (available) => available
-              ? ListTile(
-                  leading: const Icon(Icons.checklist_rtl_outlined),
-                  title: const Text('Weekly Check-in'),
-                  onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CheckInScreen())),
-                )
-              : const SizedBox.shrink(),
+          data: (checkInType) {
+            if (checkInType == CheckInType.none) {
+              return const SizedBox.shrink();
+            }
+
+            String title = 'Weekly Check-in';
+            if (checkInType == CheckInType.firstTime) {
+              title = 'Set Up First Check-in';
+            } else if (checkInType == CheckInType.monthly) {
+              title = 'Monthly Check-in';
+            }
+
+            return ListTile(
+              leading: const Icon(Icons.checklist_rtl_outlined),
+              title: Text(title),
+              onTap: () => Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const CheckInScreen())),
+            );
+          },
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, s) => const SizedBox.shrink(),
         ),
-        
-        // --- MODIFICATION: Standardized Undo Tile ---
         ListTile(
           leading: const Icon(Icons.undo_rounded),
           title: const Text('Undo Last Check-in'),
           onTap: () => _handleUndoCheckIn(context, ref),
         ),
-
         ListTile(
           leading: const Icon(Icons.calendar_month_outlined),
           title: const Text('Set Check-in Day'),
           onTap: () => _showCheckInDayPicker(context, ref),
         ),
         ListTile(
-          leading: const Icon(Icons.category_outlined),
-          title: const Text('Manage Categories'),
-          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ManageCategoriesScreen())),
+          leading: const Icon(Icons.storefront_outlined),
+          title: const Text('Manage Custom Payees'),
+          onTap: () => Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const ManagePayeesScreen())),
+        ),
+        ListTile(
+          leading: const Icon(Icons.bug_report_outlined),
+          title: const Text('Report Bug / Request Feature'),
+          trailing: const Icon(Icons.chevron_right, size: 20),
+          onTap: () => Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const FeedbackScreen())),
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16.0, 24.0, 16.0, 8.0),
@@ -161,36 +189,60 @@ class MenuScreen extends ConsumerWidget {
           leading: const Icon(Icons.dashboard_customize_outlined),
           title: const Text('Customize Dashboard'),
           subtitle: const Text('Coming soon!'),
-          onTap: () { /* Placeholder */ },
+          onTap: () {},
         ),
         ListTile(
           leading: const Icon(Icons.wallet_outlined),
           title: const Text('Customize Wallet Screen'),
           subtitle: const Text('Coming soon!'),
-          onTap: () { /* Placeholder */ },
+          onTap: () {},
         ),
         ListTile(
           leading: const Icon(Icons.brightness_6_outlined),
           title: const Text('Theme Settings'),
-          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ThemeSelectorScreen())),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const ThemeSelectorScreen()),
+          ),
         ),
         if (kDebugMode) ...[
           const Divider(),
           ListTile(
-            leading: const Icon(Icons.timelapse_rounded, color: Colors.purpleAccent),
+            leading: const Icon(
+              Icons.timelapse_rounded,
+              color: Colors.purpleAccent,
+            ),
             title: const Text('DEBUG: Time Machine'),
             onTap: () {
-              Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TimeMachineScreen()));
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const TimeMachineScreen()),
+              );
             },
           ),
           ListTile(
             leading: const Icon(Icons.history_toggle_off, color: Colors.orange),
             title: const Text('DEBUG: Reset Check-in History'),
-            onTap: () {
-              ref.read(addTransactionControllerProvider.notifier).debugClearCheckInHistory();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Check-in history cleared.')),
+            onTap: () async {
+              ref
+                  .read(addTransactionControllerProvider.notifier)
+                  .debugClearCheckInHistory();
+
+              final settings = ref.read(settingsProvider.notifier);
+              await settings.setHasCompletedFirstCheckIn(false);
+              await settings.setLastMonthlyCheckInDate(
+                DateTime.fromMillisecondsSinceEpoch(0),
               );
+
+              ref.invalidate(isCheckInAvailableProvider);
+
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'Check-in history & First-Time setup cleared.',
+                    ),
+                  ),
+                );
+              }
             },
           ),
           ListTile(
@@ -200,10 +252,13 @@ class MenuScreen extends ConsumerWidget {
               final confirmed = await _showConfirmationDialog(
                 context,
                 title: 'Generate Data?',
-                content: 'This will generate a large number of transactions for the past year based on your current budgets. Are you sure?',
+                content:
+                    'This will generate a large number of transactions for the past year based on your current budgets. Are you sure?',
               );
               if (confirmed && context.mounted) {
-                await ref.read(addTransactionControllerProvider.notifier).generateDummyData();
+                await ref
+                    .read(addTransactionControllerProvider.notifier)
+                    .generateDummyData();
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Dummy data generated.')),
                 );
@@ -217,33 +272,52 @@ class MenuScreen extends ConsumerWidget {
               final confirmed = await _showConfirmationDialog(
                 context,
                 title: 'Delete All Transactions?',
-                content: 'This will permanently delete all transaction and adjustment data. This action cannot be undone.',
+                content:
+                    'This will permanently delete all transaction and adjustment data. This action cannot be undone.',
               );
               if (confirmed && context.mounted) {
-                await ref.read(addTransactionControllerProvider.notifier).deleteAllData();
+                await ref
+                    .read(addTransactionControllerProvider.notifier)
+                    .deleteAllData();
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('All transactions deleted.')),
                 );
               }
             },
           ),
-          const Divider(),
           ListTile(
             leading: const Icon(Icons.bug_report, color: Colors.orange),
             title: const Text('DEBUG: Reset Check-in'),
-            onTap: () async { 
-              await ref.read(addTransactionControllerProvider.notifier).debugResetCheckInData();
+            onTap: () async {
+              await ref
+                  .read(addTransactionControllerProvider.notifier)
+                  .debugResetCheckInData();
+
+              final settings = ref.read(settingsProvider.notifier);
+              await settings.setHasCompletedFirstCheckIn(false);
+              await settings.setLastMonthlyCheckInDate(
+                DateTime.fromMillisecondsSinceEpoch(0),
+              );
+
               ref.invalidate(isCheckInAvailableProvider);
+
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Check-in status fully reset.')),
+                );
+              }
             },
           ),
           ListTile(
             leading: const Icon(Icons.replay, color: Colors.orange),
             title: const Text('DEBUG: Reset Streak'),
             onTap: () {
-              ref.read(addTransactionControllerProvider.notifier).debugResetStreak();
+              ref
+                  .read(addTransactionControllerProvider.notifier)
+                  .debugResetStreak();
               ref.invalidate(checkInStreakProvider);
               ref.invalidate(appBarInfoProvider);
-               ScaffoldMessenger.of(context).showSnackBar(
+              ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Streak has been reset.')),
               );
             },
@@ -253,13 +327,21 @@ class MenuScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _showCheckInDayPicker(BuildContext context, WidgetRef ref) async {
+  Future<void> _showCheckInDayPicker(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
     final settingsNotifier = ref.read(settingsProvider.notifier);
     final currentDay = await settingsNotifier.getCheckInDay();
 
     final daysOfWeek = {
-      'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4,
-      'Friday': 5, 'Saturday': 6, 'Sunday': 7,
+      'Monday': 1,
+      'Tuesday': 2,
+      'Wednesday': 3,
+      'Thursday': 4,
+      'Friday': 5,
+      'Saturday': 6,
+      'Sunday': 7,
     };
 
     return showDialog<void>(
@@ -300,7 +382,7 @@ class MenuScreen extends ConsumerWidget {
                     settingsNotifier.setCheckInDay(selectedDay);
                     Navigator.of(context).pop();
                   },
-                )
+                ),
               ],
             );
           },

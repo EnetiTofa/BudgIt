@@ -4,6 +4,9 @@ import 'package:budgit/src/core/domain/models/category.dart';
 import 'package:budgit/src/core/data/providers/category_list_provider.dart';
 import 'package:budgit/src/features/transaction_hub/transactions/domain/log_filter_state.dart';
 import 'package:budgit/src/features/transaction_hub/transactions/presentation/controllers/log_filter_controller.dart';
+import 'package:budgit/src/common_widgets/date_selector_field.dart';
+
+import 'package:budgit/src/features/transaction_hub/transactions/presentation/providers/dropdown_active_provider.dart';
 
 class FilterDropdown extends ConsumerWidget {
   const FilterDropdown({super.key});
@@ -16,10 +19,23 @@ class FilterDropdown extends ConsumerWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
-    // Helper to build radio buttons for the 'Type' filter
+    // Helper method to close the dropdown menu
+    // Helper method to close the dropdown menu
+    void _closeDropdown() {
+      // Try popping the dropdown route natively
+      if (Navigator.canPop(context)) {
+        Navigator.pop(context);
+      }
+
+      // Keep the provider update just in case your parent widget is listening to it
+      ref.read(dropdownActiveProvider.notifier).state = false;
+    }
+
     Widget buildTypeOption(TransactionTypeFilter value, String title) {
       final bool isSelected = filterState.transactionTypeFilter == value;
-      final Color textColor = isSelected ? colorScheme.primary : colorScheme.secondary;
+      final Color textColor = isSelected
+          ? colorScheme.primary
+          : colorScheme.secondary;
 
       return ListTile(
         dense: true,
@@ -38,18 +54,21 @@ class FilterDropdown extends ConsumerWidget {
         trailing: Radio<TransactionTypeFilter>(
           value: value,
           groupValue: filterState.transactionTypeFilter,
-          onChanged: (newValue) => filterController.setTransactionType(newValue!),
+          onChanged: (newValue) =>
+              filterController.setTransactionType(newValue!),
           activeColor: colorScheme.primary,
         ),
         onTap: () => filterController.setTransactionType(value),
       );
     }
 
-    // Helper for 'Category' filter options
     Widget buildCategoryOption(Category category) {
-      final bool isSelected = filterState.selectedCategoryIds.contains(category.id);
-      final Color itemColor = isSelected ? colorScheme.primary : colorScheme.secondary;
-      // When selected, the icon color will also be primary. When not, it uses its own category color.
+      final bool isSelected = filterState.selectedCategoryIds.contains(
+        category.id,
+      );
+      final Color itemColor = isSelected
+          ? colorScheme.primary
+          : colorScheme.secondary;
       final Color iconColor = category.color;
 
       return ListTile(
@@ -91,6 +110,70 @@ class FilterDropdown extends ConsumerWidget {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Date Range',
+                  style: textTheme.titleMedium?.copyWith(
+                    color: colorScheme.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                if (filterState.startDate != null ||
+                    filterState.endDate != null)
+                  TextButton(
+                    onPressed: () => filterController.setDateRange(null, null),
+                    child: const Text('Clear'),
+                  ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: DateSelectorField(
+                    labelText: 'From',
+                    icon: Icons.calendar_today,
+                    layout: DateSelectorLayout.vertical,
+                    selectedDate: filterState.startDate,
+                    allowFutureDates: true,
+                    maxDate: filterState.endDate,
+                    onOpenPicker:
+                        _closeDropdown, // <-- Closes menu before opening!
+                    onDateSelected: (date) {
+                      filterController.setDateRange(date, filterState.endDate);
+                    },
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: DateSelectorField(
+                    labelText: 'To',
+                    icon: Icons.event,
+                    layout: DateSelectorLayout.vertical,
+                    selectedDate: filterState.endDate,
+                    allowFutureDates: true,
+                    minDate: filterState.startDate,
+                    onOpenPicker:
+                        _closeDropdown, // <-- Closes menu before opening!
+                    onDateSelected: (date) {
+                      filterController.setDateRange(
+                        filterState.startDate,
+                        date,
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 32, indent: 16, endIndent: 16),
+
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
             child: Text(
               'Type',
               style: textTheme.titleMedium?.copyWith(
@@ -102,20 +185,26 @@ class FilterDropdown extends ConsumerWidget {
           buildTypeOption(TransactionTypeFilter.all, 'All'),
           buildTypeOption(TransactionTypeFilter.payment, 'Payments'),
           buildTypeOption(TransactionTypeFilter.income, 'Income'),
+
           const Divider(height: 24, indent: 16, endIndent: 16),
+
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
             child: Text(
               'Category',
               style: textTheme.titleMedium?.copyWith(
-                color: colorScheme.primary, 
-                fontWeight: FontWeight.w700
+                color: colorScheme.primary,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ),
           switch (allCategoriesAsync) {
-            AsyncLoading() => Center(child: CircularProgressIndicator(color: colorScheme.surface)),
-            AsyncError() => const Center(child: Text('Could not load categories.')),
+            AsyncLoading() => Center(
+              child: CircularProgressIndicator(color: colorScheme.surface),
+            ),
+            AsyncError() => const Center(
+              child: Text('Could not load categories.'),
+            ),
             AsyncData(:final value) =>
               value.isEmpty
                   ? const Padding(
@@ -126,8 +215,10 @@ class FilterDropdown extends ConsumerWidget {
                       builder: (context) {
                         const double itemHeight = 48.0;
                         const double maxHeight = 200.0;
-                        final double totalContentHeight = value.length * itemHeight;
-                        final bool needsScrolling = totalContentHeight > maxHeight;
+                        final double totalContentHeight =
+                            value.length * itemHeight;
+                        final bool needsScrolling =
+                            totalContentHeight > maxHeight;
 
                         if (needsScrolling) {
                           return SizedBox(

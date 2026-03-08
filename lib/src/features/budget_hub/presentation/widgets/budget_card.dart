@@ -39,65 +39,60 @@ class BudgetCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Determine the border color based on selection
-    final borderColor = isSelected 
+    final borderColor = isSelected
         ? Theme.of(context).colorScheme.primary.withAlpha(255)
         : Colors.transparent;
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // The animated card container
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          curve: Curves.easeInOut,
-          width: 64,
-          height: 64,
-          // Scale effect for selection
-          transform: isSelected 
-              ? Matrix4.diagonal3Values(1.1, 1.1, 1.0) 
-              : Matrix4.identity(),
-          transformAlignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(20), // Consistent radius
-            border: Border.all(
-              color: borderColor,
-              width: 3.0, // Thicker, cleaner outline
-              strokeAlign: BorderSide.strokeAlignInside, // Keeps border inside size bounds
-            ),
-          ),
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(20),
-            child: Center(
-              child: Icon(
-                icon,
-                color: contentColor,
-                size: 30,
+    // --- NEW: Wrapped in a transparent Material ---
+    // This ensures text doesn't get ugly yellow underlines when detached during drag
+    return Material(
+      color: Colors.transparent,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            curve: Curves.easeInOut,
+            width: 64,
+            height: 64,
+            transform: isSelected
+                ? Matrix4.diagonal3Values(1.1, 1.1, 1.0)
+                : Matrix4.identity(),
+            transformAlignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: borderColor,
+                width: 3.0,
+                strokeAlign: BorderSide.strokeAlignInside,
               ),
             ),
-          ),
-        ),
-        const SizedBox(height: 8),
-        // The label text
-        SizedBox(
-          width: 72,
-          child: Text(
-            label,
-            style: TextStyle(
-              color: isSelected
-                  ? Theme.of(context).colorScheme.primary
-                  : Theme.of(context).colorScheme.secondary,
-              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-              fontSize: 12, // Adjusted slightly to ensure fit
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(20),
+              child: Center(child: Icon(icon, color: contentColor, size: 30)),
             ),
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
           ),
-        ),
-      ],
+          const SizedBox(height: 8),
+          SizedBox(
+            width: 72,
+            child: Text(
+              label,
+              style: TextStyle(
+                color: isSelected
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.secondary,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                fontSize: 12,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

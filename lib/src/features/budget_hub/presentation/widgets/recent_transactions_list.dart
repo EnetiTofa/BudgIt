@@ -163,15 +163,6 @@ class _RecentTransactionsListState
                             child: Container(
                               width: double.infinity,
                               padding: const EdgeInsets.symmetric(vertical: 12),
-                              decoration: BoxDecoration(
-                                border: Border(
-                                  top: BorderSide(
-                                    color: theme
-                                        .colorScheme
-                                        .surfaceContainerHighest,
-                                  ),
-                                ),
-                              ),
                               child: Text(
                                 _isExpanded ? "Show Less" : "Show More",
                                 textAlign: TextAlign.center,

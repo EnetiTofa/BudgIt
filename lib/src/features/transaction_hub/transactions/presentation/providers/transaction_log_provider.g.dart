@@ -21,7 +21,7 @@ final rawTransactionsProvider = FutureProvider<List<Transaction>>.internal(
 );
 
 typedef RawTransactionsRef = FutureProviderRef<List<Transaction>>;
-String _$transactionLogHash() => r'cbac92fcf65027e8aaff3ec04e15bc0cc59d0351';
+String _$transactionLogHash() => r'5e644c6398d94e36e59bad56ba93ac996d8f35f2';
 
 /// See also [transactionLog].
 @ProviderFor(transactionLog)

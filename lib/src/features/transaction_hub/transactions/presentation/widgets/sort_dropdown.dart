@@ -1,3 +1,5 @@
+// lib/src/features/transactions/presentation/widgets/sort_dropdown.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:budgit/src/features/transaction_hub/transactions/domain/log_filter_state.dart';
@@ -18,8 +20,10 @@ class SortDropdown extends ConsumerWidget {
 
     Widget buildSortOption(SortBy value, String title, IconData icon) {
       final bool isSelected = filterState.sortBy == value;
-      final Color itemColor = isSelected ? colorScheme.primary : colorScheme.secondary;
-      
+      final Color itemColor = isSelected
+          ? colorScheme.primary
+          : colorScheme.secondary;
+
       return ListTile(
         title: AnimatedDefaultTextStyle(
           duration: const Duration(milliseconds: 200),
@@ -32,15 +36,10 @@ class SortDropdown extends ConsumerWidget {
           ),
           child: Text(title),
         ),
-        // --- MODIFIED: The Icon is now wrapped in a TweenAnimationBuilder ---
         leading: TweenAnimationBuilder<Color?>(
-          // 1. The value to animate to. It animates whenever this value changes.
           tween: ColorTween(end: itemColor),
-          // 2. The duration of the animation.
           duration: const Duration(milliseconds: 200),
-          // 3. The builder function provides the intermediate color during the animation.
           builder: (BuildContext context, Color? animatedColor, Widget? child) {
-            // We return the Icon, using the animated color.
             return Icon(icon, color: animatedColor, size: 20);
           },
         ),
@@ -68,10 +67,16 @@ class SortDropdown extends ConsumerWidget {
             padding: const EdgeInsets.only(left: 16.0, top: 8.0, bottom: 8.0),
             child: Text(
               'Sort By',
-              style: textTheme.titleMedium?.copyWith(color: colorScheme.primary, fontWeight: FontWeight.w700, fontSize: 16),
+              style: textTheme.titleMedium?.copyWith(
+                color: colorScheme.primary,
+                fontWeight: FontWeight.w700,
+                fontSize: 16,
+              ),
             ),
           ),
           buildSortOption(SortBy.date, 'Date', Icons.calendar_today),
+          // --- ADDED: Size Sort Option ---
+          buildSortOption(SortBy.amount, 'Size (Amount)', Icons.attach_money),
           buildSortOption(SortBy.category, 'Category', Icons.category),
           buildSortOption(SortBy.store, 'Store / Payee', Icons.store),
         ],

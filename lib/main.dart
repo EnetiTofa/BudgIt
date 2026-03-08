@@ -1,5 +1,3 @@
-// main.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -32,10 +30,7 @@ Future<void> main() async {
   await Hive.openBox<BudgetTransfer>('adjustments');
   await Hive.openBox<SavingsGoal>('savings_goals');
   await Hive.openBox('settings');
-
-  // This was the missing line that caused the error
   await Hive.openBox<List<String>>('category_order');
 
-  // Run the app
   runApp(const ProviderScope(child: MyApp()));
 }

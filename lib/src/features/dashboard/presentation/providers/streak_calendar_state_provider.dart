@@ -7,7 +7,7 @@ part 'streak_calendar_state_provider.g.dart';
 
 class StreakCalendarState {
   final Set<DateTime> highlightedDates;
-  final Map<DateTime, int> streakTips; 
+  final Map<DateTime, int> streakTips;
   final Set<DateTime> successfulDatesStripped;
 
   StreakCalendarState({
@@ -18,7 +18,9 @@ class StreakCalendarState {
 }
 
 @riverpod
-Future<StreakCalendarState> streakCalendarState(StreakCalendarStateRef ref) async {
+Future<StreakCalendarState> streakCalendarState(
+  StreakCalendarStateRef ref,
+) async {
   final history = await ref.watch(checkInHistoryProvider.future);
   final streakCount = await ref.watch(checkInStreakProvider.future);
   final clock = ref.watch(clockNotifierProvider);
@@ -26,9 +28,11 @@ Future<StreakCalendarState> streakCalendarState(StreakCalendarStateRef ref) asyn
   final now = clock.now();
   final today = DateTime(now.year, now.month, now.day);
 
-  final successfulDatesStripped = history.map((d) => DateTime(d.year, d.month, d.day)).toSet();
+  final successfulDatesStripped = history
+      .map((d) => DateTime(d.year, d.month, d.day))
+      .toSet();
   final sortedDates = successfulDatesStripped.toList()..sort();
-  
+
   final highlightedDates = <DateTime>{};
   final streakTips = <DateTime, int>{};
 
@@ -43,21 +47,23 @@ Future<StreakCalendarState> streakCalendarState(StreakCalendarStateRef ref) asyn
       for (final checkIn in pastDates) {
         // Highlight the 7 days leading up to each successful historical check-in
         for (int j = 0; j < 7; j++) {
-          highlightedDates.add(checkIn.subtract(Duration(days: j)));
+          highlightedDates.add(
+            DateTime(checkIn.year, checkIn.month, checkIn.day - j),
+          );
         }
       }
-      
+
       // Connect the dots between the past dates
       if (pastDates.length > 1) {
         DateTime curr = pastDates.first;
         while (!curr.isAfter(pastDates.last)) {
           highlightedDates.add(curr);
-          curr = curr.add(const Duration(days: 1));
+          curr = DateTime(curr.year, curr.month, curr.day + 1);
         }
       }
-      
+
       // Anchor the historical tip to the final check-in of that broken streak.
-      streakTips[pastDates.last] = pastDates.length; 
+      streakTips[pastDates.last] = pastDates.length;
     }
 
     // --- 3. Process Active Dates (Current Streak) ---
@@ -66,7 +72,9 @@ Future<StreakCalendarState> streakCalendarState(StreakCalendarStateRef ref) asyn
         // Highlight the 7 days leading up to each successful active check-in
         // This ensures a new streak forms its own start point 7 days prior!
         for (int j = 0; j < 7; j++) {
-          highlightedDates.add(checkIn.subtract(Duration(days: j)));
+          highlightedDates.add(
+            DateTime(checkIn.year, checkIn.month, checkIn.day - j),
+          );
         }
       }
 
@@ -74,7 +82,7 @@ Future<StreakCalendarState> streakCalendarState(StreakCalendarStateRef ref) asyn
       DateTime curr = activeDates.first;
       while (!curr.isAfter(today)) {
         highlightedDates.add(curr);
-        curr = curr.add(const Duration(days: 1));
+        curr = DateTime(curr.year, curr.month, curr.day + 1);
       }
 
       // Anchor the active tip to today

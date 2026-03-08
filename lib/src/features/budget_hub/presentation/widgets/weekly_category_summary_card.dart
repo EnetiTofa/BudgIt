@@ -58,7 +58,6 @@ class _WeeklyCategorySummaryCardState extends State<WeeklyCategorySummaryCard>
     final currencyFormat = NumberFormat.currency(locale: 'en_US', symbol: '\$');
     final theme = Theme.of(context);
     final data = widget.data;
-    final isOverspent = data.totalSpentThisWeek > data.effectiveWeeklyBudget;
 
     final contentColor = data.category.contentColor;
 
@@ -101,7 +100,7 @@ class _WeeklyCategorySummaryCardState extends State<WeeklyCategorySummaryCard>
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 14,
-                          color: isOverspent ? Colors.redAccent : contentColor,
+                          color: contentColor,
                         ),
                       ),
                       TextSpan(
@@ -131,10 +130,7 @@ class _WeeklyCategorySummaryCardState extends State<WeeklyCategorySummaryCard>
                         0.7,
                       ),
                       valueColor: AlwaysStoppedAnimation<Color>(
-                        isOverspent
-                            ? Colors.redAccent
-                            // Used the category color but darker to pop against the background
-                            : data.category.color.withAlpha(180),
+                        data.category.color.withAlpha(180),
                       ),
                     ),
                   );

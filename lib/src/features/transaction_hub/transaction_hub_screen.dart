@@ -38,8 +38,12 @@ class _TransactionHubScreenState extends ConsumerState<TransactionHubScreen>
   void initState() {
     super.initState();
     final initialIndex = ref.read(transactionHubTabIndexProvider);
-    _tabController = TabController(length: 2, vsync: this, initialIndex: initialIndex);
-    
+    _tabController = TabController(
+      length: 2,
+      vsync: this,
+      initialIndex: initialIndex,
+    );
+
     _searchController.text = ref.read(logFilterProvider).searchQuery;
     _searchFocusNode.addListener(() {
       setState(() {
@@ -66,7 +70,7 @@ class _TransactionHubScreenState extends ConsumerState<TransactionHubScreen>
     _searchFocusNode.dispose();
     super.dispose();
   }
-  
+
   void _removeOverlay() {
     if (_overlayEntry != null) {
       if (mounted) {
@@ -94,12 +98,13 @@ class _TransactionHubScreenState extends ConsumerState<TransactionHubScreen>
       });
       return;
     }
-    
+
     final overlay = Overlay.of(context);
-    final barRenderBox = _barKey.currentContext!.findRenderObject() as RenderBox;
+    final barRenderBox =
+        _barKey.currentContext!.findRenderObject() as RenderBox;
     final barSize = barRenderBox.size;
     final barOffset = barRenderBox.localToGlobal(Offset.zero);
-    
+
     _overlayEntry = OverlayEntry(
       builder: (context) {
         return Stack(
@@ -123,7 +128,7 @@ class _TransactionHubScreenState extends ConsumerState<TransactionHubScreen>
                   child: child,
                 ),
               ),
-            )
+            ),
           ],
         );
       },
@@ -131,16 +136,23 @@ class _TransactionHubScreenState extends ConsumerState<TransactionHubScreen>
 
     overlay.insert(_overlayEntry!);
     _overlayAnimationController.forward();
-    
+
     setState(() => _activeDropdown = type);
     ref.read(dropdownActiveProvider.notifier).state = true;
   }
 
   @override
   Widget build(BuildContext context) {
+    // Existing listener for the tabs
     ref.listen<int>(transactionHubTabIndexProvider, (previous, next) {
       if (next != _tabController.index) {
         _tabController.animateTo(next);
+      }
+    });
+
+    ref.listen<bool>(dropdownActiveProvider, (previous, next) {
+      if (!next && _overlayEntry != null) {
+        _removeOverlay();
       }
     });
 
@@ -148,11 +160,17 @@ class _TransactionHubScreenState extends ConsumerState<TransactionHubScreen>
     final filterState = ref.watch(logFilterProvider);
     final colorScheme = Theme.of(context).colorScheme;
 
-    final bool isSortActive = _activeDropdown == ActiveDropdown.sort || filterState.sortBy != SortBy.date;
-    final bool isFilterActive = _activeDropdown == ActiveDropdown.filter ||
+    final bool isSortActive =
+        _activeDropdown == ActiveDropdown.sort ||
+        filterState.sortBy != SortBy.date;
+    final bool isFilterActive =
+        _activeDropdown == ActiveDropdown.filter ||
         filterState.transactionTypeFilter != TransactionTypeFilter.all ||
-        filterState.selectedCategoryIds.isNotEmpty;
-    
+        filterState.selectedCategoryIds.isNotEmpty ||
+        filterState.startDate !=
+            null || // Ensure the button stays highlighted if a date is active!
+        filterState.endDate != null;
+
     final activeStyle = ButtonStyle(
       foregroundColor: WidgetStateProperty.all(colorScheme.onPrimary),
       backgroundColor: WidgetStateProperty.all(colorScheme.primary),
@@ -240,7 +258,9 @@ class _TransactionHubScreenState extends ConsumerState<TransactionHubScreen>
                             ),
                             const SizedBox(width: 8),
                             FilledButton.tonalIcon(
-                              style: isFilterActive ? activeStyle : inactiveStyle,
+                              style: isFilterActive
+                                  ? activeStyle
+                                  : inactiveStyle,
                               onPressed: () {
                                 _showOverlay(
                                   child: const FilterDropdown(),
@@ -262,10 +282,7 @@ class _TransactionHubScreenState extends ConsumerState<TransactionHubScreen>
             key: _bodyKey,
             child: TabBarView(
               controller: _tabController,
-              children: const [
-                TransactionLogScreen(),
-                RecurringScreen(),
-              ],
+              children: const [TransactionLogScreen(), RecurringScreen()],
             ),
           ),
         ),

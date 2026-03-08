@@ -1,3 +1,5 @@
+// lib/src/features/categories/presentation/controllers/manage_category_controller.dart
+
 import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -7,7 +9,14 @@ import 'package:budgit/src/core/domain/models/category.dart';
 import 'package:budgit/src/core/data/providers/transaction_repository_provider.dart';
 import 'package:budgit/src/core/domain/models/transaction.dart';
 import 'package:budgit/src/features/transaction_hub/transactions/presentation/providers/transaction_log_provider.dart';
+import 'package:budgit/src/features/transaction_hub/transactions/presentation/providers/recurring_transactions_provider.dart';
 import 'package:budgit/src/core/data/providers/category_list_provider.dart';
+import 'package:budgit/src/features/budget_hub/presentation/providers/weekly_projection_providers.dart';
+import 'package:budgit/src/features/budget_hub/presentation/providers/monthly_projection_providers.dart';
+import 'package:budgit/src/features/budget_hub/presentation/providers/overall_budget_summary_provider.dart';
+
+// --- NEW IMPORT ---
+import 'package:budgit/src/utils/date_utils.dart';
 
 part 'manage_category_controller.g.dart';
 
@@ -27,7 +36,8 @@ class ManageCategoryState extends Equatable {
   double get displayTotalBudget {
     switch (budgetPeriod) {
       case BudgetPeriod.weekly:
-        return totalBudget / 4.33;
+        // --- UPDATED ---
+        return totalBudget / AppDateUtils.weeksPerMonth;
       case BudgetPeriod.monthly:
         return totalBudget;
       case BudgetPeriod.yearly:
@@ -38,9 +48,11 @@ class ManageCategoryState extends Equatable {
   double get recurringSum => recurringTransactions.fold(0.0, (sum, p) {
     switch (p.recurrence) {
       case RecurrencePeriod.daily:
-        return sum + (p.amount * 30.44);
+        // --- UPDATED ---
+        return sum + (p.amount * AppDateUtils.daysPerMonth);
       case RecurrencePeriod.weekly:
-        return sum + (p.amount * 4.33);
+        // --- UPDATED ---
+        return sum + (p.amount * AppDateUtils.weeksPerMonth);
       case RecurrencePeriod.monthly:
         return sum + p.amount;
       case RecurrencePeriod.yearly:
@@ -51,7 +63,7 @@ class ManageCategoryState extends Equatable {
   // The absolute minimum budget is just the sum of their fixed recurring bills.
   double get minimumBudget => recurringSum;
 
-  // This is what becomes their Weekly Dashboard allowance (divided by 4.33)
+  // This is what becomes their Weekly Dashboard allowance
   double get variableBudget => totalBudget - recurringSum;
 
   @override
@@ -83,9 +95,11 @@ class ManageCategoryController extends _$ManageCategoryController {
   double _getMonthlyValue(RecurringPayment payment) {
     switch (payment.recurrence) {
       case RecurrencePeriod.daily:
-        return payment.amount * 30.44;
+        // --- UPDATED ---
+        return payment.amount * AppDateUtils.daysPerMonth;
       case RecurrencePeriod.weekly:
-        return payment.amount * 4.33;
+        // --- UPDATED ---
+        return payment.amount * AppDateUtils.weeksPerMonth;
       case RecurrencePeriod.monthly:
         return payment.amount;
       case RecurrencePeriod.yearly:
@@ -246,6 +260,22 @@ class ManageCategoryController extends _$ManageCategoryController {
     ref.invalidate(categoryListProvider);
     ref.invalidate(allTransactionOccurrencesProvider);
     ref.invalidate(transactionLogProvider);
+    ref.invalidate(rawTransactionsProvider);
+    ref.invalidate(recurringTransactionsProvider);
+
+    // Invalidate the Unified Budget providers
+    ref.invalidate(weeklyCategoryDataProvider);
+    ref.invalidate(weeklyAggregateProvider);
+    ref.invalidate(weeklyChartDataProvider);
+
+    ref.invalidate(monthlyCategoryProgressProvider);
+    ref.invalidate(globalMonthlyHistoryProvider);
+    ref.invalidate(monthlySummaryDetailsProvider);
+    ref.invalidate(historicalCategorySpendingProvider);
+    ref.invalidate(categoryGaugeDataProvider);
+    ref.invalidate(monthlyScreenDataProvider);
+
+    ref.invalidate(overallBudgetSummaryProvider);
   }
 
   void setTotalBudget(double rawAmount) {
@@ -255,7 +285,8 @@ class ManageCategoryController extends _$ManageCategoryController {
     double monthlyBudget;
     switch (currentState.budgetPeriod) {
       case BudgetPeriod.weekly:
-        monthlyBudget = rawAmount * 4.33;
+        // --- UPDATED ---
+        monthlyBudget = rawAmount * AppDateUtils.weeksPerMonth;
         break;
       case BudgetPeriod.monthly:
         monthlyBudget = rawAmount;

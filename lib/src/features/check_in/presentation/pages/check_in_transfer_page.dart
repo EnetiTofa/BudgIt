@@ -2,14 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:budgit/src/core/domain/models/category.dart';
 import 'package:budgit/src/core/data/providers/category_list_provider.dart';
+import 'package:budgit/src/features/check_in/domain/check_in_state.dart';
 import 'package:budgit/src/features/check_in/presentation/controllers/check_in_controller.dart';
 import 'package:budgit/src/features/budget_hub/domain/budget_transfer.dart';
 import 'package:budgit/src/features/budget_hub/presentation/widgets/filtered_category_selector.dart';
 import 'package:budgit/src/features/budget_hub/presentation/widgets/transfer_composition_bar.dart';
 import 'package:budgit/src/features/budget_hub/presentation/widgets/amount_slider_field.dart';
-
-// FIX: Point to the new consolidated weekly providers
-import 'package:budgit/src/features/budget_hub/presentation/providers/weekly_projection_providers.dart';
 
 class CheckInTransferPage extends ConsumerWidget {
   const CheckInTransferPage({super.key});
@@ -17,32 +15,31 @@ class CheckInTransferPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(checkInControllerProvider);
+
+    // 1. Wait for the controller to do the heavy lifting
+    if (state.status == CheckInStatus.initial ||
+        state.status == CheckInStatus.loading) {
+      // Changed to text so we know exactly what is loading
+      return Center(child: Text("STUCK LOADING CONTROLLER: ${state.status}"));
+    }
+
     final categoriesAsync = ref.watch(categoryListProvider);
-
-    // We use the date locked into the check-in state, or fallback to today
-    final targetDate = state.checkInWeekDate ?? DateTime.now();
-    // Watch the new camelCase provider from the consolidated file
-    final pastWeekDataAsync = ref.watch(
-      weeklyCategoryDataProvider(selectedDate: targetDate),
-    );
-
     final theme = Theme.of(context);
 
-    // Combine both async streams
-    if (categoriesAsync.isLoading || pastWeekDataAsync.isLoading) {
-      return const Center(child: CircularProgressIndicator());
+    if (!categoriesAsync.hasValue) {
+      if (categoriesAsync.hasError) {
+        return Center(
+          child: Text("Error loading categories: ${categoriesAsync.error}"),
+        );
+      }
+      // Changed to text so we know if categories are the problem
+      return const Center(child: Text("STUCK LOADING CATEGORIES"));
     }
-
-    if (categoriesAsync.hasError || pastWeekDataAsync.hasError) {
-      return const Center(child: Text("Error loading data"));
-    }
-
     final categories = categoriesAsync.value!;
-    final pastWeekData = pastWeekDataAsync.value!;
 
-    // A category is "walleted" if it had a variable weekly budget > 0
-    final walletedCategoriesData = pastWeekData
-        .where((data) => data.baseWeeklyBudget > 0)
+    // 3. A category is "walleted" if it has a base budget > 0
+    final walletedCategories = categories
+        .where((c) => c.budgetAmount > 0)
         .toList();
 
     return Column(
@@ -51,7 +48,12 @@ class CheckInTransferPage extends ConsumerWidget {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
-              Text('Adjust Balances', style: theme.textTheme.headlineSmall),
+              Text(
+                'Adjust Balances',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const SizedBox(height: 8),
               Text(
                 'Shift funds between categories before calculating your final savings.',
@@ -63,9 +65,8 @@ class CheckInTransferPage extends ConsumerWidget {
             ],
           ),
         ),
-        const Divider(),
         Expanded(
-          child: walletedCategoriesData.isEmpty
+          child: walletedCategories.isEmpty
               ? Center(
                   child: Text(
                     "No active categories found.",
@@ -73,17 +74,17 @@ class CheckInTransferPage extends ConsumerWidget {
                   ),
                 )
               : ListView.builder(
-                  itemCount: walletedCategoriesData.length,
+                  itemCount: walletedCategories.length,
                   itemBuilder: (context, index) {
-                    final targetData = walletedCategoriesData[index];
-                    final targetCat = targetData.category;
+                    final targetCat = walletedCategories[index];
 
+                    // Read the math straight out of the controller state! No async waiting!
                     final unspent =
                         state.unspentFundsByCategory[targetCat.id] ?? 0.0;
                     final overspent =
                         state.overspentFundsByCategory[targetCat.id] ?? 0.0;
 
-                    final activeBoosts = state.checkInWeekBoosts
+                    final activeTransfers = state.checkInWeekTransfers
                         .where(
                           (b) =>
                               b.toCategoryId == targetCat.id &&
@@ -91,13 +92,15 @@ class CheckInTransferPage extends ConsumerWidget {
                         )
                         .toList();
 
-                    return _CategoryBoostCard(
+                    // Estimate base weekly budget for the visual progress bar scaling
+                    final estimatedWeeklyBudget = targetCat.budgetAmount / 4.33;
+
+                    return _CategoryTransferCard(
                       targetCategory: targetCat,
-                      baseWeeklyBudget:
-                          targetData.baseWeeklyBudget, // Pass this down
+                      baseWeeklyBudget: estimatedWeeklyBudget,
                       unspentAmount: unspent,
                       overspentAmount: overspent,
-                      activeBoosts: activeBoosts,
+                      activeTransfers: activeTransfers,
                       unspentMap: state.unspentFundsByCategory,
                       allCategories: categories,
                     );
@@ -109,33 +112,33 @@ class CheckInTransferPage extends ConsumerWidget {
   }
 }
 
-class _CategoryBoostCard extends ConsumerWidget {
+class _CategoryTransferCard extends ConsumerWidget {
   final Category targetCategory;
-  final double baseWeeklyBudget; // Added this field
+  final double baseWeeklyBudget;
   final double unspentAmount;
   final double overspentAmount;
-  final List<BudgetTransfer> activeBoosts;
+  final List<BudgetTransfer> activeTransfers;
   final Map<String, double> unspentMap;
   final List<Category> allCategories;
 
-  const _CategoryBoostCard({
+  const _CategoryTransferCard({
     required this.targetCategory,
-    required this.baseWeeklyBudget, // Require it here
+    required this.baseWeeklyBudget,
     required this.unspentAmount,
     required this.overspentAmount,
-    required this.activeBoosts,
+    required this.activeTransfers,
     required this.unspentMap,
     required this.allCategories,
   });
 
-  void _showBoostDialog(
+  void _showTransferDialog(
     BuildContext context,
     WidgetRef ref, [
-    BudgetTransfer? existingBoost,
+    BudgetTransfer? existingTransfer,
   ]) {
     final validSources = allCategories.where((c) {
       if (c.id == targetCategory.id) return false;
-      if (existingBoost != null && c.id == existingBoost.fromCategoryId) {
+      if (existingTransfer != null && c.id == existingTransfer.fromCategoryId) {
         return true;
       }
       return unspentMap.containsKey(c.id) && unspentMap[c.id]! > 0;
@@ -148,13 +151,13 @@ class _CategoryBoostCard extends ConsumerWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
-        return _CheckInBoostBottomSheet(
+        return _CheckInTransferBottomSheet(
           targetCategory: targetCategory,
-          baseWeeklyBudget: baseWeeklyBudget, // Pass it down again
+          baseWeeklyBudget: baseWeeklyBudget,
           validSources: validSources,
           unspentMap: unspentMap,
-          existingBoost: existingBoost,
-          activeBoosts: activeBoosts,
+          existingTransfer: existingTransfer,
+          activeTransfers: activeTransfers,
         );
       },
     );
@@ -221,23 +224,28 @@ class _CategoryBoostCard extends ConsumerWidget {
               ),
             ),
             trailing: OutlinedButton(
-              onPressed: () => _showBoostDialog(context, ref),
+              onPressed: () => _showTransferDialog(context, ref),
               style: OutlinedButton.styleFrom(
                 foregroundColor: theme.colorScheme.primary,
               ),
-              child: const Text("Boost"),
+              child: const Text("Transfer"),
             ),
           ),
         ),
-        if (activeBoosts.isNotEmpty)
+        if (activeTransfers.isNotEmpty)
           Padding(
-            padding: const EdgeInsets.only(left: 32, right: 16, bottom: 12),
+            padding: const EdgeInsets.only(
+              left: 16,
+              right: 16,
+              bottom: 8,
+              top: 8,
+            ),
             child: Column(
-              children: activeBoosts.map((boost) {
-                return _CheckInExistingBoostCard(
-                  boost: boost,
+              children: activeTransfers.map((transfer) {
+                return _CheckInExistingTransferCard(
+                  transfer: transfer,
                   allCategories: allCategories,
-                  onTap: () => _showBoostDialog(context, ref, boost),
+                  onTap: () => _showTransferDialog(context, ref, transfer),
                 );
               }).toList(),
             ),
@@ -247,46 +255,46 @@ class _CategoryBoostCard extends ConsumerWidget {
   }
 }
 
-class _CheckInBoostBottomSheet extends ConsumerStatefulWidget {
+class _CheckInTransferBottomSheet extends ConsumerStatefulWidget {
   final Category targetCategory;
-  final double baseWeeklyBudget; // Added this field
+  final double baseWeeklyBudget;
   final List<Category> validSources;
   final Map<String, double> unspentMap;
-  final BudgetTransfer? existingBoost;
-  final List<BudgetTransfer> activeBoosts;
+  final BudgetTransfer? existingTransfer;
+  final List<BudgetTransfer> activeTransfers;
 
-  const _CheckInBoostBottomSheet({
+  const _CheckInTransferBottomSheet({
     required this.targetCategory,
-    required this.baseWeeklyBudget, // Require it here
+    required this.baseWeeklyBudget,
     required this.validSources,
     required this.unspentMap,
-    this.existingBoost,
-    required this.activeBoosts,
+    this.existingTransfer,
+    required this.activeTransfers,
   });
 
   @override
-  ConsumerState<_CheckInBoostBottomSheet> createState() =>
-      _CheckInBoostBottomSheetState();
+  ConsumerState<_CheckInTransferBottomSheet> createState() =>
+      _CheckInTransferBottomSheetState();
 }
 
-class _CheckInBoostBottomSheetState
-    extends ConsumerState<_CheckInBoostBottomSheet> {
+class _CheckInTransferBottomSheetState
+    extends ConsumerState<_CheckInTransferBottomSheet> {
   Category? _selectedSource;
   double _amountToTransfer = 0.0;
 
   @override
   void initState() {
     super.initState();
-    if (widget.existingBoost != null) {
+    if (widget.existingTransfer != null) {
       final matchingSources = widget.validSources.where(
-        (c) => c.id == widget.existingBoost!.fromCategoryId,
+        (c) => c.id == widget.existingTransfer!.fromCategoryId,
       );
       if (matchingSources.isNotEmpty) {
         _selectedSource = matchingSources.first;
       } else if (widget.validSources.isNotEmpty) {
         _selectedSource = widget.validSources.first;
       }
-      _amountToTransfer = widget.existingBoost!.amount;
+      _amountToTransfer = widget.existingTransfer!.amount;
     } else if (widget.validSources.isNotEmpty) {
       _selectedSource = widget.validSources.first;
     }
@@ -315,15 +323,16 @@ class _CheckInBoostBottomSheetState
               "You don't have any unspent funds in other categories.",
               textAlign: TextAlign.center,
             ),
+            const SizedBox(height: 24),
           ],
         ),
       );
     }
 
     double maxAvailable = widget.unspentMap[_selectedSource?.id] ?? 0.0;
-    if (widget.existingBoost != null &&
-        _selectedSource?.id == widget.existingBoost!.fromCategoryId) {
-      maxAvailable += widget.existingBoost!.amount;
+    if (widget.existingTransfer != null &&
+        _selectedSource?.id == widget.existingTransfer!.fromCategoryId) {
+      maxAvailable += widget.existingTransfer!.amount;
     }
     final sliderMax = maxAvailable > 0 ? maxAvailable : 0.0;
     final displayAmount = _amountToTransfer.clamp(0.0, sliderMax);
@@ -333,12 +342,12 @@ class _CheckInBoostBottomSheetState
 
     final baseBudget = widget.baseWeeklyBudget;
 
-    double otherBoostsTotal = widget.activeBoosts.fold(
+    double otherTransfersTotal = widget.activeTransfers.fold(
       0.0,
       (sum, b) => sum + b.amount,
     );
-    if (widget.existingBoost != null) {
-      otherBoostsTotal -= widget.existingBoost!.amount;
+    if (widget.existingTransfer != null) {
+      otherTransfersTotal -= widget.existingTransfer!.amount;
     }
 
     return Padding(
@@ -356,24 +365,25 @@ class _CheckInBoostBottomSheetState
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    widget.existingBoost == null
-                        ? "Boost ${widget.targetCategory.name}"
-                        : "Edit Boost",
+                    widget.existingTransfer == null
+                        ? "Transfer to ${widget.targetCategory.name}"
+                        : "Edit Transfer",
                     style: theme.textTheme.titleLarge,
                   ),
-                  if (widget.existingBoost != null)
+                  if (widget.existingTransfer != null)
                     IconButton(
                       icon: Icon(
                         Icons.delete_outline,
                         color: theme.colorScheme.error,
                       ),
+                      // ... existing close/delete math ...
                       onPressed: () async {
                         await ref
                             .read(checkInControllerProvider.notifier)
-                            .applyCheckInBoost(
-                              existingBoostId: widget.existingBoost!.id,
+                            .applyCheckInTransfer(
+                              existingTransferId: widget.existingTransfer!.id,
                               fromCategoryId:
-                                  widget.existingBoost!.fromCategoryId,
+                                  widget.existingTransfer!.fromCategoryId,
                               toCategoryId: widget.targetCategory.id,
                               amount: 0.0,
                             );
@@ -387,7 +397,7 @@ class _CheckInBoostBottomSheetState
                 targetCategory: widget.targetCategory,
                 baseBudget: baseBudget,
                 spent: 0.0,
-                otherTransfersTotal: otherBoostsTotal,
+                otherTransfersTotal: otherTransfersTotal,
                 currentTransferAmount: displayAmount,
                 currentTransferColor: sourceColor,
               ),
@@ -421,8 +431,8 @@ class _CheckInBoostBottomSheetState
                     ? () async {
                         await ref
                             .read(checkInControllerProvider.notifier)
-                            .applyCheckInBoost(
-                              existingBoostId: widget.existingBoost?.id,
+                            .applyCheckInTransfer(
+                              existingTransferId: widget.existingTransfer?.id,
                               fromCategoryId: _selectedSource!.id,
                               toCategoryId: widget.targetCategory.id,
                               amount: _amountToTransfer,
@@ -431,7 +441,9 @@ class _CheckInBoostBottomSheetState
                       }
                     : null,
                 child: Text(
-                  widget.existingBoost == null ? "Apply Boost" : "Save Changes",
+                  widget.existingTransfer == null
+                      ? "Apply Transfer"
+                      : "Save Changes",
                 ),
               ),
             ],
@@ -442,13 +454,13 @@ class _CheckInBoostBottomSheetState
   }
 }
 
-class _CheckInExistingBoostCard extends StatelessWidget {
-  final BudgetTransfer boost;
+class _CheckInExistingTransferCard extends StatelessWidget {
+  final BudgetTransfer transfer;
   final List<Category> allCategories;
   final VoidCallback onTap;
 
-  const _CheckInExistingBoostCard({
-    required this.boost,
+  const _CheckInExistingTransferCard({
+    required this.transfer,
     required this.allCategories,
     required this.onTap,
   });
@@ -456,7 +468,7 @@ class _CheckInExistingBoostCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final source = allCategories.firstWhere(
-      (c) => c.id == boost.fromCategoryId,
+      (c) => c.id == transfer.fromCategoryId,
       orElse: () => Category(
         id: 'unknown',
         name: 'Unknown',
@@ -467,45 +479,55 @@ class _CheckInExistingBoostCard extends StatelessWidget {
     );
 
     final theme = Theme.of(context);
+    final sourceColor = Color(source.colorValue);
+    final contentColor = source.contentColor;
 
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        margin: const EdgeInsets.only(bottom: 4),
-        decoration: BoxDecoration(
-          color: Color(source.colorValue).withOpacity(0.1),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Color(source.colorValue).withOpacity(0.3)),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: sourceColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ListTile(
+        onTap: onTap,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        dense: true,
+        leading: Icon(
+          IconData(source.iconCodePoint, fontFamily: 'MaterialIcons'),
+          color: contentColor,
+          size: 24,
         ),
-        child: Row(
+        title: Text(
+          "From ${source.name}",
+          style: theme.textTheme.bodyLarge?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: contentColor,
+          ),
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              IconData(source.iconCodePoint, fontFamily: 'MaterialIcons'),
-              color: Color(source.colorValue),
-              size: 16,
-            ),
-            const SizedBox(width: 8),
             Text(
-              "From ${source.name}",
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const Spacer(),
-            Text(
-              "+\$${boost.amount.toStringAsFixed(0)}",
-              style: theme.textTheme.bodyMedium?.copyWith(
+              "+\$${transfer.amount.toStringAsFixed(0)}",
+              style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: Color(source.colorValue),
+                color: contentColor,
               ),
             ),
             const SizedBox(width: 8),
-            Icon(Icons.edit, size: 14, color: theme.colorScheme.secondary),
+            Icon(Icons.edit, size: 16, color: contentColor.withOpacity(0.7)),
           ],
         ),
       ),
     );
   }
 }
+
+// Hello

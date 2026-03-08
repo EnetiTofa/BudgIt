@@ -7,7 +7,7 @@ part of 'streak_calendar_state_provider.dart';
 // **************************************************************************
 
 String _$streakCalendarStateHash() =>
-    r'd61a6a859a884de122adbec1a07b16a4e54cfc02';
+    r'a705d1e0c19fd9080ebad97940afe9a89fea5be2';
 
 /// See also [streakCalendarState].
 @ProviderFor(streakCalendarState)

@@ -1,3 +1,5 @@
+// lib/src/features/budget_hub/presentation/providers/weekly_projection_providers.dart
+
 import 'package:equatable/equatable.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,6 +12,9 @@ import 'package:budgit/src/features/budget_hub/domain/weekly_aggregate_data.dart
 import 'package:budgit/src/utils/clock_provider.dart';
 import 'package:budgit/src/features/settings/data/settings_provider.dart';
 import 'package:budgit/src/core/data/providers/transaction_repository_provider.dart';
+
+// --- NEW IMPORT ---
+import 'package:budgit/src/utils/date_utils.dart';
 
 part 'weekly_projection_providers.g.dart';
 
@@ -61,7 +66,6 @@ Future<List<WeeklyCategoryData>> weeklyCategoryData(
     59,
   );
 
-  // Fetch BudgetTransfers (formerly WalletAdjustments)
   final allTransfers = await repository.getBudgetTransfersForWeek(
     startOfSelectedWeek,
   );
@@ -84,7 +88,9 @@ Future<List<WeeklyCategoryData>> weeklyCategoryData(
     // B. Base Weekly Variable Budget
     final monthlyVariableBudget = (category.budgetAmount - monthlyFixedSum)
         .clamp(0.0, double.infinity);
-    final baseWeeklyBudget = monthlyVariableBudget / 4.333;
+
+    // --- THE FIX: Used AppDateUtils instead of hardcoded 4.333 ---
+    final baseWeeklyBudget = monthlyVariableBudget / AppDateUtils.weeksPerMonth;
 
     // C. Weekly Variable Transactions
     final categoryVariableTxs = transactionLog.whereType<OneOffPayment>().where(
@@ -115,18 +121,15 @@ Future<List<WeeklyCategoryData>> weeklyCategoryData(
     }
 
     // D. Transfers (The Physics Update)
-    // Money coming IN increases the budget
     final incomingTransfers = allTransfers
         .where((b) => b.toCategoryId == category.id)
         .fold(0.0, (sum, b) => sum + b.amount);
 
-    // Money going OUT decreases the budget
     final outgoingTransfers = allTransfers
         .where((b) => b.fromCategoryId == category.id)
         .fold(0.0, (sum, b) => sum + b.amount);
 
     // E. Math & Physics
-    // The budget is strictly: Base + In - Out
     final double effectiveWeeklyBudget =
         baseWeeklyBudget + incomingTransfers - outgoingTransfers;
 

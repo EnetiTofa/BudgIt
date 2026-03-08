@@ -49,7 +49,7 @@ class _DashboardWeeklyWidgetState extends ConsumerState<DashboardWeeklyWidget> {
         }
 
         return DashboardCard(
-          title: 'Daily Weekly',
+          title: 'Daily Recommended',
           subtitle: 'Today',
           child: Column(
             children: [
